@@ -1,0 +1,27 @@
+project:
+  type: book
+  
+bibliography: _bibliography.bib
+nocite: |
+  @*
+  
+
+book:
+  title: "Housing Insecurity and Homelessness in New York State"
+  author: "Don Boyd"
+  date: today
+  date-format: long
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - summary.qmd
+    - references.qmd
+
+format:
+  html:
+    theme: cosmo
+  # pdf:
+  #   documentclass: scrreprt
+
+
+

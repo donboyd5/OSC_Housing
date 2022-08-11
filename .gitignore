@@ -3,3 +3,11 @@
 .Rdata
 .httr-oauth
 .DS_Store
+
+report/.quarto/
+*.csv
+*.doc*
+*.html
+*.pdf
+*.xl*
+report/_book/
