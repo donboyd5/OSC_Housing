@@ -14,7 +14,12 @@ book:
   chapters:
     - index.qmd
     - intro.qmd
-    - summary.qmd
+    - part: "Housing Insecurity"
+      chapters:
+      - measure_insecurity.qmd
+      - recent_events_housing.qmd
+    - part: "Homelessness"      
+    - conclusions.qmd
     - references.qmd
 
 format:
@@ -22,6 +27,11 @@ format:
     theme: cosmo
   # pdf:
   #   documentclass: scrreprt
+  
+# web 
+#   site: https://osc-housing.netlify.app/
+#   password: oscdjb
+
 
 
 
