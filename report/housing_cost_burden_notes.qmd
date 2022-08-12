@@ -1,0 +1,25 @@
+# Housing Cost Burden Notes
+
+-   [HUD CHAS data](https://www.huduser.gov/portal/datasets/cp.html)
+
+> On September 29, 2021 HUD released updated CHAS data for the 2014-2018 period...
+>
+> Each year, the U.S. Department of Housing and Urban Development (HUD) receives custom tabulations of American Community Survey (ACS) data from the U.S. Census Bureau. These data, known as the "CHAS" data (Comprehensive Housing Affordability Strategy), demonstrate the extent of housing problems and housing needs, particularly for low income households. The CHAS data are used by local governments to plan how to spend HUD funds, and may also be used by HUD to distribute grant funds.
+
+-   [CHAS Background](https://www.huduser.gov/portal/datasets/cp/CHAS/bg_chas.html)
+
+> The primary purpose of the CHAS data is to demonstrate the number of households in need of housing assistance. This is estimated by the number of households that have certain housing problems and have income low enough to qualify for HUD's programs (primarily 30, 50, and 80 percent of median income). It is also important to consider the prevalence of housing problems among different types of households, such as the elderly, disabled, minorities, and different household types. The CHAS data provide counts of the numbers of households that fit these HUD-specified characteristics in HUD-specified geographic areas.
+>
+> In addition to estimating low-income housing needs, the CHAS data contribute to a more comprehensive market analysis by documenting issues like lead paint risks, "affordability mismatch," and the interaction of affordability with variables like age of homes, number of bedrooms, and type of building. Data Format
+>
+> HUD has identified a large set of characteristics of interest to housing planners and policy-makers, and as a result the CHAS data can be quite unwieldy. To streamline the data and make it easier to use, HUD has created a series of "tables," which are grouped by theme.
+
+> Each of these tables contains certain "dimensions" (also referred to as variables). These dimensions can be combined in a number of ways, and the data files for each table present every possible combination of those dimensions. As an example, consider Table 11. Table 11 contains 3 dimensions: tenure, housing problems, and household income. Tenure has 2 options: owner-occupied or renter-occupied. Housing problems has 3 options: household has at least one housing problem, household has no housing problems, or household has no income (so cost burden could not be computed) but no other housing problems. Household income, in this particular table, has 13 options. Thus Table 11 essentially has 78 buckets (2*3*13=78), and every household belongs in one (and only one) of those buckets. In the CHAS data, we have counted the number of households in each of those buckets, for thousands of states, counties, cities, and neighborhoods.
+>
+> Because CHAS provides count estimates, users interested in percentage estimates (e.g. percentage of low-income renters with severe housing cost burden) will need to make the calculation themselves. To make these calculations, users may need to sum count estimates (buckets) in both the numerator and denominator before dividing to obtain the percentage estimate. Users should be careful to identify the appropriate total or subtotal that serves as the denominator. In some cases, totals and subtotals are provided in the CHAS data.
+
+-   [CHAS downloads](https://www.huduser.gov/portal/datasets/cp.html)
+
+-   [CHAS documentation](https://www.huduser.gov/portal/datasets/cp/CHAS-data-dictionary-14-18.xlsx)
+
+-   <https://acsdatacommunity.prb.org/discussion-forum/f/forum/435/acs-table-for-severe-housing-burden>

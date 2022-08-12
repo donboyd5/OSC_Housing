@@ -1,11 +1,17 @@
 # The Impact of Recent Events on Housing Insecurity
 
-Much of the available data on housing insecurity precedes the COVID-19 pandemic and the recent rises in inflation and interest rates. While we cannot quantify the impact of these changes on regions of New York, some research and data allow us to understand how these changes may have affected housing insecurity.
+Much of the available data on housing insecurity precedes the COVID-19 pandemic and the recent rises in inflation and interest rates. While we cannot quantify the impact of these changes on regions of New York, available research and data provide insights into how these changes may have affected housing insecurity.
 
 ## The Impact of the COVID-19 Pandemic
+
+In 2020 with the onset of the COVID-19 pandemic, a large and growing share of renters were cost-burdened, according to a Center analysis of new experimental data from the American Community Survey (ACS). From 2019 to 2020, the share of renter households with cost burdens rose nearly 3 percentage points. Among renters, the pandemic widened socioeconomic and racial inequalities in housing cost burdens. [@airgood-obryckiAffordabilityGapsWidened2022]
+
+Before the pandemic, cost burdens were highest for lower-income renter households and rising fastest among middle-income renters. This trend continued in the first year of the pandemic. Cost burdens increased by nearly 5 percentage points, to 80 percent, for households making less than \$30,000. Renters making \$30,000–45,000 saw their cost burden rate jump by 9 percentage points to 58 percent, while those making \$45,000–75,000 had a cost-burden rate of 30 percent, a 5-percentage-point rise from 2019. Cost burdens rose fastest among renter households headed by a Black person, widening the existing Black-white affordability gap. [@airgood-obryckiAffordabilityGapsWidened2022]
+
+With eviction and foreclosure moratoriums now ended, housing insecurity is on the rise. [@jointcenterforhousingstudiesofharvarduniversityStateNationHousing2022]
 
 ## The Impact of Rising Inflation and Higher Interest Rates
 
 According to the Joint Center for Housing Studies of Harvard University the combined increases in home prices and mortgage interest rates over the past year have made buying the typical home much more expensive across the country. Between April 2021 and April 2022 the median existing home sales price in the U.S. was up 15 percent and 30-year mortgage interest rates were up nearly two percentage points, raising the cost of a mortgage significantly. [@jointcenterforhousingstudiesofharvarduniversityStateNationHousing2022] As a result, a potential homebuyer would have needed an income of at least \$107,600 to qualify for a mortgage on the median-priced home in April of 2022, up from \$79,600 in April 2021, pricing roughly 4 million renter households out of home ownership. [@mccueNationRisingPrices2022]
 
-\[NOTE TO SELF: These are almost direct quotes. Paraphrase or quote.\]
+**\[NOTE TO SELF: Some of the text above is almost verbatim from the JCHS documents. While properly cited, it would be better to revise so that they are paraphrases, or else use quotes.\]**

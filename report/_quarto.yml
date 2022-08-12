@@ -16,11 +16,25 @@ book:
     - intro.qmd
     - part: "Housing Insecurity"
       chapters:
-      - measure_insecurity.qmd
+      - measure_housing_insecurity.qmd
+      - housing_affordability.qmd
       - recent_events_housing.qmd
-    - part: "Homelessness"      
+    - part: "Homelessness"
+      chapters: 
+      - measure_homelessness.qmd
     - conclusions.qmd
     - references.qmd
+    - part: "Appendix and Working Notes"
+      chapters: 
+        - housing_cost_burden_notes.qmd
+
+# https://quarto.org/docs/computations/execution-options.html
+# warning: false
+# error: false
+execute:
+  echo: false
+  message: false
+  note: false
 
 format:
   html:

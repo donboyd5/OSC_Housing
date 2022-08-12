@@ -4,10 +4,12 @@
 .httr-oauth
 .DS_Store
 
+data/
 report/.quarto/
+report/_book/
 *.csv
 *.doc*
 *.html
 *.pdf
 *.xl*
-report/_book/
+*.zip
