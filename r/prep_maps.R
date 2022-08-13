@@ -5,19 +5,12 @@
 # library(choroplethr)
 # library(choroplethrZip)
 source(here::here("r", "libraries.r"))
-
-library(maps) #contains outlines
-library(mapdata) #higher resolution outlines
-library(mapproj) #map projections collection
-
-library(choroplethr)
-library(tidycensus)
-library(sf)
-library(tigris)
-options(tigris_use_cache = TRUE)
+source(here::here("r", "libraries_maps.r"))
 
 
 # Simple feature shape files for counties in NY --------------------------------
+nycos_shape <- tigris::counties(state = "New York", cb = TRUE)
+saveRDS(nycos_shape, here::here("data", "nycos_shape.rds"))
 
 
 # Simple feature shape files for Census metro areas in NY --------------------------------
@@ -139,6 +132,11 @@ tot <- get_acs(geography = "county", variables = acs_var, state=c("PA", "VA", "D
 
 tot <- get_acs(geography = "county", variables = acs_var, state=c("NY"),
                geometry = TRUE)
+
+
+# counties(state = NULL, cb = FALSE, resolution = "500k", year = NULL, ...)
+df <- tigris::counties(state = "New York", cb = TRUE)
+
 
 # tigris
 # cb=TRUE limits this to generalized cartographic boundaries rather than detailed

@@ -1,5 +1,7 @@
 # Housing Cost Burden Notes
 
+## CHAS data
+
 -   [HUD CHAS data](https://www.huduser.gov/portal/datasets/cp.html)
 
 > On September 29, 2021 HUD released updated CHAS data for the 2014-2018 period...
@@ -23,3 +25,23 @@
 -   [CHAS documentation](https://www.huduser.gov/portal/datasets/cp/CHAS-data-dictionary-14-18.xlsx)
 
 -   <https://acsdatacommunity.prb.org/discussion-forum/f/forum/435/acs-table-for-severe-housing-burden>
+
+-   HAMFI -- HUD Area Median Family Income. This is the median family income calculated by HUD for each jurisdiction, in order to determine Fair Market Rents (FMRs) and income limits for HUD programs. HAMFI will not necessarily be the same as other calculations of median incomes (such as a simple Census number), due to a series of adjustments that are made (For full documentation of these adjustments, consult the [HUD Income Limit Briefing Materials](https://www.huduser.gov/portal/datasets/il.html)). If you see the terms "area median income" (AMI) or "median family income" (MFI) used in the CHAS, assume it refers to HAMFI.
+
+-   Housing Problems -- There are four housing problems in the CHAS data: 1) housing unit lacks complete kitchen facilities; 2) housing unit lacks complete plumbing facilities; 3) household is overcrowded; and 4) household is cost burdened. A household is said to have a housing problem if they have any 1 or more of these 4 problems.
+
+-   Data for related important measures.
+
+    -   Overcrowding -- More than 1 person per room.
+
+    -   Severe overcrowding -- More than 1.5 persons per room.
+
+    -   Cost burden -- Monthly housing costs (including utilities) exceeding 30% of monthly income.
+
+    -   Severe cost burden -- Monthly housing costs (including utilities) exceeding 50% of monthly income.
+
+-   [https://acsdatacommunity.prb.org/discussion-forum/f/forum/597/chas-vs-acs-for-housing-problems](https://acsdatacommunity.prb.org/discussion-forum/f/forum/597/chas-vs-acs-for-housing-problemshttps://acsdatacommunity.prb.org/discussion-forum/f/forum/597/chas-vs-acs-for-housing-problems)
+
+-   
+
+-   

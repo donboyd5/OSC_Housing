@@ -14,7 +14,8 @@ comment(df)
 #| rows.print: 20
 df |> 
   filter(ny | us, year==2021) |> 
-  arrange(desc(rank))
+  arrange(sort) |> 
+  select(metro, ratio, diffus, rank, prank)
 
 ```
 

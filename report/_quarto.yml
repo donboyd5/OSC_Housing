@@ -17,6 +17,8 @@ book:
     - part: "Housing Insecurity"
       chapters:
       - measure_housing_insecurity.qmd
+      - housing_cost_burden.qmd
+      - evictions.qmd
       - housing_affordability.qmd
       - recent_events_housing.qmd
     - part: "Homelessness"
@@ -24,7 +26,7 @@ book:
       - measure_homelessness.qmd
     - conclusions.qmd
     - references.qmd
-    - part: "Appendix and Working Notes"
+    - part: "Appendix and Notes"
       chapters: 
         - housing_cost_burden_notes.qmd
 

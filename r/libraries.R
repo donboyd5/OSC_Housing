@@ -1,7 +1,7 @@
 # libraries ---------------------------------------------------------------
 
 library(tidyverse)
-tprint <- 50  # default tibble print
+tprint <- 100  # default tibble print is 50
 options(tibble.print_max = tprint, tibble.print_min = tprint) # show up to tprint rows
 
 library(fs)
@@ -35,8 +35,5 @@ library(kableExtra)
 library(DT)
 library(gt)
 
-# maps
-library(maps)
-# https://cran.r-project.org/web/packages/usmap/vignettes/mapping.html
-library(usmap)
+
 

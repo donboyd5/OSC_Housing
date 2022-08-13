@@ -1,0 +1,19 @@
+# Check Totals from the CHAS Query Tool
+
+-   [Query tool](https://www.huduser.gov/portal/datasets/cp.html)
+
+-   Check totals for New York State
+
+![](images/paste-A3BC8EF3.png)
+
+-   Cost burden
+
+![](images/paste-B94C6B0D.png)
+
+![](images/paste-7D6EF4EA.png)
+
+![](images/paste-01E80997.png)
+
+1.  The four housing problems are: incomplete kitchen facilities, incomplete plumbing facilities, more than 1 person per room, and cost burden greater than 30%.
+2.  The four severe housing problems are: incomplete kitchen facilities, incomplete plumbing facilities, more than 1.5 persons per room, and cost burden greater than 50%.
+3.  Cost burden is the ratio of housing costs to household income. For renters, housing cost is gross rent (contract rent plus utilities). For owners, housing cost is "select monthly owner costs", which includes mortgage payment, utilities, association fees, insurance, and real estate taxes.
