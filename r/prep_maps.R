@@ -6,17 +6,28 @@
 # library(choroplethrZip)
 source(here::here("r", "libraries.r"))
 source(here::here("r", "libraries_maps.r"))
+source(here::here("r", "functions_maps.r"))
 
 
 # Simple feature shape files for counties in NY --------------------------------
-nycos_shape <- tigris::counties(state = "New York", cb = TRUE)
+nycos_shape1 <- tigris::counties(state = "New York", cb = TRUE)
+# add centroids for labels, and adjust so that Westchester label does not overlap
+nycos_shape <- nycos_shape1  |> 
+  lcnames() |> 
+  rename(area=name) |> 
+  mutate(centroids(geometry),
+         Y=ifelse(area=="Westchester", Y +.05, Y)) |> 
+  rename(xlabel=X, ylabel=Y)
+nycos_shape
 saveRDS(nycos_shape, here::here("data", "nycos_shape.rds"))
 
 
 # Simple feature shape files for Census metro areas in NY --------------------------------
 
 nymetro_shape <- core_based_statistical_areas(cb = TRUE) %>%  # this appears to be what we want
-  filter(str_detect(NAMELSAD, "Metro"), str_detect(NAME, "NY"))
+  lcnames() |> 
+  rename(area=name) |> 
+  filter(str_detect(namelsad, "Metro"), str_detect(area, "NY"))
 nymetro_shape
 saveRDS(nymetro_shape, here::here("data", "nymetro_shape.rds"))
 
@@ -24,18 +35,18 @@ saveRDS(nymetro_shape, here::here("data", "nymetro_shape.rds"))
 # Crosswalk to the (nonstandard) JCHS metro area names ----
 nymetro <- readRDS(here::here("data", "nymetro_shape.rds")) |> 
   st_drop_geometry() |> 
-  select(GEOID, NAME)
+  select(geoid, area)
 
 jchs <- readRDS(here::here("data", "price_income_jchs.rds")) |> 
   filter(ny, year==2021) |> 
   select(metro) |> 
-  mutate(NAME=ifelse(metro=="Buffalo-Cheektowaga-Niagara Falls, NY",
+  mutate(area=ifelse(metro=="Buffalo-Cheektowaga-Niagara Falls, NY",
                      "Buffalo-Cheektowaga, NY",
                      metro))
 jchs
 
 jchs_cbsa_xwalk <- nymetro |> 
-  left_join(jchs, by="NAME")
+  left_join(jchs, by="area")
 jchs_cbsa_xwalk
 saveRDS(jchs_cbsa_xwalk, here::here("data", "jchs_cbsa_xwalk.rds"))
 
