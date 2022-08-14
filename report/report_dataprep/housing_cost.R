@@ -74,6 +74,9 @@ hcwide <- hcsummary |>
 mapddata <- hcwide |> 
   select(geoid, area, otot, rtot, htot, contains("pct"))
 
+
+
+
 nycomap(hcwide2, mapvar="owners_hhpct", maptitle="Homeownership percentage by county")
 nycomap(hcwide2, mapvar="opct", maptitle="Percentage of homeowners who are cost-burdened")
 nycomap(hcwide2, mapvar="rpct", maptitle="Percentage of renters who are cost-burdened")
