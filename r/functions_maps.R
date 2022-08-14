@@ -21,6 +21,9 @@ centroids <- function(geometry) {
 
 nycomap <- function(data, mapvar, maptitle, direction=1){
   # data should have geoid
+  
+  nycos_shape <- readRDS(here::here("data", "nycos_shape.rds"))
+  
   df <- data |> 
     select(geoid, value=!!mapvar)
   

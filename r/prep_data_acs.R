@@ -286,6 +286,12 @@ nycomap(hcwide2, mapvar="opct", maptitle="Percentage of homeowners who are cost-
 nycomap(hcwide2, mapvar="rpct", maptitle="Percentage of renters who are cost-burdened")
 
 
+hcwide2 |> 
+  mutate(lab=str_remove(area, " County, New York")) |> 
+  ggplot(aes(opct, rpct)) +
+  geom_point() +
+  geom_text(aes(label=lab), hjust=0, vjust=0)
+
 
 ## households by type and tenure ----
 acs_tab <- "B11012"
