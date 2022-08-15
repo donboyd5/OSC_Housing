@@ -1,6 +1,9 @@
 # Housing Cost Burden in New York
 
-
 New York
 
+![](results/rpct.png)
 
+![](results/opct.png)
+
+![](results/hcb_ownrent.png)

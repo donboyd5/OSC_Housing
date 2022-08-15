@@ -13,6 +13,7 @@ book:
   date-format: long
   chapters:
     - index.qmd
+    - highlights.qmd
     - intro.qmd
     - part: "Housing Insecurity"
       chapters:

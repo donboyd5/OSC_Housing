@@ -13,6 +13,8 @@ acsdir <- here::here("data", "acs")
 acsdata <- readRDS(here::here("data", "acs",  "acs_selected_table_data.rds"))
 glimpse(acsdata)
 
+xwalk <- readRDS(here::here("data", "nycounty_xwalk.rds"))
+
 # make a wide file with counties as rows, pcts as columns -----------------
 # B25106  TENURE BY HOUSING COSTS AS A PERCENTAGE OF HOUSEHOLD INCOME IN THE PAST 12 MONTHS       
 
@@ -71,21 +73,50 @@ hcwide <- hcsummary |>
          renters_hhpct=rtot / htot,
          owners_hhpct=1 - renters_hhpct)
 
-mapddata <- hcwide |> 
-  select(geoid, area, otot, rtot, htot, contains("pct"))
+glimpse(hcwide)
+hcwide |> 
+  mutate(dpct=rpct - opct, rratio=rent_p30p / own_p30p, rentown=rtot / otot) |> 
+  select(geoid, area, opct, rpct, dpct, rratio, rentown) |> 
+  arrange(desc(dpct))
+
+hcwide |> 
+  mutate(dpct=rpct - opct, rratio=rent_p30p / own_p30p, rentown=rtot / otot) |> 
+  select(geoid, area, opct, rpct, dpct, rratio, rentown) |> 
+  arrange(desc(rratio))
 
 
 
 
-nycomap(hcwide2, mapvar="owners_hhpct", maptitle="Homeownership percentage by county")
-nycomap(hcwide2, mapvar="opct", maptitle="Percentage of homeowners who are cost-burdened")
-nycomap(hcwide2, mapvar="rpct", maptitle="Percentage of renters who are cost-burdened")
+mapdata <- hcwide |> 
+  select(geoid, area, otot, rtot, htot, contains("pct")) |> 
+  left_join(xwalk, by="geoid")
+names(mapdata)
+count(mapdata, area, costate)
 
+p <- nycomap(mapdata, mapvar="owners_hhpct", maptitle="Homeownership percentage by county")
+ggsave(here::here("report", "results", "owners_hhpct.png"), p, width = 10, height = 6, scale=1.5)
 
-mapddata |> 
-  mutate(lab=str_remove(area, " County, New York")) |> 
-  ggplot(aes(opct, rpct)) +
+p <- nycomap(mapdata, mapvar="opct", maptitle="Percentage of homeowners who are cost-burdened")
+ggsave(here::here("report", "results", "opct.png"), p, width = 10, height = 6, scale=1.5)
+
+p <- nycomap(mapdata, mapvar="rpct", maptitle="Percentage of renters who are cost-burdened")
+ggsave(here::here("report", "results", "rpct.png"), p, width = 10, height = 6, scale=1.5)
+
+p <- mapdata |> 
+  mutate(clrcode=ifelse(rgn_code %in% c("nyc", "li", "hudson"), rgn_edc, "Rest of State")) |> 
+  ggplot(aes(opct, rpct, colour=clrcode)) +
   geom_point() +
-  geom_text(aes(label=lab), hjust=0, vjust=0)
+  geom_text(aes(label=borough_county), hjust=0, vjust=0) +
+  geom_vline(aes(xintercept=median(opct))) +
+  geom_hline(aes(yintercept=median(rpct))) +
+  scale_color_manual(values=c("blue", "darkgreen", "darkred", "grey40")) +
+  scale_x_continuous(name="% of homeowners who are cost-burdened", breaks = seq(0, 1, .05), labels=percent_format(accuracy=1)) +
+  scale_y_continuous(name="% of renters who are cost-burdened", breaks = seq(0, 1, .05), labels=percent_format(accuracy=1)) +
+  ggtitle("Housing Cost Burden of Homeowners and Renters") +
+  theme_bw()
+ggsave(here::here("report", "results", "hcb_ownrent.png"), p, width = 10, height = 6, scale=1.5)
+  
+  
 
 
+  

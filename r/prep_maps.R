@@ -8,7 +8,6 @@ source(here::here("r", "libraries.r"))
 source(here::here("r", "libraries_maps.r"))
 source(here::here("r", "functions_maps.r"))
 
-
 # Simple feature shape files for counties in NY --------------------------------
 nycos_shape1 <- tigris::counties(state = "New York", cb = TRUE)
 # add centroids for labels, and adjust so that Westchester label does not overlap
@@ -23,13 +22,129 @@ saveRDS(nycos_shape, here::here("data", "nycos_shape.rds"))
 
 
 # Simple feature shape files for Census metro areas in NY --------------------------------
-
 nymetro_shape <- core_based_statistical_areas(cb = TRUE) %>%  # this appears to be what we want
   lcnames() |> 
   rename(area=name) |> 
   filter(str_detect(namelsad, "Metro"), str_detect(area, "NY"))
 nymetro_shape
 saveRDS(nymetro_shape, here::here("data", "nymetro_shape.rds"))
+
+
+# New York county crosswalk --------------------------------
+# https://en.wikipedia.org/wiki/Category:Regions_of_New_York_(state)
+# Regions of New York as defined by the New York State Department of Economic Development
+# Regions in Upstate New York:
+# 1. Western New York – counties : Niagara, Erie, Chautauqua, Cattaraugus, Allegany
+# 2. Finger Lakes – counties : Orleans, Genesee, Wyoming, Monroe, Livingston, Wayne, Ontario, Yates, Seneca
+# 3. Southern Tier – counties : Steuben, Schuyler, Chemung, Tompkins, Tioga, Chenango, Broome, Delaware
+# 4. Central New York – counties : Cortland, Cayuga, Onondaga, Oswego, Madison
+# 5. North Country – counties : St. Lawrence, Lewis, Jefferson, Hamilton, Essex, Clinton, Franklin
+# 6. Mohawk Valley – counties : Oneida, Herkimer, Fulton, Montgomery, Otsego, Schoharie
+# 7. Capital District – counties : Albany, Columbia, Greene, Warren, Washington, Saratoga, Schenectady, Rensselaer
+# Regions in Downstate New York:
+# 8. Hudson Valley – counties : Sullivan, Ulster, Dutchess, Orange, Putnam, Rockland, Westchester
+# 9. New York City – counties (boroughs) : New York (Manhattan), Bronx (The Bronx), Queens (Queens), Kings (Brooklyn), Richmond (Staten Island)
+# 10. Long Island – counties : Nassau, Suffolk
+
+# Borough	County
+# Bronx	Bronx County
+# Brooklyn	Kings County
+# Manhattan	New York County
+# Queens	Queens County
+# Staten Island	Richmond County
+
+ny1 <- readRDS(here::here("data", "nycos_shape.rds")) |> 
+  st_drop_geometry() |> 
+  select(geoid, county=area, namelsad) |> 
+  distinct()
+
+# Labor market regions:
+# download.file("https://data.ny.gov/api/views/imem-myat/rows.csv?accessType=DOWNLOAD&sorting=true",
+#               here::here("data", "crosswalks", "Labor_Market_Regions.csv"))
+
+ny2 <- read_csv(here::here("data", "crosswalks", "Labor_Market_Regions.csv")) |> 
+  setNames(c("rgn_labor", "county"))
+
+nycounty_xwalk1 <- ny1 |> 
+  left_join(ny2, by = "county") |> 
+  mutate(costate=paste0(namelsad, ", New York"),
+         rgn_edc=ifelse(str_detect(rgn_labor, "Hudson"), "Mid-Hudson", rgn_labor),
+         # OSC has this note on their map: 
+         # https://www.osc.state.ny.us/files/local-government/publications/pdf/osc-economic-regions.pdf
+         # Otsego and Hamilton County differ from the Economic Development Regions used by the State’s Labor Department
+         # OSC map shows Otsego in Southern Tier (OSC), not Mohawk Valley (EDC), and
+         #               Hamilton in Mohawk Valley (OSC), not North Country (EDC)
+         rgn_oscQ=ifelse(str_detect(rgn_edc, "Capital"), "Capital District", rgn_edc),
+         rgn_oscQ=paste0(rgn_oscQ, " Region"),
+         rgn_code=case_when(rgn_labor=="Western New York" ~ "wny",
+                           rgn_labor=="Finger Lakes" ~ "flakes",
+                           rgn_labor=="Southern Tier" ~ "stier",
+                           rgn_labor=="Central New York" ~ "cny",
+                           rgn_labor=="North Country" ~ "ncountry",
+                           rgn_labor=="Mohawk Valley" ~ "mohawk",
+                           rgn_labor=="Capital Region" ~ "capdist",
+                           rgn_labor=="Hudson Valley" ~ "hudson",
+                           rgn_labor=="New York City" ~ "nyc",
+                           rgn_labor=="Long Island" ~ "li",
+                           TRUE ~ "ERROR"), 
+         rgn_num=case_when(rgn_labor=="Western New York" ~ 1,
+                           rgn_labor=="Finger Lakes" ~ 2,
+                           rgn_labor=="Southern Tier" ~ 3,
+                           rgn_labor=="Central New York" ~ 4,
+                           rgn_labor=="North Country" ~ 5,
+                           rgn_labor=="Mohawk Valley" ~ 6,
+                           rgn_labor=="Capital Region" ~ 7,
+                           rgn_labor=="Hudson Valley" ~ 8,
+                           rgn_labor=="New York City" ~ 9,
+                           rgn_labor=="Long Island" ~ 10,
+                           TRUE ~ 0),         
+         borough_county=case_when(county=="New York" ~ "Manhattan",
+                                  county=="Kings" ~ "Brooklyn",
+                                  county=="Richmond" ~ "Staten Island",
+                                  TRUE ~ county)
+         )
+nycounty_xwalk1
+# Albany County, New York
+
+count(nycounty_xwalk1, rgn_num, rgn_code, rgn_labor, rgn_edc, rgn_oscQ)
+count(nycounty_xwalk1, rgn_num, rgn_code, rgn_labor, rgn_edc, county, borough_county, namelsad, costate)
+
+nycounty_xwalk2 <- nycounty_xwalk1 |> 
+  select(geoid, county, borough_county, namelsad, costate, rgn_num, rgn_code, rgn_edc, rgn_labor, rgn_oscQ) |> 
+  arrange(geoid)
+
+# verify against EDC table (Wikipedia above) - hoping correct, as EDC does not seem to have a list on their site
+nycounty_xwalk2 |> 
+  select(rgn_num, rgn_edc, county) |> 
+  arrange(rgn_num, rgn_edc, county) |> 
+  group_by(rgn_num, rgn_edc) |> 
+  mutate(name=paste0("name", row_number())) |> 
+  pivot_wider(values_from = county)
+# EDC list from Wikipedia
+# 1. Western New York – counties : Niagara, Erie, Chautauqua, Cattaraugus, Allegany
+# 2. Finger Lakes – counties : Orleans, Genesee, Wyoming, Monroe, Livingston, Wayne, Ontario, Yates, Seneca
+# 3. Southern Tier – counties : Steuben, Schuyler, Chemung, Tompkins, Tioga, Chenango, Broome, Delaware
+# 4. Central New York – counties : Cortland, Cayuga, Onondaga, Oswego, Madison
+# 5. North Country – counties : St. Lawrence, Lewis, Jefferson, Hamilton, Essex, Clinton, Franklin
+# 6. Mohawk Valley – counties : Oneida, Herkimer, Fulton, Montgomery, Otsego, Schoharie
+# 7. Capital District – counties : Albany, Columbia, Greene, Warren, Washington, Saratoga, Schenectady, Rensselaer
+# 8. Hudson Valley – counties : Sullivan, Ulster, Dutchess, Orange, Putnam, Rockland, Westchester
+# 9. New York City – counties (boroughs) : New York (Manhattan), Bronx (The Bronx), Queens (Queens), Kings (Brooklyn), Richmond (Staten Island)
+# 10. Long Island – counties : Nassau, Suffolk
+
+# data
+# 1       1 Western New York Allegany Cattaraugus Chautauqua Erie       Niagara   NA          NA           NA         NA   
+# 2       2 Finger Lakes     Genesee  Livingston  Monroe     Ontario    Orleans   Seneca      Wayne        Wyoming    Yates
+# 3       3 Southern Tier    Broome   Chemung     Chenango   Delaware   Schuyler  Steuben     Tioga        Tompkins   NA   
+# 4       4 Central New York Cayuga   Cortland    Madison    Onondaga   Oswego    NA          NA           NA         NA   
+# 5       5 North Country    Clinton  Essex       Franklin   Hamilton   Jefferson Lewis       St. Lawrence NA         NA   
+# 6       6 Mohawk Valley    Fulton   Herkimer    Montgomery Oneida     Otsego    Schoharie   NA           NA         NA   
+# 7       7 Capital Region   Albany   Columbia    Greene     Rensselaer Saratoga  Schenectady Warren       Washington NA   
+# 8       8 Mid-Hudson       Dutchess Orange      Putnam     Rockland   Sullivan  Ulster      Westchester  NA         NA   
+# 9       9 New York City    Bronx    Kings       New York   Queens     Richmond  NA          NA           NA         NA   
+# 10      10 Long Island      Nassau   Suffolk     NA         NA         NA        NA          NA           NA         NA   
+
+saveRDS(nycounty_xwalk2, here::here("data", "nycounty_xwalk.rds"))
 
 
 # Crosswalk to the (nonstandard) JCHS metro area names ----

@@ -2,3 +2,8 @@
 
 This report examines housing insecurity and homelessness in New York.
 
+### What is housing insecurity?
+
+### Home ownership in New York
+
+![](results/owners_hhpct.png)
