@@ -1,0 +1,33 @@
+# Housing Insecurity Notes
+
+## Definitions
+
+> \"Housing insecurity\" is an umbrella term that encompasses several dimensions of housing problems people may experience, including affordability, safety, quality, insecurity, and loss of housing. ..Missing a rent or utility payment or receiving an eviction notice is an important sign that a household\'s housing situation is unstable....Compared with renters living in housing that was affordable to them, moderately cost-burdened renters, defined as those having housing costs totaling between 30 and 50 percent of household income, were 1.6 times more likely to miss rent payments or make partial payments.
+> [@MeasuringHousingInsecurity2018]
+
+
+## [@coxRoadmapUnifiedMeasure2016]:
+
+-   Housing is a basic need, essential for physical, social, and psychological well-being
+
+-   "most definitions of housing insecurity in some way address access to adequate housing, quality of housing obtained, and uncertainty regarding the ability to sustain housing"
+
+> The United Nations describes adequate housing as consisting of the following criteria: (a) tenure security that guarantees legal protection against forced evictions, harassment, and other threats; (b) availability of materials and infrastructure such as safe drinking water, adequate sanitation, energy for cooking, heating, and lighting, food storage, and refuse disposal; (c) affordability such that paying for housing does not compromise other human rights; (d) habitability that includes protection against the cold, damp, heat, rain, wind, other threats to health, and structural hazards; (e) location that is not polluted or dangerous and that does not cut off access to employment opportunities, health care services, schools, or other critical social institutions; and (f) accessibility that can meet the specific needs of disadvantaged and marginalized groups and does not compromise the expression of cultural identity (United Nations, 2014)
+
+
+## [@airgood-obryckiAffordabilityGapsWidened2022]
+> Cost-burdened renters spend more than 30 percent of their incomes on rent and utilities each month.
+
+
+
+## County Health Rankings: Severe Housing Problems
+
+County Health Rankings uses a measure of Severe Housing Problems: Percentage of households with at least 1 of 4 housing problems: overcrowding, high housing costs, lack of kitchen facilities, or lack of plumbing facilities. Severe Housing Problems is the percentage of households with one or more of the following housing problems:
+
+Housing unit lacks complete kitchen facilities;
+
+Housing unit lacks complete plumbing facilities;
+
+Household is overcrowded; or
+
+Household is severely cost burdened.

@@ -6,14 +6,21 @@ source(here::here("r", "functions_maps.r"))
 
 
 # locations --------------------------------------------------------------
-acsdir <- here::here("data", "acs")
+# acsdir <- here::here("data", "acs")
 
 
 # get data ----------------------------------------------------------------
-acsdata <- readRDS(here::here("data", "acs",  "acs_selected_table_data.rds"))
-glimpse(acsdata)
+# acsdata <- readRDS(here::here("data", "acs",  "acs_selected_table_data.rds"))
+# glimpse(acsdata)
+# 
+# xwalk <- readRDS(here::here("data", "nycounty_xwalk.rds"))
 
-xwalk <- readRDS(here::here("data", "nycounty_xwalk.rds"))
+nycos_shape <- readRDS(here::here("data", "maps", "nycos_shape.rds"))
+acsdata <- readRDS(here::here("data", "acs", "acsdata.rds"))
+nycentroids <- readRDS(here::here("data", "maps", "nycentroids.rds"))
+nygeom <- readRDS(here::here("data", "maps", "nycentroids.rds"))
+xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
+
 
 # make a wide file with counties as rows, pcts as columns -----------------
 # B25106  TENURE BY HOUSING COSTS AS A PERCENTAGE OF HOUSEHOLD INCOME IN THE PAST 12 MONTHS       
@@ -74,6 +81,8 @@ hcwide <- hcsummary |>
          owners_hhpct=1 - renters_hhpct)
 
 glimpse(hcwide)
+
+
 hcwide |> 
   mutate(dpct=rpct - opct, rratio=rent_p30p / own_p30p, rentown=rtot / otot) |> 
   select(geoid, area, opct, rpct, dpct, rratio, rentown) |> 

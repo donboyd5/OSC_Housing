@@ -1,9 +1,7 @@
 # Introduction
 
-This report examines housing insecurity and homelessness in New York.
 
-### What is housing insecurity?
+Adequate housing is essential to people's physical, social and psychological well-being. Extensive research links housing adequacy or security to health outcomes [better phrase].^[For literature reviews, see @officeofdiseasepreventionandhealthpromotionHousingInstabilityLiterature2022, @officeofdiseasepreventionandhealthpromotionQualityHousingLiterature2022, and @taylorHousingHealthOverview2018.] Society bears some of the health and other costs of housing insecurity. Government responds to the costs of poor health related to housing insecurity through Medicaid and other programs. Many federal and state policies are intended to combat housing insecurity.
 
-### Home ownership in New York
+This report examines housing insecurity in New York and policies to address it.
 
-![](results/owners_hhpct.png)

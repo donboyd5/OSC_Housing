@@ -16,6 +16,12 @@ centroids <- function(geometry) {
   # returns a tibble with X, Y centroid points of a geometry column
   xy=st_centroid(geometry)
   as_tibble(st_coordinates(xy))
+
+  # example  
+  # nycos_shape |> 
+  #   mutate(centroids(geometry),
+  #          Y=ifelse(area=="Westchester", Y +.05, Y)) |> 
+  #   rename(xlabel=X, ylabel=Y)
 }
 
 
@@ -30,7 +36,7 @@ centroids <- function(geometry) {
 nycomap <- function(data, mapvar, maptitle, direction=1){
   # data should have geoid
   
-  nycos_shape <- readRDS(here::here("data", "nycos_shape.rds"))
+  nycos_shape <- readRDS(here::here("data", "maps", "nycos_shape.rds"))
   
   df <- data |> 
     select(geoid, value=!!mapvar)

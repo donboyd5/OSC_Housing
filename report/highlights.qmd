@@ -2,8 +2,7 @@
 
 -   Housing insecurity has mulitple dimensions, including housing cost burden, living in overcrowded or substandard housing, living with family or friends to share costs, living in areas that are unsafe, or lack access to transportation, jobs, and quality schools, and risk of eviction, or homelessness.
 
--   Housing insecurity may have different dimensions for renters than for owners. New York has a greater proportion of renters than other states, but this is driven by New York City.
+-   Housing insecurity may have different dimensions for renters than for owners. New York has a greater proportion of renters than other states, but this is driven by New York City. The sit
 
 -   Housing cost burden, measured as the percentage of households with housing costs equaling or exceeding 30 percent of household income, is far more common among renters than homeowners, and far more common in downstate New York than upstate.
 
-![](images/paste-CBC499D7.png)

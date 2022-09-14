@@ -1,3 +1,37 @@
-# Preface {.unnumbered}
+# Progress and issues {.unnumbered}
 
+## Progress
 
+-   Background research
+
+    -   Obtained and read much relevant research - see [bibliography](bibliography.qmd#References)
+
+-   Data
+
+    -   Housing insecurity
+
+        -   Obtained and organzied relevant ACS 2020 5-year data for all counties, places (e.g, cities and villages), and county subdivisions (e.g., towns) in NYS - useful for measuring housing tenure (owner/renter), housing age and quality, housing cost burden, and characteristics of areas that have high housing insecurity
+
+        -   CHAS
+
+        -   Evictions - obtained annual county-level data on eviction filings and households threatened with eviction from Princeton's Eviction Lab [@EvictionLab]. I have computerized the data, so it is possible to produce tables, graphs, etc. However, they have a great website so in the interest of efficiency, for purposes of exploration I have simply taken some screenshots from their site.
+
+        -   Foreclosures - the major source appears to be RealtyTrac, via ATTOM [@ATTOMForeclosureData]. They do have substate estimates of foreclosures over time. I looked for a free source but have not found one. OSC has used these data in the past. [@MeltdownHousingCrisis2008]
+
+        -   Homelessness - extensive HUD data, coming soon
+
+        -   Housing characteristics - I investigated the American Housing Survey but the metro-area data are quite old. For example, last reported data for the Buffalo area are for 2011.
+
+    -   Policies related to housing insecurity
+
+        -   Federal
+
+            -   HUD
+
+            -   USASpending
+
+-   Analysis
+
+    -   I'm just at the exploratory stage.
+
+    -   The goal is to learn about housing insecurity in New York. There are some tables and graphs within. They are not intended to be pretty, just informative.

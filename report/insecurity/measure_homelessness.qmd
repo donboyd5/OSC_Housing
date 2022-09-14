@@ -1,0 +1,6 @@
+# Measuring Homelessness
+
+## This is the first part of measuring homelessness
+
+{{< include measure_homelessness2.qmd >}}
+

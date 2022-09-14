@@ -4,6 +4,7 @@ library(tidyverse)
 tprint <- 100  # default tibble print is 50
 options(tibble.print_max = tprint, tibble.print_min = tprint) # show up to tprint rows
 
+# general utilities
 library(fs)
 
 # tools

@@ -1,13 +1,8 @@
 project:
   type: book
   
-bibliography: _bibliography.bib
-nocite: |
-  @*
-  
-
 book:
-  title: "Housing Insecurity and Homelessness in New York State"
+  title: "Housing Insecurity in New York State"
   author: "Don Boyd"
   date: today
   date-format: long
@@ -17,26 +12,41 @@ book:
     - intro.qmd
     - part: "Housing Insecurity"
       chapters:
-      - measure_housing_insecurity.qmd
-      - housing_cost_burden.qmd
-      - evictions.qmd
-      - housing_affordability.qmd
-      - recent_events_housing.qmd
-    - part: "Homelessness"
+      - insecurity/housing_insecurity.qmd
+      - insecurity/owners_renters.qmd
+      - insecurity/housing_cost_burden.qmd
+      - insecurity/housing_affordability.qmd      
+      - insecurity/evictions.qmd
+      - insecurity/measure_homelessness.qmd
+      - insecurity/recent_events_housing.qmd
+    - part: "Policies to address housing insecurity"
       chapters: 
-      - measure_homelessness.qmd
+      - policies/policy_intro.qmd
+      - policies/federal.qmd
+      - policies/state.qmd
     - conclusions.qmd
-    - references.qmd
-    - part: "Appendix and Notes"
+    - bibliography.qmd
+    - part: "Appendix"
       chapters: 
-        - housing_cost_burden_notes.qmd
-
+        - appendix/appendix.qmd
+    - part: "Notes"
+      chapters: 
+      - notes/notes.qmd
+      - notes/articles.qmd
+      - notes/housing_insecurity_notes.qmd
+      - notes/housing_cost_burden_notes.qmd
+  
+bibliography: _bibliography.bib
+nocite: |
+  @*
+  
 # https://quarto.org/docs/computations/execution-options.html
 # warning: false
 # error: false
 execute:
   echo: false
   message: false
+  warning: false
   note: false
 
 format:

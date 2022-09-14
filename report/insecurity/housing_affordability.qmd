@@ -1,0 +1,46 @@
+# Housing Affordability
+
+## Housing Affordability Nationally
+
+[The Economist](https://www.economist.com/graphic-detail/2022/05/23/housing-in-america-has-become-much-harder-to-afford)
+
+![](images/paste-4672ECD6.png)
+
+## Housing Affordability in New York
+
+```{r}
+#| include: false
+source(here::here("r", "libraries.r"))
+df <- readRDS(here::here("data", "jchs", "price_income_jchs.rds"))
+comment(df)
+# Ratio of the Median Home Price for Existing Home Sales to the Median Household Income
+count(df, year)
+
+```
+
+```{r}
+#| rows.print: 20
+tabdata <- df |> 
+  filter(ny | us, year==2021) |> 
+  arrange(sort) |> 
+  select(metro, ratio, diffus, rank, prank)
+
+tab <- tabdata |> 
+  gt() |> 
+  tab_header(
+    title = "Housing Affordability in 2021, U.S. and Selected New York Metro Areas",
+    subtitle = "Ratio of the Median Home Price for Existing Home Sales to the Median Household Income; Source Harvard JCHS"
+  ) |>
+  cols_label(metro="Metropolitan area",
+             ratio = html("Ratio: Median price to Median HHI"),
+             diffus="Metro ratio minus U.S. ratio",
+             rank="Rank among metro areas (1=least affordable, 381=most affordable)",
+             prank="Percentile rank (0%=least affordable, 100=most affordable)") |> 
+  fmt_number(columns=c(ratio, diffus),
+             decimals=2) |> 
+  fmt_number(columns=c(rank),
+             decimals=0) |> 
+  fmt_percent(columns=c(prank), decimals=1)
+tab  
+
+```
