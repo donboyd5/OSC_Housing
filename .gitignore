@@ -7,10 +7,12 @@
 data/
 report/.quarto/
 report/_book/
+report/_report/
 report/results/
 *.csv
 *.doc*
 *.html
 *.pdf
+*.png
 *.xl*
 *.zip

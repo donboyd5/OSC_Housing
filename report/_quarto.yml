@@ -15,9 +15,7 @@ book:
       chapters:
       - insecurity/housing_insecurity.qmd
       # - insecurity/owners_renters.qmd
-      - insecurity/cost_and_affordability.qmd
-      # - insecurity/housing_cost_burden.qmd
-      # - insecurity/housing_affordability.qmd      
+      - insecurity/cost_and_availability.qmd
       - insecurity/quality.qmd
       - insecurity/stress.qmd
       # - insecurity/measure_homelessness.qmd

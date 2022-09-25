@@ -14,7 +14,7 @@ chdir2019 <- path(chdir, "2015-2019")
 t9 <- readRDS(path(chdir2019, "nychas_t9.rds"))
 glimpse(t9)
 count(t9, atype, nytype)
-count(t9, rgn_num, rgn_code, rgn_oscQ)
+count(t9, rgn_num, rgn_code, rgn_osc)
 
 # quick checks ----
 # t9_est1	Total	Total: Occupied housing units
@@ -38,7 +38,7 @@ cost1 <- t9 |>
   filter(estmoe=="est") |>  
   filter(vnum %in% c(1, 2, 38) | !is.na(desc3)) |> 
   select(geoid, stabbr, atype, nytype, shortname, mininame,
-         rgn_num, rgn_code, rgn_oscQ, vnum, vname, value, cnty, cntyname, tenure, desc1:desc5)
+         rgn_num, rgn_code, rgn_osc, vnum, vname, value, cnty, cntyname, tenure, desc1:desc5)
 glimpse(cost1)
 count(cost1, desc1) # need
 count(cost1, desc2) # don't need but keep
@@ -69,30 +69,24 @@ glimpse(cost2)
 cost3 <- cost2 |> 
   group_by(geoid, stabbr, nytype, shortname, mininame,
            cnty, cntyname,
-           rgn_num, rgn_code, rgn_oscQ,
+           rgn_num, rgn_code, rgn_osc,
            tenure, vdesc3, desc3) |> 
   summarise(value=sum(value), .groups="drop")
 
 # add region summaries to the data
 rgns <- cost3 |> 
-  filter(stabbr=="NY") |> 
-  group_by(stabbr, rgn_num, rgn_code, rgn_oscQ,
+  filter(stabbr=="NY", nytype=="county") |> 
+  group_by(stabbr, rgn_num, rgn_code, rgn_osc,
            tenure, vdesc3, desc3) |> 
   summarise(value=sum(value), .groups="drop") |> 
-  mutate(nytype="region")
+  mutate(nytype="region", mininame=rgn_osc)
 
-cost4 <- bind_rows(cost3, rgns) |> 
-  rename(rgn_osc=rgn_oscQ) |> 
-  mutate(shortname=ifelse(nytype=="state" & stabbr=="NY",
-                          "New York State",
-                          shortname),
-         mininame=ifelse(nytype=="state" & stabbr=="NY",
-                          "New York State",
-                          mininame))
+cost4 <- bind_rows(cost3, rgns)
+
 glimpse(cost4)
 count(cost4, nytype)
 count(cost4, rgn_num, rgn_code, rgn_osc)
-count(cost4 |> filter(nytype=="region"), rgn_num, rgn_code, rgn_osc)
+count(cost4 |> filter(nytype=="region"), rgn_num, rgn_code, rgn_osc, mininame)
 count(cost4 |> filter(nytype=="state"), stabbr, shortname, mininame)
 count(cost4 |> filter(nytype=="city", str_detect(shortname, "New York")), stabbr, shortname, mininame)
 
@@ -100,6 +94,4 @@ saveRDS(cost4, here::here("data", "cost.rds"))
 
 cost <- readRDS(here::here("data", "cost.rds"))
 
-# base data: remove " Region" from region names
-# include " State" in NYS name in mininame
 

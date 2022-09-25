@@ -99,7 +99,7 @@ tabdata_st
 
 ```
 
-New York has the fourth highest crowding rate among the states, measured by the percentage of households with more than 1 person per room on average. This is drive by New York's #4 rank for renters, and its high percentage of households that are renters (not shown).
+New York has the fourth highest crowding rate among the states, measured by the percentage of households with more than 1 person per room on average. This is driven by New York's #4 rank for renters, and its high percentage of households that are renters (not shown).
 
 ```{r}
 #| label: state_crowding
