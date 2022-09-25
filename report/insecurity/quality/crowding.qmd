@@ -1,0 +1,387 @@
+---
+output: html_document
+editor_options:
+chunk_output_type: console
+---
+
+## Overcrowding and Its Consequences
+
+Living in overcrowded housing can lead to poor mental health, food insecurity, and infectious diseases such as Meningitis, Hepatitis, and Tuberculosis; overcrowding can have negative effects on neighborhoods as well. [@officeofdiseasepreventionandhealthpromotionQualityHousingLiterature2022], [@kevins.blakeMeasuringOvercrowdingHousing2007]
+
+The most commonly used measure of overcrowding is persons-per-room in a dwelling unit. [@kevins.blakeMeasuringOvercrowdingHousing2007] This measure includes all rooms in a dwelling unit in the denominator, not just bedrooms. The number of persons per room generally will be lower than the number of persons per bedroom. One reason persons-per-room is used so commonly is that it can be computed readily using important data sources such as the American Community Survey (ACS) and the American Housing Survey. It is available in a crucially important data source prepared by the U.S. Department of Housing and Urban Development (HUD) known as Comprehensive Housing Affordability Strategy (CHAS), which is used in developing housing polices. HUD develops CHAS data using detailed nonpublic ACS data, 
+
+There is no universally accepted threshold of persons-per-room above which a housing unit is considered crowded. Some studies have used a cutoff of 1 person per room, some have used a cutoff of 1.5 persons, and others have used different thresholds depending on specific health risks being examined. An important review conducted for HUD by Econometrica, Inc. used a cutoff of 1 person per room. [@kevins.blakeMeasuringOvercrowdingHousing2007] Crowding measures based on alternative thresholds tend to be highly correlated. In the analysis below we calculate the percentage of housing units in New York and other areas that are crowded using a threshold of 1 person per room.
+
+
+```{r}
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+
+crowding <- readRDS(here::here("data", "crowding.rds"))
+
+fcrowd <- crowding |> 
+  select(desc2) |> 
+  distinct() |> 
+  mutate(order=row_number(),
+         vdesc2=c("all", "pprle1", "pprgt1le1p5", "pprgt1p5")) |> 
+  select(order, vdesc2, desc2)
+fcrowd
+
+# T10	T10_est1	t10_est1	Total	Total: Occupied housing units
+# T10	T10_est2	t10_est2	Subtotal	Owner occupied
+# T10	T10_est3	t10_est3	Subtotal	Owner occupied	 AND persons per room is less than or equal to 1
+# T10	T10_est24	t10_est24	Subtotal	Owner occupied	 AND persons per room is greater than 1 but less than or equal to 1.5
+# T10	T10_est45	t10_est45	Subtotal	Owner occupied	 AND persons per room is greater than 1.5
+# T10	T10_est66	t10_est66	Subtotal	Renter occupied
+# T10	T10_est67	t10_est67	Subtotal	Renter occupied	 AND persons per room is less than or equal to 1
+# T10	T10_est88	t10_est88	Subtotal	Renter occupied	 AND persons per room is greater than 1 but less than or equal to 1.5
+# T10	T10_est109	t10_est109	Subtotal	Renter occupied	 AND persons per room is greater than 1.5
+
+```
+
+```{r}
+#| label: constants
+#| include: false
+
+minunits <- 500
+nplaces <- 25
+
+tabst <- "Percent of occupied housing units with more than 1 person per room"
+
+
+```
+
+### Housing unit crowding
+
+#### New York compared to other states
+
+```{r}
+#| label: state-crowding-data
+#| include: false
+
+
+# idvars <- c("geoid", "stabbr" , "atype", "nytype", "shortname", "mininame", "cnty", "cntyname")
+
+crowding_st <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), atype=="state") |>
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  group_by(stabbr, mininame, cntyname, tenure, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(stabbr, mininame, cntyname, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+    # mutate(own_crowd=own_pprgt1p5,
+    #      rent_crowd=rent_pprgt1p5)
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_st <- crowding_st |> 
+  select(stabbr, mininame, cntyname, contains("pct")) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  arrange(desc(occ_pct))
+tabdata_st
+
+# tabdata |> 
+#   ggplot(aes(own_pct, rent_pct))+
+#   geom_point() +
+#   geom_text(aes(label=stabbr), hjust=0, vjust=0) +
+#   geom_abline(slope=1, intercept=0)
+
+
+```
+
+New York has the fourth highest crowding rate among the states, measured by the percentage of households with more than 1 person per room on average. This is drive by New York's #4 rank for renters, and its high percentage of households that are renters (not shown).
+
+```{r}
+#| label: state_crowding
+#| include: true
+#| echo: false
+
+tt <- "Housing unit crowding by state"
+tab <- ftabranks(tabdata_st, stubvar="mininame", stubhead="State",
+         tabtitle=tt, tabsubtitle=tabst)
+tab
+
+```
+
+#### Housing-unit crowding in New York's regions
+
+```{r}
+#| label: region_crowding_data
+#| include: false
+
+# idvars <- c("geoid", "stabbr" , "atype", "nytype", "shortname", "mininame", "cnty", "cntyname")
+
+crowding_rgn <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "county")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        str_detect(rgn_oscQ, "New York City") ~
+                          "New York City",
+                        TRUE ~ rgn_oscQ)) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+    # mutate(own_crowd=own_pprgt1p5,
+    #      rent_crowd=rent_pprgt1p5)
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_rgn <- crowding_rgn |> 
+  select(group, stub, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct))
+tabdata_rgn
+
+```
+
+```{r}
+#| label: region_crowding
+#| include: true
+#| echo: false
+
+tt <- "Housing unit crowding, regions in New York"
+tab <- ftabranks(tabdata_rgn, stubvar="stub", stubhead="Region",
+         tabtitle=tt)
+tab
+
+```
+
+#### Housing-unit crowding in New York's counties
+
+```{r}
+#| label: county_crowding_data
+#| include: false
+
+crowding_cnty <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "county")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                            TRUE ~ mininame)) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_cnty <- crowding_cnty |> 
+  select(group, stub, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct))
+tabdata_cnty
+
+```
+
+```{r}
+#| label: county_crowding
+#| include: true
+#| echo: false
+tt <- "Housing unit crowding, counties in New York"
+tab <- ftabranks(tabdata_cnty, stubvar="stub", stubhead="County",
+         tabtitle=tt, tabsubtitle=tabst)
+tab
+```
+
+#### Housing-unit crowding in New York's cities
+
+```{r}
+#| label: city_crowding_data
+#| include: false
+
+crowding_city <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "city")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        mininame=="New York" ~ "New York City",
+                        TRUE ~ mininame),
+         cntyname=str_remove(cntyname, " County")) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, cntyname, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, cntyname, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_city <- crowding_city |> 
+  select(group, stub, cntyname, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct)) |> 
+  filter(row_number() <= nplaces)
+tabdata_city
+
+```
+
+```{r}
+#| label: city_crowding
+#| include: true
+#| echo: false
+
+tt <- "Cities in New York with greatest housing-unit crowding"
+tab <- ftabranks(tabdata_city, stubvar="stub", stubhead="City",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+tab
+```
+
+#### New York towns with greatest housing-unit crowding
+
+```{r}
+#| label: town_crowding_data
+#| include: false
+
+crowding_town <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "town")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        TRUE ~ mininame),
+         cntyname=str_remove(cntyname, " County")) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, cntyname, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, cntyname, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_town <- crowding_town |> 
+  filter(occ_all >= minunits) |> 
+  select(group, stub, cntyname, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct)) |> 
+  filter(row_number() <= nplaces)
+tabdata_town
+
+```
+
+```{r}
+#| label: town_crowding
+#| include: true
+#| echo: false
+
+tt <- paste0("Towns in New York with ",
+             minunits, 
+             "+ housing units and greatest housing-unit crowding")
+tab <- ftabranks(tabdata_town, stubvar="stub", stubhead="Town",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+tab
+```
+
+#### New York villages with greatest housing-unit crowding
+
+```{r}
+#| label: village_crowding_data
+#| include: false
+
+crowding_village <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "village")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        TRUE ~ mininame),
+         cntyname=str_remove(cntyname, " County")) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, cntyname, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, cntyname, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_village <- crowding_village |> 
+  filter(occ_all >= minunits) |> 
+  select(group, stub, cntyname, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct)) |> 
+  filter(row_number() <= nplaces)
+tabdata_village
+
+```
+
+```{r}
+#| label: village_crowding
+#| include: true
+#| echo: false
+
+tt <- paste0("Villages in New York with ",
+             minunits, 
+             "+ housing units and greatest housing-unit crowding")
+tab <- ftabranks(tabdata_village, stubvar="stub", stubhead="Village",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+tab
+```
+
+### Who lives in crowded housing?
+
+\[To come - breakdowns by income and race\]

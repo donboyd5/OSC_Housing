@@ -4,7 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-# Housing Cost Burden in New York
+## Housing Cost Burden in New York
 <!-- #| echo: false -->
 <!-- #| message: false -->
 <!-- #| warning: false -->

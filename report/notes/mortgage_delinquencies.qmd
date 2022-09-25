@@ -1,0 +1,29 @@
+# Mortgage delinquencies
+
+The data that OSC gave me appears to come from here:
+
+https://www.newyorkfed.org/microeconomics/databank.html https://www.newyorkfed.org/medialibrary/interactives/householdcredit/data/xls/hhd_c\_report_2022q2.xlsx page 36 -- the numbers for NY match
+
+Also look at: https://www.newyorkfed.org/medialibrary/interactives/householdcredit/data/xls/area_report_by_year.xlsx
+
+pdf report: https://www.newyorkfed.org/medialibrary/interactives/householdcredit/data/pdf/HHDC_2022Q2
+
+![](images/paste-C76C18F5.png)
+
+![](images/paste-42374A4F.png)
+
+![](images/paste-45DC897C.png)
+
+The CFPB has some substate data here: https://www.consumerfinance.gov/data-research/mortgage-performance-trends/mortgages-30-89-days-delinquent/
+
+A little by county:
+
+![](images/paste-EC4A6BF6.png)
+
+![](images/paste-ECBB8874.png)
+
+Also, metro areas
+
+https://www.consumerfinance.gov/data-research/mortgage-performance-trends/download-the-data/
+
+https://s3.amazonaws.com/files.consumerfinance.gov/data/mortgage-performance/downloads/MetroAreaMortgagesPercent-30-89DaysLate-thru-2021-12.csv

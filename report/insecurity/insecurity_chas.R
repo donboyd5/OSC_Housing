@@ -215,21 +215,112 @@ glimpse(nychas)
 
 # table1 ----
 # Table 1	 Tenure (2) by Housing Unit Problems (2) by Household Income (5) by Race (6)	Universe: All occupied housing units
+# the descriptions are in alpha order, put them in desired order
+forder <- function(df, colname, prefix="lev"){
+  # function to put a factor in order based on first variable numbers associated with each level
+  df |> 
+    select(vnum, desc=.data[[colname]]) |> 
+    mutate(descname=colname) |> 
+    group_by(desc) |>
+    arrange(vnum) |>
+    filter(row_number()==1) |>
+    ungroup() |>
+    arrange(vnum) |>
+    mutate(order=row_number(),
+           vlev=paste0(prefix, order))
+}
+
+t1 <- nychas |> 
+  filter(table=="t1")
+
+t1d1 <- forder(t1, "desc1", "tenure")
+t1d2 <- forder(t1, "desc2", "problems")
+t1d3 <- forder(t1, "desc3", "pcthamfi")
+t1d4 <- forder(t1, "desc4", "race")
+
+t1a <- t1 |> 
+  mutate(fdesc1=factor(desc1, levels=t1d1$desc, labels=t1d1$vlev),
+         fdesc2=factor(desc2, levels=t1d2$desc, labels=t1d2$vlev),
+         fdesc3=factor(desc3, levels=t1d3$desc, labels=t1d3$vlev),
+         fdesc4=factor(desc4, levels=t1d4$desc, labels=t1d4$vlev))
+count(t1a, fdesc1, desc1)  # tenure
+count(t1a, fdesc2, desc2) # problems
+count(t1a, fdesc3, desc3) # pcthamfi
+count(t1a, fdesc4, desc4)
+
+## tenure ----
+t1a |> 
+  filter(fdesc2=="problems1", fdesc3=="pcthamfi1", fdesc4=="race1", estmoe=="est") |> 
+  filter(stabbr=="NY", atype=="county") |> 
+  select(geoid, stabbr, atype, shortname, fdesc1, value) |> 
+  pivot_wider(names_from = fdesc1) |> 
+  mutate(rpct=tenure3 / tenure1) |> 
+  arrange(desc(rpct))
+
+## any problem ----
+# problems2 / problems1
+t1a |> 
+  filter(fdesc1!="tenure1", fdesc3=="pcthamfi1", fdesc4=="race1", estmoe=="est") |> 
+  filter(stabbr=="NY", atype=="county") |> 
+  select(geoid, stabbr, atype, shortname, fdesc1, fdesc2, value) |> 
+  group_by(geoid, stabbr, atype, shortname, fdesc2) |> 
+  summarise(value=sum(value)) |> 
+  pivot_wider(names_from = c(fdesc2)) |> 
+  mutate(probpct=problems2 / problems1) |> 
+  arrange(desc(probpct))
+
+# wide
+glimpse(t1)
+t1wide <- t1 |> 
+  filter(estmoe=="est") |> 
+  select(geoid, stabbr, atype, shortname, vname, value) |> 
+  pivot_wider(names_from = vname)
 
 
+# djb this is the way to do it ----
+idvars <- c("geoid", "stabbr", "atype", "shortname", "cnty", "cntyname")
+probpct <- t1 |> 
+  filter(estmoe=="est", vnum %in% c(1:3, 75, 76)) |> 
+  select(all_of(idvars), vname, value) |> 
+  pivot_wider(names_from = vname) |> 
+  mutate(own_probpct=t1_est3 / t1_est2,
+         rent_probpct=t1_est76 / t1_est75,
+         tot_probpct=(t1_est3 + t1_est76) / t1_est1,
+         rentmown=rent_probpct - own_probpct) |> 
+  # filter(stabbr=="NY", atype=="county") |> 
+  # filter(atype=="state") |> 
+  arrange(desc(tot_probpct))
+summary(probpct)
+
+probpct |> 
+  filter(!is.na(rentmown)) |> 
+  mutate(rentgtown = rentmown > 0) |> 
+  count(rentgtown) |> 
+  mutate(share=n / sum(n))
+
+probpct |> 
+  filter(atype=="place", t1_est1>=500) |> 
+  filter(str_detect(shortname, "village"))
+
+probpct |> 
+  filter(atype=="cousub", t1_est1>=500) |> 
+  arrange(desc(rent_probpct))
+
+probpct |> 
+  filter(atype=="cousub", t1_est1>=500, cnty=="115") |> 
+  arrange(desc(rent_probpct))
+
+probpct |> 
+  filter(atype=="cousub", t1_est1>=500, cnty=="115") |> 
+  arrange(desc(own_probpct))
+
+probpct |> 
+  filter(atype=="place", t1_est1>=500) |> 
+  filter(str_detect(shortname, "village"), 
+         str_detect_any(shortname, c("Cambridge", "Greenwich", "Argyle", "Schuylerville", "Edward", "Granville"))) |> 
+  arrange(desc(rent_probpct))
 
 
-# OLD ----
+  
 
-tenuret1 <- c("occ", "own", "rent")
-probst1 <- c("all", "prob1p", "noprob")
-pcthamfit1 <- c("all", "le30p", "gt30le50", "gt50le80", "gt80le100", "ge100")
-racet1 <- c("all", "white", "black", "asian", "aian", "pi", "hisp")
-nychast1 <- nychast1 |> 
-  # create ordered factors
-  mutate(tenure=factor(tenure, levels=tenuret1),
-         problems=factor(problems, levels=probst1),
-         pcthamfi=factor(pcthamfi, levels=pcthamfit1),
-         race=factor(race, levels=racet1))
 
-saveRDS(nychast1, path(chdir2019, "nychast1.rds"))

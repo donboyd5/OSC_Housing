@@ -1,14 +1,14 @@
 # What is Housing Insecurity?
 
-There is no single accepted definition of housing insecurity, sometimes referred to as housing instability. Researchers and policymakers often consider issues such as *cost and affordability* of housing, *quality* of housing, *access** to suitable housing, and *stress* about ability to pay for and remain in suitable housing.^[Discussions of housing security and insecurity definitions can be found in @coxRoadmapUnifiedMeasure2016 and @leopoldImprovingMeasuresHousing2016.] These definitions often take into account not just specific housing units, but also the neighborhoods in which they are located. The U.S. Department of Health and Human Services and the United Nations have developed detailed and widely cited and overlapping descriptions of what they consider adequate or secure housing.^[See and @unitednationsRightAdequateHousing2014.]
+There is no single accepted definition of housing insecurity, sometimes referred to as housing instability. Researchers and policymakers often consider issues such as **housing cost and affordability** including access to affordable suitable housing, **housing quality and conditions**, and **housing-related stress** such as stress from risks related to ability to pay for and remain in suitable housing.^[Discussions of housing security and insecurity definitions can be found in @coxRoadmapUnifiedMeasure2016 and @leopoldImprovingMeasuresHousing2016.] 
+
+These definitions often take into account not just characteristics of specific housing units, but also of the neighborhoods in which they are located. The U.S. Department of Health and Human Services and the United Nations have developed detailed and widely cited and overlapping descriptions of what they consider adequate or secure housing.^[See and @unitednationsRightAdequateHousing2014.]
 
 One group of widely cited researchers proposed a unifying definition:^[@coxRoadmapUnifiedMeasure2016]
 
 > Limited or uncertain availability of stable, safe, adequate, and affordable housing and neighborhoods; limited or uncertain access to stable, safe, adequate, and affordable housing and neighborhoods; or the inability to acquire stable, safe, adequate, and affordable housing and neighborhoods in socially acceptable ways.
 
-These definitions of housing insecurity are 
+<!-- These definitions of housing insecurity are  -->
 
-
-
-
+We organize our analysis in this report around three broad categories of housing insecurity: cost and affordability, quality and conditions, and housing-related stress.
 

@@ -1,5 +1,6 @@
 project:
   type: book
+  output-dir: _report
   
 book:
   title: "Housing Insecurity in New York State"
@@ -13,11 +14,13 @@ book:
     - part: "Housing Insecurity"
       chapters:
       - insecurity/housing_insecurity.qmd
-      - insecurity/owners_renters.qmd
-      - insecurity/housing_cost_burden.qmd
-      - insecurity/housing_affordability.qmd      
-      - insecurity/evictions.qmd
-      - insecurity/measure_homelessness.qmd
+      # - insecurity/owners_renters.qmd
+      - insecurity/cost_and_affordability.qmd
+      # - insecurity/housing_cost_burden.qmd
+      # - insecurity/housing_affordability.qmd      
+      - insecurity/quality.qmd
+      - insecurity/stress.qmd
+      # - insecurity/measure_homelessness.qmd
       - insecurity/recent_events_housing.qmd
     - part: "Policies to address housing insecurity"
       chapters: 
@@ -35,6 +38,8 @@ book:
       - notes/articles.qmd
       - notes/housing_insecurity_notes.qmd
       - notes/housing_cost_burden_notes.qmd
+      - notes/housing_forced_removal_notes.qmd
+      - notes/mortgage_delinquencies.qmd
   
 bibliography: _bibliography.bib
 nocite: |

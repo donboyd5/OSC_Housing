@@ -1,10 +1,10 @@
-# Evictions in New York
+## Evictions and risk of eviction as housing-related stress
 
-## What is an eviction case?
+### What is an eviction case?
 
 > Eviction cases are civil lawsuits filed by landlords to remove tenants from rental properties or collect past-due rent or other monetary damages (1). The filing represents only the first action in the formal eviction process. Tenants must respond to the filing, either by answering the summons or appearing in court. If the tenant fails to respond, a default judgment in favor of the plaintiff is usually issued by the court. If the tenant responds, the case proceeds and can be resolved in many ways. The case may be dismissed due to insufficient action or evidence by the landlord or because the tenant has already vacated the property. The landlord and tenant may resolve the dispute by mutual agreement, which may or may not stipulate that the tenant vacates the property or repays past-due rent. A judge may decide the case in favor of the landlord or tenant after a court trial. If a tenant is ordered by the court to vacate a property but does not leave voluntarily, the landlord can file a writ of restitution with the sheriff or marshal to forcibly remove the tenant. [@ashleygromisSupplementaryInformationEstimating2022]
 
-## About the data
+### About the data
 
 The Eviction Lab at Princeton University has developed a database of eviction filings, att the county level, for 2000-2018. It collects eviction data directly from state and local courts, and uses statistical models to estimate data where it is unable to collect it directly. [@ashleygromisSupplementaryInformationEstimating2022]
 
@@ -33,30 +33,30 @@ evict <- readRDS(here::here("data", "evictions", "evict_counties.rds"))
 
 The Eviction Lab constructed 95% confidence intervals for their estimates, and they are pretty large. For example, the table below shows the estimated eviction filing rate and threat rate for Bronx and Fulton counties, and the 95% confidence interval around each. Not surprisingly, the confidence intervals are much smaller for the Bronx than for Fulton (for the Bronx, the upper bound for eviction filing rate is about twice the lower bound; for Fulton, it is about 6 times as large).
 
-![](images/paste-41428E61.png)
+![](../images/paste-41428E61.png)
 
-## Eviction prevalence nationally
+### Eviction prevalence nationally
 
 The map below, screenshotted from their webpage, shows state-level eviction filing rates in 2018 across the U.S.. The larger the red bubble the higher the rate. (The location of the bubble is simply the state centroid - New York's bubble primarily reflects evictions in New York City, although it is placed in the center of the state.)
 
 Maryland's eviction filing rate was 69.6 eviction filings per 100 renter households. New York's was 9 evictions filed per 100 households, somewhat behind New Jersey's rate of 12.1.
 
-![](images/paste-7E6206CE.png)
+![](../images/paste-7E6206CE.png)
 
 The next map shows the eviction threat rate (unique households as percent of renter households). It appears reasonably correlated with the eviction filing rate.
 
-![](images/paste-5A088CAD.png)
+![](../images/paste-5A088CAD.png)
 
-## Eviction prevalence in New York
+### Eviction prevalence in New York
 
 The map below shows 2018 eviction threat rates by county in New York. The highest rate appears to be 15.9% pf renter households in the Bronx. However, many upstate counties have pretty high (estimated) rates. For example, the eviction threat rate in Fulton County (immediately west of Saratoga County) is 15.6 percent (with a large confidence interval, as noted above).
 
-![](images/paste-6F7AB6FE.png)
+![](../images/paste-6F7AB6FE.png)
 
 The table below shows the data for Bronx and Fulton.
 
-![](images/paste-DC9DD075.png)
+![](../images/paste-DC9DD075.png)
 
 ## Eviction filings over time
 
-![](images/paste-37389E35.png)
+![](../images/paste-37389E35.png)

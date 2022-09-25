@@ -1,0 +1,13 @@
+# Housing cost and affordability
+
+## Housing cost burden
+
+Something about cost burden here.
+
+{{< include cost/housing_cost_burden.qmd >}}
+
+## Housing affordability
+
+Something about affordability here
+
+{{< include cost/housing_affordability.qmd >}}

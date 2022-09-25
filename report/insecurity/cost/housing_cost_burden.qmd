@@ -1,0 +1,410 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Housing Costs and Consequences
+
+import
+
+measures
+
+thresholds
+
+
+```{r}
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+
+cost <- readRDS(here::here("data", "cost.rds"))
+
+fcost <- cost |> 
+  group_by(vdesc3, desc3) |> 
+  summarise(n=n(), .groups="drop") |> 
+  mutate(order=row_number()) |> 
+  select(order, vdesc3, desc3)
+fcost
+
+cost_wide <- cost |> 
+  # filter(nytype=="state", stabbr=="NY") |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent")) |>
+  group_by(nytype, stabbr, mininame, cntyname, rgn_num, rgn_oscQ, tenure, vdesc3, desc3) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(-desc3) |> 
+  pivot_wider(names_from = c(tenure, vdesc3)) |> 
+  # get own and rent sums where cost burden is computable
+  mutate(occ_all=own_all + rent_all,
+         own_check=own_costle30 + own_costgt30le50 + own_costgt50,
+         rent_check=rent_costle30 + rent_costgt30le50 + rent_costgt50,
+         own_cost30=own_costgt30le50 + own_costgt50,
+         rent_cost30=rent_costgt30le50 + rent_costgt50,
+         occ_cost30=own_cost30 + rent_cost30,
+         own_cost50=own_costgt50,
+         rent_cost50=rent_costgt50,
+         occ_cost50=own_cost50 + rent_cost50) |> 
+  # calc percentages
+  mutate(own_pct30=own_cost30 / own_all,
+         rent_pct30=rent_cost30 / rent_all,
+         occ_pct30=occ_cost30 / occ_all,
+         own_pct50=own_cost50 / own_all,
+         rent_pct50=rent_cost50 / rent_all,
+         occ_pct50=occ_cost50 / occ_all)
+
+# cost_wide |> select(-c(nytype, mininame, cntyname, rgn_num, rgn_oscQ)) |>
+#   pivot_longer(contains("_"))
+
+```
+
+```{r}
+#| label: constants
+#| include: false
+
+minunits <- 500
+nplaces <- 25
+
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+
+
+```
+
+### Housing cost burden
+
+#### New York compared to other states
+
+```{r}
+#| label: state-cost-data
+#| include: false
+
+# cost_st <- cost |> 
+#   # CAUTION - drop the grand total before adding all
+#   filter(tenure %in% c("own", "rent"), nytype=="state") |>
+#   # filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+#   group_by(stabbr, mininame, cntyname, tenure, vdesc3, desc3) |> 
+#   summarise(value=sum(value), .groups="drop") |> 
+#   select(stabbr, mininame, cntyname, tenure, vdesc3, value) |> 
+#   pivot_wider(names_from = c(tenure, vdesc3)) |> 
+#   # get own and rent sums where cost burden is computable
+#   mutate(own_cost=own_costle30 + own_costgt30le50 + own_costgt50,
+#          rent_cost=rent_costle30 + rent_costgt30le50 + rent_costgt50) |> 
+#   mutate(occ_cost=own_cost + rent_cost,
+#          occ_all=own_all + rent_all,
+#          own_pct=own_cost / own_all,
+#          rent_pct=rent_cost / rent_all,
+#          occ_pct=occ_cost / occ_all)
+
+cost_st <- cost_wide |> 
+  filter(nytype=="state")
+
+# own_pct30 rent_pct30 occ_pct30
+# own_pct50 rent_pct50 occ_pct50
+
+
+tabdata_st <- cost_st |> 
+  select(stabbr, mininame, cntyname, 
+         own_pct=own_pct30, rent_pct=rent_pct30, occ_pct=occ_pct30) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  arrange(desc(occ_pct))
+tabdata_st
+
+# tabdata |> 
+#   ggplot(aes(own_pct, rent_pct))+
+#   geom_point() +
+#   geom_text(aes(label=stabbr), hjust=0, vjust=0) +
+#   geom_abline(slope=1, intercept=0)
+
+
+```
+
+New York has the fourth highest crowding rate among the states, measured by the percentage of households with more than 1 person per room on average. This is drive by New York's #4 rank for renters, and its high percentage of households that are renters (not shown).
+
+```{r}
+#| label: state_crowding
+#| include: true
+#| echo: false
+
+tt <- "Housing unit cost burden by state"
+tab <- ftabranks(tabdata_st, stubvar="mininame", stubhead="State",
+         tabtitle=tt, tabsubtitle=tabst)
+tab
+
+```
+
+#### Housing cost burden in New York's regions
+
+```{r}
+#| label: region_crowding_data
+#| include: false
+
+# idvars <- c("geoid", "stabbr" , "atype", "nytype", "shortname", "mininame", "cnty", "cntyname")
+
+crowding_rgn <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "county")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        str_detect(rgn_oscQ, "New York City") ~
+                          "New York City",
+                        TRUE ~ rgn_oscQ)) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+    # mutate(own_crowd=own_pprgt1p5,
+    #      rent_crowd=rent_pprgt1p5)
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_rgn <- crowding_rgn |> 
+  select(group, stub, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct))
+tabdata_rgn
+
+```
+
+```{r}
+#| label: region_crowding
+#| include: true
+#| echo: false
+
+tt <- "Housing unit crowding, regions in New York"
+tab <- ftabranks(tabdata_rgn, stubvar="stub", stubhead="Region",
+         tabtitle=tt)
+tab
+
+```
+
+#### Housing cost burden in New York's counties
+
+```{r}
+#| label: county_crowding_data
+#| include: false
+
+crowding_cnty <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "county")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                            TRUE ~ mininame)) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_cnty <- crowding_cnty |> 
+  select(group, stub, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct))
+tabdata_cnty
+
+```
+
+```{r}
+#| label: county_crowding
+#| include: true
+#| echo: false
+tt <- "Housing unit crowding, counties in New York"
+tab <- ftabranks(tabdata_cnty, stubvar="stub", stubhead="County",
+         tabtitle=tt, tabsubtitle=tabst)
+tab
+```
+
+#### Housing cost burden in New York's cities
+
+```{r}
+#| label: city_crowding_data
+#| include: false
+
+crowding_city <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "city")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        mininame=="New York" ~ "New York City",
+                        TRUE ~ mininame),
+         cntyname=str_remove(cntyname, " County")) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, cntyname, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, cntyname, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_city <- crowding_city |> 
+  select(group, stub, cntyname, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct)) |> 
+  filter(row_number() <= nplaces)
+tabdata_city
+
+```
+
+```{r}
+#| label: city_crowding
+#| include: true
+#| echo: false
+
+tt <- "Cities in New York with greatest housing-unit crowding"
+tab <- ftabranks(tabdata_city, stubvar="stub", stubhead="City",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+tab
+```
+
+#### New York towns with greatest housing cost burden
+
+```{r}
+#| label: town_crowding_data
+#| include: false
+
+crowding_town <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "town")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        TRUE ~ mininame),
+         cntyname=str_remove(cntyname, " County")) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, cntyname, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, cntyname, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_town <- crowding_town |> 
+  filter(occ_all >= minunits) |> 
+  select(group, stub, cntyname, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct)) |> 
+  filter(row_number() <= nplaces)
+tabdata_town
+
+```
+
+```{r}
+#| label: town_crowding
+#| include: true
+#| echo: false
+
+tt <- paste0("Towns in New York with ",
+             minunits, 
+             "+ housing units and greatest housing-unit crowding")
+tab <- ftabranks(tabdata_town, stubvar="stub", stubhead="Town",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+tab
+```
+
+#### New York villages with greatest housing cost burden
+
+```{r}
+#| label: village_crowding_data
+#| include: false
+
+crowding_village <- crowding |> 
+  # CAUTION - drop the grand total before adding all
+  filter(tenure %in% c("own", "rent"), stabbr=="NY") |>
+  filter(nytype %in% c("state", "village")) |> 
+  filter(vdesc2 %in% c("all", "pprgt1le1p5", "pprgt1p5")) |> 
+  mutate(stub=case_when(nytype=="state" ~ "New York State",
+                        TRUE ~ mininame),
+         cntyname=str_remove(cntyname, " County")) |> 
+  mutate(group=ifelse(nytype=="state", 1, 2)) |> 
+  group_by(group, stub, tenure, cntyname, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  select(group, stub, cntyname, tenure, vdesc2, value) |> 
+  pivot_wider(names_from = c(tenure, vdesc2)) |> 
+  mutate(own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
+         rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5) |> 
+  mutate(occ_crowd=own_crowd + rent_crowd,
+         occ_all=own_all + rent_all,
+         own_pct=own_crowd / own_all,
+         rent_pct=rent_crowd / rent_all,
+         occ_pct=occ_crowd / occ_all)
+
+tabdata_village <- crowding_village |> 
+  filter(occ_all >= minunits) |> 
+  select(group, stub, cntyname, contains("pct")) |> 
+  group_by(group) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         occrank=row_number(desc(occ_pct))) |> 
+  ungroup() |> 
+  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
+  arrange(desc(occ_pct)) |> 
+  filter(row_number() <= nplaces)
+tabdata_village
+
+```
+
+```{r}
+#| label: village_crowding
+#| include: true
+#| echo: false
+
+tt <- paste0("Villages in New York with ",
+             minunits, 
+             "+ housing units and greatest housing-unit crowding")
+tab <- ftabranks(tabdata_village, stubvar="stub", stubhead="Village",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+tab
+```
+
+### Who has high housing costs?
+
+\[To come - breakdowns by income and race\]
