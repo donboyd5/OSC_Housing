@@ -9,10 +9,13 @@ report/.quarto/
 report/_book/
 report/_report/
 report/results/
+*.css
 *.csv
 *.doc*
 *.html
+*.js
 *.pdf
 *.png
+*.woff
 *.xl*
 *.zip

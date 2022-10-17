@@ -58,13 +58,14 @@ cost_wide <- t9 |>
 # nytype groups: state, region, county, city, town, village
 tabdata <- cost_wide |> 
   filter(nytype %in% c("state", "region", "county", "city", "town", "village")) |>
-  rename(own_pct=own_pct30, rent_pct=rent_pct30, alltenure_pct=alltenure_pct30) |> 
+  rename(allunits=alltenure_allcost,
+         own_pct=own_pct30, rent_pct=rent_pct30, alltenure_pct=alltenure_pct30) |> 
   group_by(nytype) |> 
   mutate(ownrank=row_number(desc(own_pct)),
          rentrank=row_number(desc(rent_pct)),
          alltenurerank=row_number(desc(alltenure_pct)))  |> 
   select(nytype, stabbr, mininame, cntyname, 
-         alltenure_allcost,
+         allunits,
          own_pct, rent_pct, alltenure_pct, 
          ownrank, rentrank, alltenurerank,
          renter_share) |> 
@@ -108,7 +109,7 @@ tabdata_st <- tabdata |>
 New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 rank for both owners and renters. As is true of every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
 
 ```{r}
-#| label: state-cost
+#| label: state-cost-table
 #| include: true
 #| echo: false
 
@@ -136,7 +137,7 @@ tabdata_rgn
 High housing cost burden is far more prevalent in New York City, the Mid-Hudson region, and Long Island than in upstate New York. In all regions, high cost burden for renters is more prevalent than it is for homeowners; this is particularly true in upstate regions.
 
 ```{r}
-#| label: region-cost
+#| label: region-cost-table
 #| include: true
 #| echo: false
 
@@ -162,7 +163,7 @@ tabdata_cnty
 ```
 
 ```{r}
-#| label: county-cost
+#| label: county-cost-table
 #| include: true
 #| echo: false
 tt <- "Counties in New York ranked by housing cost burden"
@@ -189,7 +190,7 @@ tabdata_city
 Note the high cost burden for Ithaca in Tompkins County. This probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located. *(It might make sense to examine differences by age.)*
 
 ```{r}
-#| label: city-cost
+#| label: city-cost-table
 #| include: true
 #| echo: false
 
@@ -207,7 +208,7 @@ tab
 
 tabdata_town <- tabdata |> 
   filter(stabbr=="NY", nytype %in% c("state", "town"))  |> 
-  filter(alltenure_allcost >= minunits) |> 
+  filter(allunits >= minunits) |> 
   filter(row_number() <= nplaces) |>  
   mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
@@ -218,7 +219,7 @@ tabdata_town
 Note that the town of Le Ray in Jefferson County is ranked in #5 overall (owners plus renters) among towns with 500+ housing units but is ranked much further down for owners only and for renters only. *This is not an error.* It is a result of Le Ray's extremely high percentage of renters, which means that the overall weighted value for all households is high because cost-burdened households generally are a much larger share for renters than for owners.
 
 ```{r}
-#| label: town-cost
+#| label: town-cost-table
 #| include: true
 #| echo: false
 
@@ -238,7 +239,7 @@ tab
 
 tabdata_village <- tabdata |> 
   filter(stabbr=="NY", nytype %in% c("state", "village"))  |> 
-  filter(alltenure_allcost >= minunits) |> 
+  filter(allunits >= minunits) |> 
   filter(row_number() <= nplaces) |>  
   mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
@@ -247,7 +248,7 @@ tabdata_village
 ```
 
 ```{r}
-#| label: village-cost
+#| label: village-cost-table
 #| include: true
 #| echo: false
 
