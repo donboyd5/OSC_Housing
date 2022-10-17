@@ -46,14 +46,13 @@ tmp
 # T10	T10_est88	t10_est88	Subtotal	Renter occupied	 AND persons per room is greater than 1 but less than or equal to 1.5
 # T10	T10_est109	t10_est109	Subtotal	Renter occupied	 AND persons per room is greater than 1.5
 vnums <- c(1:3, 24, 45, 66, 67, 88, 109)
-idvars <- expression(geoid, stabbr, atype, shortname, cnty, cntyname)
 
 crowding1 <- t10 |> 
   filter(dominant) |> 
   filter(estmoe=="est") |>  
   filter(vnum %in% vnums) |> 
   select(geoid, stabbr, atype, nytype, shortname, mininame,
-         rgn_num, rgn_code, rgn_oscQ, vnum, vname, value, cnty, cntyname, tenure, desc1:desc5)
+         rgn_num, rgn_code, rgn_osc, vnum, vname, value, cnty, cntyname, tenure, desc1:desc5)
 tmp <- count(crowding1, tenure, desc1, desc2, desc3, desc4, desc5, vnum, vname)
 count(crowding1, desc1, desc2)
 count(crowding1, desc2)
@@ -67,13 +66,26 @@ fcrowd <- crowding1 |>
   select(order, vdesc2, desc2)
 fcrowd
 
-crowding <- crowding1 |> 
+crowding2 <- crowding1 |> 
   left_join(fcrowd |> select(-order), by="desc2") |> 
   mutate(vdesc2=factor(vdesc2, levels=fcrowd$vdesc2))
-count(crowding, vdesc2, desc2)
-count(crowding, tenure, vdesc2, desc2)
-glimpse(crowding)
-saveRDS(crowding, here::here("data", "crowding.rds"))
+count(crowding2, vdesc2, desc2)
+count(crowding2, tenure, vdesc2, desc2)
+glimpse(crowding2)
+
+
+# add region summaries to the data
+rgns <- crowding2 |> 
+  filter(stabbr=="NY", nytype=="county") |> 
+  group_by(stabbr, rgn_num, rgn_code, rgn_osc,
+           tenure, vdesc2, desc2) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  mutate(nytype="region", mininame=rgn_osc)
+
+crowding3 <- bind_rows(crowding2, rgns)
+
+
+saveRDS(crowding3, here::here("data", "crowding.rds"))
 
 crowding <- readRDS(here::here("data", "crowding.rds"))
 

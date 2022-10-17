@@ -3,7 +3,7 @@
 ## Definitions
 
 > \"Housing insecurity\" is an umbrella term that encompasses several dimensions of housing problems people may experience, including affordability, safety, quality, insecurity, and loss of housing. ..Missing a rent or utility payment or receiving an eviction notice is an important sign that a household\'s housing situation is unstable....Compared with renters living in housing that was affordable to them, moderately cost-burdened renters, defined as those having housing costs totaling between 30 and 50 percent of household income, were 1.6 times more likely to miss rent payments or make partial payments.
-> [@MeasuringHousingInsecurity2018]
+> [@u.s.departmentofhousingandurbandevelopmentMeasuringHousingInsecurity2018]
 
 
 ## [@coxRoadmapUnifiedMeasure2016]:

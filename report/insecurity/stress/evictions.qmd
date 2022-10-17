@@ -6,7 +6,7 @@
 
 ### About the data
 
-The Eviction Lab at Princeton University has developed a database of eviction filings, att the county level, for 2000-2018. It collects eviction data directly from state and local courts, and uses statistical models to estimate data where it is unable to collect it directly. [@ashleygromisSupplementaryInformationEstimating2022]
+The Eviction Lab at Princeton University has developed a database of eviction filings, at the county level, for 2000-2018. It collects eviction data directly from state and local courts, and uses statistical models to estimate data where it is unable to collect it directly. [@ashleygromisSupplementaryInformationEstimating2022]
 
 They constructed two measures of evictions: (1) eviction filings, and (2) households threatened by eviction. Multiple eviction filings can be applicable to a single household, so they are not unique counts.
 

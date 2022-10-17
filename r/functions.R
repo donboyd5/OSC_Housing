@@ -7,8 +7,10 @@ ftabranks <- function(tabdata,
               tabsubtitle=NULL,
               keepcounty=FALSE){
   
-  mainvars <- c("own_pct", "rent_pct", "occ_pct", 
-                "ownrank", "rentrank", "occrank", "renter_share")
+  mainvars <- c("alltenure_allcost",
+                "own_pct", "rent_pct", "alltenure_pct", 
+                "ownrank", "rentrank", "alltenurerank",
+                "renter_share")
   
   if(keepcounty) keepvars <- c("stub", "cntyname", mainvars) else
     keepvars <- c("stub", mainvars)
@@ -19,27 +21,28 @@ ftabranks <- function(tabdata,
   tab <- tabdata |> 
     rename(stub=all_of(stubvar)) |> 
     select(all_of(keepvars)) |>
-    arrange(desc(occ_pct)) |> 
+    arrange(desc(alltenure_pct)) |> 
     gt() |> 
     sub_missing(columns = everything()) |> 
     tab_header(
       title = tabtitle,
       subtitle = tabsubtitle
     ) |> 
-    tab_spanner(columns = c(own_pct, rent_pct, occ_pct),
-                label="Percent of households") |> 
-    tab_spanner(columns = c(ownrank, rentrank, occrank),
+    tab_spanner(columns = c(own_pct, rent_pct, alltenure_pct),
+                label=html("Percent of household<br>units that are cost-burdened")) |> 
+    tab_spanner(columns = c(ownrank, rentrank, alltenurerank),
                 label="Rank") |> 
     cols_label(stub=stubhead,
+               alltenure_allcost=html("# of<br>occupied units"),
                own_pct="Owners",
                rent_pct="Renters",
-               occ_pct="All",
+               alltenure_pct="All",
                ownrank="Owners",
                rentrank="Renters",
-               occrank="All",
+               alltenurerank="All",
                renter_share=html("Renter households as<br>% of all households")) |> 
-    fmt_percent(columns=c(own_pct, rent_pct, occ_pct, renter_share), decimals=1) |> 
-    fmt_number(columns=c(ownrank, rentrank, occrank),
+    fmt_percent(columns=c(own_pct, rent_pct, alltenure_pct, renter_share), decimals=1) |> 
+    fmt_number(columns=c(alltenure_allcost, ownrank, rentrank, alltenurerank),
                decimals=0) |> 
     tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
   

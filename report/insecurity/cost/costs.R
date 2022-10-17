@@ -5,7 +5,7 @@
 source(here::here("r", "libraries.r"))
 
 # locations ---------------------------------------------------------------
-chdir <- here::here("data", "CHAS")
+chdir <- here::here("data", "chas")
 chdir2019 <- path(chdir, "2015-2019")
 
 # get data ----------------------------------------------------------------

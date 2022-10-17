@@ -1,0 +1,59 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+
+hpi <- readRDS(here::here("data", "fhfa", "hpi_county.rds"))
+
+tabdata <- hpi |>
+  filter(stabbr=="NY") |> 
+  group_by(geoid) |> 
+  mutate(pch5ya=hpi / hpi[match(year - 5, year)] - 1) |> 
+  ungroup() |> 
+  filter(year==2021) |> 
+  arrange(desc(pch5ya))
+
+```
+
+
+### Change in housing prices by county between 2016 and 2021
+
+Note: This is an experimental index prepared by the Federal Housing Finance Agency (FHFA).^[@boginLocalHousePrice2019] FHFA notes:
+
+> These annual county indexes should be considered developmental. As with the standard FHFA HPIs, revisions to these indexes may reflect the impact of new data or technical adjustments. Indexes are calibrated using appraisal values and sales prices for mortgages bought or guaranteed by Fannie Mae and Freddie Mac. In cases where sample sizes are small for the county area, an index is either not reported if recording has not started or a missing value is reported with a period (".")
+
+Note that percent change is missing for New York County (Manhattan). That is because the file does not contain data for the county in 2016. It would be possible to construct an estimate of that value.
+
+
+```{r}
+#| label: county-prices
+#| include: true
+#| echo: false
+#| warning: false
+#| notes: false
+
+tab <- tabdata |> 
+  select(cntyname, pch5ya) |> 
+  gt() |> 
+    sub_missing(columns = everything()) |> 
+    tab_header(
+      title = "% change in housing prices, 2016 to 2021",
+      subtitle = "CAUTION: Experimental data"
+    ) |>
+    cols_label(cntyname="County",
+               pch5ya="% change, 2016 to 2021") |> 
+    fmt_percent(columns=c(pch5ya), decimals=1) |> 
+    tab_source_note(source_note = "Source: Federal Housing Finance Agency, Annual All Transactions Housing Price Indexes")
+
+tab
+
+```
+

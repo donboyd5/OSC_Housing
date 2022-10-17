@@ -4,7 +4,11 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Housing Costs and Consequences
+## Housing cost burden
+
+What is housing cost burden?
+
+### Consequences of Housing Cost Burden
 
 <!-- import -->
 
@@ -18,46 +22,54 @@ editor_options:
 source(here::here("r", "libraries.r"))
 source(here::here("r", "functions.r"))
 
-cost <- readRDS(here::here("data", "cost.rds"))
+chdir <- here::here("data", "chas")
+chdir2019 <- path(chdir, "2015-2019")
 
-fcost <- cost |> 
-  group_by(vdesc3, desc3) |> 
-  summarise(n=n(), .groups="drop") |> 
-  mutate(order=row_number()) |> 
-  select(order, vdesc3, desc3)
-fcost
+# cost <- readRDS(here::here("data", "cost.rds"))
 
-cost_wide <- cost |> 
-  # filter(nytype=="state", stabbr=="NY") |> 
-  # CAUTION - drop the grand total before adding all
-  filter(tenure %in% c("own", "rent")) |>
-  group_by(nytype, stabbr, mininame, cntyname,
-           tenure, vdesc3, desc3) |> 
-  summarise(value=sum(value), .groups="drop") |> 
-  select(-desc3) |> 
-  pivot_wider(names_from = c(tenure, vdesc3)) |> 
+t9 <- readRDS(path(chdir2019, "t9long.rds"))
+# we need cnty, cntyname maybe shortname also
+
+# use allrace for this set of tables
+cost_wide <- t9 |> 
+  filter(race=="allrace") |> 
+  # filter(nytype=="state", stabbr=="NY") |> # uncomment for testing
+  pivot_wider(names_from = c(tenure, cost)) |> 
   # get own and rent sums where cost burden is computable
-  mutate(occ_all=own_all + rent_all,
-         own_check=own_costle30 + own_costgt30le50 + own_costgt50,
+  mutate(own_check=own_costle30 + own_costgt30le50 + own_costgt50,
          rent_check=rent_costle30 + rent_costgt30le50 + rent_costgt50,
          own_cost30=own_costgt30le50 + own_costgt50,
          rent_cost30=rent_costgt30le50 + rent_costgt50,
-         occ_cost30=own_cost30 + rent_cost30,
+         alltenure_cost30=own_cost30 + rent_cost30,
          own_cost50=own_costgt50,
          rent_cost50=rent_costgt50,
-         occ_cost50=own_cost50 + rent_cost50) |> 
+         alltenure_cost50=own_cost50 + rent_cost50) |> 
+  relocate(own_check, rent_check, .after=cntyname) |> 
   # calc percentages
-  mutate(own_pct30=own_cost30 / own_all,
-         rent_pct30=rent_cost30 / rent_all,
-         occ_pct30=occ_cost30 / occ_all,
-         own_pct50=own_cost50 / own_all,
-         rent_pct50=rent_cost50 / rent_all,
-         occ_pct50=occ_cost50 / occ_all, 
-         renter_share=rent_all / occ_all)
+  mutate(own_pct30=own_cost30 / own_allcost,
+         rent_pct30=rent_cost30 / rent_allcost,
+         alltenure_pct30=alltenure_cost30 / alltenure_allcost,
+         own_pct50=own_cost50 / own_allcost,
+         rent_pct50=rent_cost50 / rent_allcost,
+         alltenure_pct50=alltenure_cost50 / alltenure_allcost, 
+         renter_share=rent_allcost / alltenure_allcost)
 
-# cost_wide |> select(-c(nytype, mininame, cntyname, rgn_num, rgn_oscQ)) |>
-#   pivot_longer(contains("_"))
-cost_wide |> filter(nytype=="region")
+# tabdata for all types
+# nytype groups: state, region, county, city, town, village
+tabdata <- cost_wide |> 
+  filter(nytype %in% c("state", "region", "county", "city", "town", "village")) |>
+  rename(own_pct=own_pct30, rent_pct=rent_pct30, alltenure_pct=alltenure_pct30) |> 
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct)))  |> 
+  select(nytype, stabbr, mininame, cntyname, 
+         alltenure_allcost,
+         own_pct, rent_pct, alltenure_pct, 
+         ownrank, rentrank, alltenurerank,
+         renter_share) |> 
+  ungroup() |> 
+  arrange(desc(alltenure_pct))
 
 ```
 
@@ -80,25 +92,9 @@ tabst <- "Percent of occupied housing units with housing costs greater than 30% 
 #| label: state-cost-data
 #| include: false
 
-# cost_st <- cost_wide |> 
-#   filter(nytype=="state")
-
-# own_pct30 rent_pct30 occ_pct30
-# own_pct50 rent_pct50 occ_pct50
-
-tabdata_st <-  cost_wide |> 
+tabdata_st <- tabdata |> 
   filter(nytype=="state") |> 
-  rename(own_pct=own_pct30, rent_pct=rent_pct30, occ_pct=occ_pct30) |> 
-  mutate(mininame=str_remove(mininame, " State"),
-         ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         occrank=row_number(desc(occ_pct)))  |> 
-  select(stabbr, mininame, cntyname, 
-         own_pct, rent_pct, occ_pct, 
-         ownrank, rentrank, occrank,
-         renter_share) |> 
-  arrange(desc(occ_pct))
-tabdata_st
+  mutate(mininame=str_remove(mininame, " State"))
 
 # tabdata |> 
 #   ggplot(aes(own_pct, rent_pct))+
@@ -129,23 +125,9 @@ tab
 #| label: region-cost-data
 #| include: false
 
-# count(rgns, rgn_num, rgn_osc, mininame)
-
-tabdata_rgn <- cost_wide |> 
+tabdata_rgn <- tabdata |> 
   filter(stabbr=="NY", nytype %in% c("state", "region")) |>  
-  rename(own_pct=own_pct30, rent_pct=rent_pct30, occ_pct=occ_pct30) |> 
-  mutate(group=ifelse(nytype=="state", 1, 2)) |>
-  group_by(group) |> 
-  mutate(ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         occrank=row_number(desc(occ_pct))) |> 
-  ungroup() |> 
-  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |> 
-  select(stabbr, mininame, cntyname, 
-         own_pct, rent_pct, occ_pct, 
-         ownrank, rentrank, occrank,
-         renter_share) |>  
-  arrange(desc(occ_pct))
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
 tabdata_rgn
 
@@ -171,21 +153,9 @@ tab
 #| label: county-cost-data
 #| include: false
 
-tabdata_cnty <- cost_wide |> 
-  filter(stabbr=="NY", nytype %in% c("state", "county")) |>   
-  rename(own_pct=own_pct30, rent_pct=rent_pct30, occ_pct=occ_pct30) |> 
-  mutate(group=ifelse(nytype=="state", 1, 2)) |>
-  group_by(group) |> 
-  mutate(ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         occrank=row_number(desc(occ_pct))) |> 
-  ungroup() |> 
-  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |>  
-  select(stabbr, mininame, cntyname, 
-         own_pct, rent_pct, occ_pct, 
-         ownrank, rentrank, occrank,
-         renter_share) |>  
-  arrange(desc(occ_pct))
+tabdata_cnty <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "county")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
 tabdata_cnty
 
@@ -207,21 +177,9 @@ tab
 #| label: city-cost-data
 #| include: false
 
-tabdata_city <- cost_wide |> 
-  filter(stabbr=="NY", nytype %in% c("state", "city")) |>    
-  rename(own_pct=own_pct30, rent_pct=rent_pct30, occ_pct=occ_pct30) |> 
-  mutate(group=ifelse(nytype=="state", 1, 2)) |>
-  group_by(group) |> 
-  mutate(ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         occrank=row_number(desc(occ_pct))) |> 
-  ungroup() |> 
-  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |>   
-  select(stabbr, mininame, cntyname, 
-         own_pct, rent_pct, occ_pct, 
-         ownrank, rentrank, occrank,
-         renter_share) |>  
-  arrange(desc(occ_pct))
+tabdata_city <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "city")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
 tabdata_city
 
@@ -247,29 +205,17 @@ tab
 #| label: town-cost-data
 #| include: false
 
-tabdata_town <- cost_wide |>  
-  filter(occ_all >= minunits) |>
-  filter(stabbr=="NY", nytype %in% c("state", "town")) |>    
-  rename(own_pct=own_pct30, rent_pct=rent_pct30, occ_pct=occ_pct30) |> 
-  mutate(group=ifelse(nytype=="state", 1, 2)) |>
-  group_by(group) |> 
-  mutate(ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         occrank=row_number(desc(occ_pct))) |> 
-  ungroup() |> 
-  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |>   
-  select(stabbr, mininame, cntyname, 
-         own_pct, rent_pct, occ_pct, 
-         ownrank, rentrank, occrank,
-         renter_share) |>  
-  arrange(desc(occ_pct)) |> 
-  filter(row_number() <= nplaces)
+tabdata_town <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "town"))  |> 
+  filter(alltenure_allcost >= minunits) |> 
+  filter(row_number() <= nplaces) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
 tabdata_town
 
 ```
 
-Note that the town of Le Ray in Jefferson County is ranked 5th overall (owners plus renters) among towns with 500+ housing units but is ranked much further down for owners only and for renters only. *This is not an error.* It is a result of Le Ray's extremely high percentage of renters, which means that the overall weighted value for all households is high because cost-burdened households generally are a much larger share for renters than for owners.
+Note that the town of Le Ray in Jefferson County is ranked in #5 overall (owners plus renters) among towns with 500+ housing units but is ranked much further down for owners only and for renters only. *This is not an error.* It is a result of Le Ray's extremely high percentage of renters, which means that the overall weighted value for all households is high because cost-burdened households generally are a much larger share for renters than for owners.
 
 ```{r}
 #| label: town-cost
@@ -279,7 +225,7 @@ Note that the town of Le Ray in Jefferson County is ranked 5th overall (owners p
 tt <- paste0("Towns in New York with ",
              minunits, 
              "+ housing units and greatest housing cost burden")
-tab <- ftabranks(tabdata_town, stubvar="stub", stubhead="Town",
+tab <- ftabranks(tabdata_town, stubvar="mininame", stubhead="Town",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 tab
 ```
@@ -290,23 +236,11 @@ tab
 #| label: village-cost-data
 #| include: false
 
-tabdata_village <- cost_wide |>  
-  filter(occ_all >= minunits) |>
-  filter(stabbr=="NY", nytype %in% c("state", "village")) |>    
-  rename(own_pct=own_pct30, rent_pct=rent_pct30, occ_pct=occ_pct30) |> 
-  mutate(group=ifelse(nytype=="state", 1, 2)) |>
-  group_by(group) |> 
-  mutate(ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         occrank=row_number(desc(occ_pct))) |> 
-  ungroup() |> 
-  mutate(across(contains("rank"), ~ ifelse(group==1, NA_real_, .x))) |>   
-  select(stabbr, mininame, cntyname, 
-         own_pct, rent_pct, occ_pct, 
-         ownrank, rentrank, occrank,
-         renter_share) |>  
-  arrange(desc(occ_pct)) |> 
-  filter(row_number() <= nplaces)
+tabdata_village <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "village"))  |> 
+  filter(alltenure_allcost >= minunits) |> 
+  filter(row_number() <= nplaces) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
 tabdata_village
 

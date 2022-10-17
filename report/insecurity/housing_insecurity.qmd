@@ -8,7 +8,5 @@ One group of widely cited researchers proposed a unifying definition:^[@coxRoadm
 
 > Limited or uncertain availability of stable, safe, adequate, and affordable housing and neighborhoods; limited or uncertain access to stable, safe, adequate, and affordable housing and neighborhoods; or the inability to acquire stable, safe, adequate, and affordable housing and neighborhoods in socially acceptable ways.
 
-<!-- These definitions of housing insecurity are  -->
-
 We organize our analysis in this report around three broad categories of housing insecurity: cost and availability, quality and conditions, and housing-related stress.
 

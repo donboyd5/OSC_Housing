@@ -9,16 +9,15 @@ book:
   date-format: long
   chapters:
     - index.qmd
-    - highlights.qmd
+    # - highlights.qmd
     - intro.qmd
     - part: "Housing Insecurity"
       chapters:
       - insecurity/housing_insecurity.qmd
-      # - insecurity/owners_renters.qmd
-      - insecurity/cost_and_availability.qmd
-      - insecurity/quality.qmd
-      - insecurity/stress.qmd
-      # - insecurity/measure_homelessness.qmd
+      - insecurity/cost/cost.qmd
+      - insecurity/quality/quality.qmd
+      - insecurity/stress/stress.qmd
+      - insecurity/homelessness/homelessness.qmd
       - insecurity/recent_events_housing.qmd
     - part: "Policies to address housing insecurity"
       chapters: 
@@ -55,6 +54,7 @@ execute:
 format:
   html:
     theme: cosmo
+    toc-depth: 4
   # pdf:
   #   documentclass: scrreprt
   

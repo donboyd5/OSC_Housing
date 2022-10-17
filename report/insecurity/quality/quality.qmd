@@ -6,7 +6,9 @@ editor_options:
 
 # Housing quality and conditions
 
-{{< include quality/crowding.qmd >}}
+{{< include crowding.qmd >}}
+
+{{< include plumb_kitch.qmd >}}
 
 
 
