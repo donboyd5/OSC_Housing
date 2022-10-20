@@ -1,0 +1,120 @@
+# Insert
+
+```{r}
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+
+chdir <- here::here("data", "chas")
+chdir2019 <- path(chdir, "2015-2019")
+
+# cost <- readRDS(here::here("data", "cost.rds"))
+
+t9 <- readRDS(path(chdir2019, "t9long.rds"))
+# we need cnty, cntyname maybe shortname also
+
+# use allrace for this set of tables
+cost_wide <- t9 |> 
+  filter(race=="allrace") |> 
+  # filter(nytype=="state", stabbr=="NY") |> # uncomment for testing
+  pivot_wider(names_from = c(tenure, cost)) |> 
+  # get own and rent sums where cost burden is computable
+  mutate(own_check=own_costle30 + own_costgt30le50 + own_costgt50,
+         rent_check=rent_costle30 + rent_costgt30le50 + rent_costgt50,
+         own_cost30=own_costgt30le50 + own_costgt50,
+         rent_cost30=rent_costgt30le50 + rent_costgt50,
+         alltenure_cost30=own_cost30 + rent_cost30,
+         own_cost50=own_costgt50,
+         rent_cost50=rent_costgt50,
+         alltenure_cost50=own_cost50 + rent_cost50) |> 
+  relocate(own_check, rent_check, .after=cntyname) |> 
+  # calc percentages
+  mutate(own_pct30=own_cost30 / own_allcost,
+         rent_pct30=rent_cost30 / rent_allcost,
+         alltenure_pct30=alltenure_cost30 / alltenure_allcost,
+         own_pct50=own_cost50 / own_allcost,
+         rent_pct50=rent_cost50 / rent_allcost,
+         alltenure_pct50=alltenure_cost50 / alltenure_allcost, 
+         renter_share=rent_allcost / alltenure_allcost)
+
+# tabdata for all types
+# nytype groups: state, region, county, city, town, village
+tabdata <- cost_wide |> 
+  filter(nytype %in% c("state", "region", "county", "city", "town", "village")) |>
+  rename(allunits=alltenure_allcost,
+         own_pct=own_pct30, rent_pct=rent_pct30, alltenure_pct=alltenure_pct30) |> 
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct)))  |> 
+  select(nytype, stabbr, mininame, cntyname, 
+         allunits,
+         own_pct, rent_pct, alltenure_pct, 
+         ownrank, rentrank, alltenurerank,
+         renter_share) |> 
+  ungroup() |> 
+  arrange(desc(alltenure_pct))
+
+```
+
+```{r}
+#| label: constants
+#| include: false
+
+minunits <- 500
+nplaces <- 25
+
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+
+```
+
+## New York compared to other states
+
+```{r}
+#| label: state-cost-data
+#| include: false
+
+tabdata_st <- tabdata |> 
+  filter(nytype=="state") |> 
+  mutate(mininame=str_remove(mininame, " State"))
+
+# tabdata |> 
+#   ggplot(aes(own_pct, rent_pct))+
+#   geom_point() +
+#   geom_text(aes(label=stabbr), hjust=0, vjust=0) +
+#   geom_abline(slope=1, intercept=0)
+
+
+```
+
+New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks fourth for both owners and renters. As is true of every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
+
+```{r}
+#| label: state-cost-table
+#| include: true
+#| echo: false
+
+
+tt <- "States ranked by housing cost burden"
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+
+tab <- f_tabranks(tabdata_st, stubvar="mininame", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+# zoom=2, expand=5, vwidth=992, vheight=744 defaults
+# expand=20 puts more whitespace around the table, seemingly just on right side, where needed
+tabfile <- "gtables/cost_states.png"
+gtsave(tab, tabfile, path = here::here("report"), zoom=2, expand=20)
+
+# Sys.setenv(CURRENT_TAB = "gtables/cost_states.png")
+# Sys.getenv("CURRENT_TAB")
+
+
+# gtsave(tab, "gtables/tab.png", path = here::here("report"), zoom=2, expand=20)
+
+```
+
+{{< include _gt_snippet.qmd >}}
+
+

@@ -25,8 +25,6 @@ chdir2019 <- path(chdir, "2015-2019")
 
 t10 <- readRDS(path(chdir2019, "t10long.rds"))
 
-# own_crowd=own_pprgt1le1p5 + own_pprgt1p5,
-#          rent_crowd=rent_pprgt1le1p5 + rent_pprgt1p5,
 crowd_wide <- t10 |> 
   filter(hhi=="allhhi", fam=="allfam") |> 
   # filter(nytype=="state", stabbr=="NY") |> # uncomment for testing

@@ -10,33 +10,35 @@ book:
   chapters:
     - index.qmd
     # - highlights.qmd
+    # - update.qmd
     - intro.qmd
+    # - insert.qmd
     - part: "Housing Insecurity"
       chapters:
-      - insecurity/housing_insecurity.qmd
-      - insecurity/cost/cost.qmd
-      - insecurity/quality/quality.qmd
-      - insecurity/stress/stress.qmd
-      - insecurity/homelessness/homelessness.qmd
-      - insecurity/recent_events_housing.qmd
-    - part: "Policies to address housing insecurity"
-      chapters: 
-      - policies/policy_intro.qmd
-      - policies/federal.qmd
-      - policies/state.qmd
-    - conclusions.qmd
+        - insecurity/housing_insecurity.qmd
+        - insecurity/cost/cost.qmd
+      # - insecurity/quality/quality.qmd
+      # - insecurity/stress/stress.qmd
+      # - insecurity/homelessness/homelessness.qmd
+      # - insecurity/recent_events_housing.qmd
+    # - part: "Policies to address housing insecurity"
+    #   chapters: 
+    #   - policies/policy_intro.qmd
+    #   - policies/federal.qmd
+    #   - policies/state.qmd
+    # - conclusions.qmd
     - bibliography.qmd
-    - part: "Appendix"
-      chapters: 
-        - appendix/appendix.qmd
-    - part: "Notes"
-      chapters: 
-      - notes/notes.qmd
-      - notes/articles.qmd
-      - notes/housing_insecurity_notes.qmd
-      - notes/housing_cost_burden_notes.qmd
-      - notes/housing_forced_removal_notes.qmd
-      - notes/mortgage_delinquencies.qmd
+    # - part: "Appendix"
+    #   chapters: 
+    #     - appendix/appendix.qmd
+    # - part: "Notes"
+    #   chapters: 
+    #   - notes/notes.qmd
+    #   - notes/articles.qmd
+    #   - notes/housing_insecurity_notes.qmd
+    #   - notes/housing_cost_burden_notes.qmd
+    #   - notes/housing_forced_removal_notes.qmd
+    #   - notes/mortgage_delinquencies.qmd
   
 bibliography: _bibliography.bib
 nocite: |
@@ -55,13 +57,23 @@ format:
   html:
     theme: cosmo
     toc-depth: 4
-  # pdf:
-  #   documentclass: scrreprt
+  docx:
+    toc: true
+    toc-depth: 4
+    number-sections: true
+    highlight-style: github
+    reference-doc: refdoc.docx
+  pdf:
+    toc: true
+    documentclass: report
+# scrreprt scrartcl report
+
   
 # web 
 #   site: https://osc-housing.netlify.app/
 #   password: oscdjb
 
+# quarto render document.qmd --to html
+# quarto render --to pdf
 
-
-
+# devtools::install_github("rstudio/gt")  

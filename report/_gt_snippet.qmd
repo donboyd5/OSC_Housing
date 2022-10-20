@@ -1,0 +1,27 @@
+
+<!-- This snippet assumes two objects exist: -->
+<!-- - tab: the gt() table object that will be included when html is rendered -->
+<!-- - tabfile: a string with the path to the .png gt table file for pdf and docx rendering -->
+
+
+::: {.content-hidden unless-format="html"}
+<!-- For html, use the html table -->
+```{r}
+#| include: true
+
+tab
+```
+
+:::
+
+
+::: {.content-visible unless-format="html"}
+<!-- For word and pdf, use the png in the current tabfile name -->
+```{r}
+
+knitr::include_graphics(tabfile)
+```
+
+<!-- direct insertion doesn't find the file - prepends current dir!? -->
+<!-- ![](`r tabfile`) -->
+:::

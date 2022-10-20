@@ -1,8 +1,3 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
 
 ## Housing cost burden
 
@@ -10,17 +5,15 @@ What is housing cost burden?
 
 ### Consequences of Housing Cost Burden
 
-<!-- import -->
+<!-- import, measures, thresholds -->
 
-<!-- measures -->
-
-<!-- thresholds -->
 
 ```{r}
 #| include: false
 
 source(here::here("r", "libraries.r"))
 source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
 
 chdir <- here::here("data", "chas")
 chdir2019 <- path(chdir, "2015-2019")
@@ -106,7 +99,7 @@ tabdata_st <- tabdata |>
 
 ```
 
-New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 rank for both owners and renters. As is true of every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
+New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 rank for both owners and renters. As is true in every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
 
 ```{r}
 #| label: state-cost-table
@@ -114,11 +107,20 @@ New York has the fourth highest cost burden among the states, measured by the pe
 #| echo: false
 
 tt <- "States ranked by housing cost burden"
-tab <- ftabranks(tabdata_st, stubvar="mininame", stubhead="State",
-         tabtitle=tt, tabsubtitle=tabst)
-tab
+
+tab <- f_tabranks(tabdata_st, stubvar="mininame", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "cost_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 
 ```
+
+<!-- {{< include C:/Users/donbo/Documents/R_projects/OSC_Housing/report/_gt_snippet.qmd >}} -->
+
+{{< include ../../_gt_snippet.qmd >}}
+
 
 #### Housing cost burden in New York's regions
 
@@ -142,11 +144,17 @@ High housing cost burden is far more prevalent in New York City, the Mid-Hudson 
 #| echo: false
 
 tt <- "New York regions ranked by housing cost burden"
-tab <- ftabranks(tabdata_rgn, stubvar="mininame", stubhead="Region",
+tab <- f_tabranks(tabdata_rgn, stubvar="mininame", stubhead="Region",
          tabtitle=tt)
-tab
+
+tabfile <-  path(tabdir, "cost_regions.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 
 ```
+
+
+{{< include ../../_gt_snippet.qmd >}}
 
 #### Housing cost burden in New York's counties
 
@@ -167,10 +175,15 @@ tabdata_cnty
 #| include: true
 #| echo: false
 tt <- "Counties in New York ranked by housing cost burden"
-tab <- ftabranks(tabdata_cnty, stubvar="mininame", stubhead="County",
+tab <- f_tabranks(tabdata_cnty, stubvar="mininame", stubhead="County",
          tabtitle=tt, tabsubtitle=tabst)
-tab
+
+tabfile <-  path(tabdir, "cost_counties.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 ```
+
+{{< include ../../_gt_snippet.qmd >}}
 
 #### Housing cost burden in New York's cities
 
@@ -195,10 +208,15 @@ Note the high cost burden for Ithaca in Tompkins County. This probably is an art
 #| echo: false
 
 tt <- "Cities in New York ranked by housing cost burden"
-tab <- ftabranks(tabdata_city, stubvar="mininame", stubhead="City",
+tab <- f_tabranks(tabdata_city, stubvar="mininame", stubhead="City",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-tab
+
+tabfile <-  path(tabdir, "cost_cities.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 ```
+
+{{< include ../../_gt_snippet.qmd >}}
 
 #### New York towns with greatest housing cost burden
 
@@ -226,10 +244,15 @@ Note that the town of Le Ray in Jefferson County is ranked in #5 overall (owners
 tt <- paste0("Towns in New York with ",
              minunits, 
              "+ housing units and greatest housing cost burden")
-tab <- ftabranks(tabdata_town, stubvar="mininame", stubhead="Town",
+tab <- f_tabranks(tabdata_town, stubvar="mininame", stubhead="Town",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-tab
+
+tabfile <-  path(tabdir, "cost_towns.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 ```
+
+{{< include ../../_gt_snippet.qmd >}}
 
 #### New York villages with greatest housing cost burden
 
@@ -255,10 +278,15 @@ tabdata_village
 tt <- paste0("Villages in New York with ",
              minunits, 
              "+ housing units and greatest housing cost burden")
-tab <- ftabranks(tabdata_village, stubvar="mininame", stubhead="Village",
+tab <- f_tabranks(tabdata_village, stubvar="mininame", stubhead="Village",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-tab
+
+tabfile <-  path(tabdir, "cost_villages.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 ```
+
+{{< include ../../_gt_snippet.qmd >}}
 
 ### Who has high housing costs?
 
