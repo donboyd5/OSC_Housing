@@ -1,16 +1,16 @@
 <!-- # Housing Affordability -->
 
-## Housing affordability
+## Housing Affordability
 
 What is housing affordability?
 
-### Housing Affordability Nationally
+### Housing affordability nationally
 
 [The Economist](https://www.economist.com/graphic-detail/2022/05/23/housing-in-america-has-become-much-harder-to-afford)
 
 ![](images/paste-4672ECD6.png)
 
-### Housing Affordability in New York
+### Housing affordability in New York
 
 ```{r}
 #| include: false

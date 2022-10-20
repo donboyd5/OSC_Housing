@@ -17,16 +17,17 @@ book:
       chapters:
         - insecurity/housing_insecurity.qmd
         - insecurity/cost/cost.qmd
-      # - insecurity/quality/quality.qmd
-      # - insecurity/stress/stress.qmd
-      # - insecurity/homelessness/homelessness.qmd
+        - insecurity/quality/quality.qmd
+        - insecurity/stress/stress.qmd
+        - insecurity/homelessness/homelessness.qmd
+        - insecurity/crosscutting.qmd
       # - insecurity/recent_events_housing.qmd
-    # - part: "Policies to address housing insecurity"
-    #   chapters: 
-    #   - policies/policy_intro.qmd
+    - part: "Policies to Address Housing Insecurity"
+      chapters: 
+        - policies/policy_intro.qmd
     #   - policies/federal.qmd
     #   - policies/state.qmd
-    # - conclusions.qmd
+    - conclusions.qmd
     - bibliography.qmd
     # - part: "Appendix"
     #   chapters: 
@@ -59,12 +60,13 @@ format:
     toc-depth: 4
   docx:
     toc: true
-    toc-depth: 4
+    toc-depth: 2
     number-sections: true
     highlight-style: github
-    reference-doc: refdoc.docx
+    # reference-doc: refdoc.docx
   pdf:
     toc: true
+    toc-depth: 2
     documentclass: report
 # scrreprt scrartcl report
 

@@ -1,11 +1,21 @@
 
-## Housing cost burden
+## Housing Cost Burden
 
-What is housing cost burden?
-
-### Consequences of Housing Cost Burden
-
+<!-- Housing Cost Burden and Its Consequences -->
 <!-- import, measures, thresholds -->
+
+### Key points
+
+```{r}
+#| label: constants
+#| include: false
+
+minunits <- 500
+nplaces <- 25
+
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+
+```
 
 
 ```{r}
@@ -67,27 +77,15 @@ tabdata <- cost_wide |>
 
 ```
 
-```{r}
-#| label: constants
-#| include: false
 
-minunits <- 500
-nplaces <- 25
-
-tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
-
-```
-
-### Housing cost burden
-
-#### New York compared to other states
+### Housing Cost Burden in New York and Other States
 
 ```{r}
 #| label: state-cost-data
 #| include: false
 
 tabdata_st <- tabdata |> 
-  filter(nytype=="state") |> 
+  filter(nytype=="state", !stabbr %in% c("DC", "PR")) |> 
   mutate(mininame=str_remove(mininame, " State"))
 
 # tabdata |> 
@@ -122,14 +120,14 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 {{< include ../../_gt_snippet.qmd >}}
 
 
-#### Housing cost burden in New York's regions
+### Housing Cost Burden in New York's Regions
 
 ```{r}
 #| label: region-cost-data
 #| include: false
 
 tabdata_rgn <- tabdata |> 
-  filter(stabbr=="NY", nytype %in% c("state", "region")) |>  
+  filter(stabbr=="NY", nytype %in% c("state", "region")) |>
   mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
 tabdata_rgn
@@ -156,7 +154,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-#### Housing cost burden in New York's counties
+### Housing Cost Burden in New York's Counties
 
 ```{r}
 #| label: county-cost-data
@@ -185,7 +183,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-#### Housing cost burden in New York's cities
+### Housing Cost Burden in New York's Cities
 
 ```{r}
 #| label: city-cost-data
@@ -218,7 +216,9 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-#### New York towns with greatest housing cost burden
+### Housing Cost Burden in New York's Towns
+
+There are more than 500 towns in New York, many of which are quite small. The table below ranks towns with at least 500 occupied housing units by the percentage of households with housing costs that exceed 30 percent of income.
 
 ```{r}
 #| label: town-cost-data
@@ -227,6 +227,12 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 tabdata_town <- tabdata |> 
   filter(stabbr=="NY", nytype %in% c("state", "town"))  |> 
   filter(allunits >= minunits) |> 
+  # rerank dropping excluded units
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct))) |> 
+  ungroup() |> 
   filter(row_number() <= nplaces) |>  
   mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
@@ -254,7 +260,9 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-#### New York villages with greatest housing cost burden
+### Housing Cost Burden in New York's Villages
+
+There are more than 500 villages in New York, many of which are quite small. The table below ranks villages with at least 500 occupied housing units by the percentage of households with housing costs that exceed 30 percent of income.
 
 ```{r}
 #| label: village-cost-data
@@ -262,7 +270,13 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 tabdata_village <- tabdata |> 
   filter(stabbr=="NY", nytype %in% c("state", "village"))  |> 
-  filter(allunits >= minunits) |> 
+  filter(allunits >= minunits) |>   
+  # rerank dropping excluded units
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct))) |> 
+  ungroup() |> 
   filter(row_number() <= nplaces) |>  
   mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
@@ -288,6 +302,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-### Who has high housing costs?
+<!-- ### Who has high housing costs? -->
 
-\[To come - breakdowns by income and race\]
+<!-- \[To come - breakdowns by income and race\] -->

@@ -1,12 +1,6 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
+# Housing Quality and Conditions
 
-# Housing quality and conditions
-
-{{< include crowding.qmd >}}
+{{< include _crowding.qmd >}}
 
 <!-- {{< include plumb_kitch.qmd >}} -->
 

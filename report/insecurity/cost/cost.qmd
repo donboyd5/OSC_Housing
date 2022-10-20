@@ -1,10 +1,12 @@
-# Housing cost and availability
+# Housing Cost and Availability
 
 {{< include _housing_cost_burden.qmd >}}
 
-<!-- {{< include housing_affordability.qmd >}} -->
+{{< include _housing_affordability.qmd >}}
 
-## Housing availability and other market measures - data sources under investigation
+## Housing Availability and Related Measures
+
+I mention below a few data sources under investigation.
 
 ### FHFA housing prices
 
@@ -24,8 +26,8 @@ https://www.census.gov/construction/bps/ https://www2.census.gov/econ/bps/
 
 > Data Attribution: Files in the realtor.com real estate data library are free to use, we just ask that you attribute any full or partial use of the data to realtor.com with a link to this page. See specific notes on attribution for each data series...
 
-Several county-level data sets
+Several county-level data sets.
 
-## Selected data (exploratory at this point)
+<!-- ## Selected data (exploratory at this point) -->
 
 <!-- {{< include prices.qmd >}} -->

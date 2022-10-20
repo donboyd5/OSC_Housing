@@ -1,16 +1,10 @@
----
-output: html_document
-editor_options:
-chunk_output_type: console
----
+## Housing Crowding
 
-## Overcrowding and Its Consequences
+Living in overcrowded housing can lead to poor mental health, food insecurity, and infectious diseases such as Meningitis, Hepatitis, and Tuberculosis; overcrowding can have negative effects on neighborhoods as well. [@officeofdiseasepreventionandhealthpromotionQualityHousingLiterature2022], [@blakeMeasuringOvercrowdingHousing2007]
 
-Living in overcrowded housing can lead to poor mental health, food insecurity, and infectious diseases such as Meningitis, Hepatitis, and Tuberculosis; overcrowding can have negative effects on neighborhoods as well. [@officeofdiseasepreventionandhealthpromotionQualityHousingLiterature2022], [@kevins.blakeMeasuringOvercrowdingHousing2007]
+The most commonly used measure of overcrowding is persons-per-room in a dwelling unit. [@blakeMeasuringOvercrowdingHousing2007] This measure includes all rooms in a dwelling unit in the denominator, not just bedrooms. The number of persons per room generally will be lower than the number of persons per bedroom. One reason persons-per-room is used so commonly is that it can be computed readily using important data sources such as the American Community Survey (ACS) and the American Housing Survey. It is available in a crucially important data source prepared by the U.S. Department of Housing and Urban Development (HUD) known as Comprehensive Housing Affordability Strategy (CHAS), which is used in developing housing polices. HUD develops CHAS data using detailed nonpublic ACS data, 
 
-The most commonly used measure of overcrowding is persons-per-room in a dwelling unit. [@kevins.blakeMeasuringOvercrowdingHousing2007] This measure includes all rooms in a dwelling unit in the denominator, not just bedrooms. The number of persons per room generally will be lower than the number of persons per bedroom. One reason persons-per-room is used so commonly is that it can be computed readily using important data sources such as the American Community Survey (ACS) and the American Housing Survey. It is available in a crucially important data source prepared by the U.S. Department of Housing and Urban Development (HUD) known as Comprehensive Housing Affordability Strategy (CHAS), which is used in developing housing polices. HUD develops CHAS data using detailed nonpublic ACS data, 
-
-There is no universally accepted threshold of persons-per-room above which a housing unit is considered crowded. Some studies have used a cutoff of 1 person per room, some have used a cutoff of 1.5 persons, and others have used different thresholds depending on specific health risks being examined. An important review conducted for HUD by Econometrica, Inc. used a cutoff of 1 person per room. [@kevins.blakeMeasuringOvercrowdingHousing2007] Crowding measures based on alternative thresholds tend to be highly correlated. In the analysis below we calculate the percentage of housing units in New York and other areas that are crowded using a threshold of 1 person per room.
+There is no universally accepted threshold of persons-per-room above which a housing unit is considered crowded. Some studies have used a cutoff of 1 person per room, some have used a cutoff of 1.5 persons, and others have used different thresholds depending on specific health risks being examined. An important review conducted for HUD by Econometrica, Inc. used a cutoff of 1 person per room. [@blakeMeasuringOvercrowdingHousing2007] Crowding measures based on alternative thresholds tend to be highly correlated. In the analysis below we calculate the percentage of housing units in New York and other areas that are crowded using a threshold of 1 person per room.
 
 
 ```{r}
@@ -18,6 +12,7 @@ There is no universally accepted threshold of persons-per-room above which a hou
 
 source(here::here("r", "libraries.r"))
 source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
 
 chdir <- here::here("data", "chas")
 chdir2019 <- path(chdir, "2015-2019")
@@ -72,17 +67,15 @@ tabst <- "Percent of occupied housing units with more than 1 person per room"
 
 ```
 
-### Housing unit crowding
 
-
-#### New York compared to other states
+### Housing-unit Crowding in New York and Other States
 
 ```{r}
 #| label: state-crowding-data
 #| include: false
 
 tabdata_st <- tabdata |> 
-  filter(nytype=="state") |> 
+  filter(nytype=="state", !stabbr %in% c("DC", "PR")) |> 
   mutate(mininame=str_remove(mininame, " State"))
 
 ```
@@ -96,13 +89,18 @@ New York has the fourth highest crowding rate among the states, measured by the 
 #| echo: false
 
 tt <- "States ranked by housing unit crowding"
-tab <- ftabranks(tabdata_st, stubvar="mininame", stubhead="State",
+tab <- f_tabranks(tabdata_st, stubvar="mininame", stubhead="State",
          tabtitle=tt, tabsubtitle=tabst)
-tab
+
+tabfile <-  path(tabdir, "crowd_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 
 ```
 
-#### Housing-unit crowding in New York's regions
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing-unit Crowding in New York's Regions
 
 ```{r}
 #| label: region-crowding-data
@@ -123,13 +121,18 @@ tabdata_rgn
 #| echo: false
 
 tt <- "New York regions ranked by housing unit crowding"
-tab <- ftabranks(tabdata_rgn, stubvar="mininame", stubhead="Region",
+tab <- f_tabranks(tabdata_rgn, stubvar="mininame", stubhead="Region",
          tabtitle=tt)
-tab
+tabfile <-  path(tabdir, "crowd_regions.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 
 ```
 
-#### Housing-unit crowding in New York's counties
+{{< include ../../_gt_snippet.qmd >}}
+
+
+### Housing-unit Crowding in New York's Counties
 
 ```{r}
 #| label: county-crowding-data
@@ -148,13 +151,18 @@ tabdata_cnty
 #| include: true
 #| echo: false
 tt <- "Counties in New York ranked by housing unit crowding"
-tab <- ftabranks(tabdata_cnty, stubvar="mininame", stubhead="County",
+tab <- f_tabranks(tabdata_cnty, stubvar="mininame", stubhead="County",
          tabtitle=tt, tabsubtitle=tabst)
-tab
+tabfile <-  path(tabdir, "crowd_counties.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 
 ```
 
-#### Housing-unit crowding in New York's cities
+{{< include ../../_gt_snippet.qmd >}}
+
+
+### Housing-unit Crowding in New York's Cities
 
 ```{r}
 #| label: city-crowding-data
@@ -175,13 +183,19 @@ tabdata_city
 #| echo: false
 
 tt <- "Cities in New York ranked by housing-unit crowding"
-tab <- ftabranks(tabdata_city, stubvar="mininame", stubhead="City",
+tab <- f_tabranks(tabdata_city, stubvar="mininame", stubhead="City",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-tab
+tabfile <-  path(tabdir, "crowd_cities.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 
 ```
 
-#### New York towns with greatest housing-unit crowding
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing-unit Crowding in New York's Towns
+
+There are more than 500 towns in New York, many of which are quite small. The table below ranks towns with at least 500 occupied housing units by the percentage of households with housing costs that have more than one person per room.
 
 ```{r}
 #| label: town-crowding-data
@@ -190,6 +204,12 @@ tab
 tabdata_town <- tabdata |> 
   filter(stabbr=="NY", nytype %in% c("state", "town"))  |> 
   filter(allunits >= minunits) |> 
+  # rerank dropping excluded units
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct))) |> 
+  ungroup() |> 
   filter(row_number() <= nplaces) |>  
   mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
@@ -205,13 +225,19 @@ tabdata_town
 tt <- paste0("Towns in New York with ",
              minunits, 
              "+ housing units and greatest housing-unit crowding")
-tab <- ftabranks(tabdata_town, stubvar="mininame", stubhead="Town",
+tab <- f_tabranks(tabdata_town, stubvar="mininame", stubhead="Town",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-tab
+tabfile <-  path(tabdir, "crowd_towns.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
 
 ```
 
-#### New York villages with greatest housing-unit crowding
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing-unit Crowding in New York's Villages
+
+There are more than 500 villages in New York, many of which are quite small. The table below ranks villages with at least 500 occupied housing units by the percentage of households with housing costs that have more than one person per room.
 
 ```{r}
 #| label: village-crowding-data
@@ -220,6 +246,12 @@ tab
 tabdata_village <- tabdata |> 
   filter(stabbr=="NY", nytype %in% c("state", "village"))  |> 
   filter(allunits >= minunits) |> 
+  # rerank dropping excluded units
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct))) |> 
+  ungroup() |> 
   filter(row_number() <= nplaces) |>  
   mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
 
@@ -235,11 +267,16 @@ tabdata_village
 tt <- paste0("Villages in New York with ",
              minunits, 
              "+ housing units and greatest housing-unit crowding")
-tab <- ftabranks(tabdata_village, stubvar="mininame", stubhead="Village",
+tab <- f_tabranks(tabdata_village, stubvar="mininame", stubhead="Village",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-tab
+tabfile <-  path(tabdir, "crowd_villages.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
 ```
 
-### Who lives in crowded housing?
+{{< include ../../_gt_snippet.qmd >}}
 
-\[To come - breakdowns by income and race\]
+<!-- ### Who lives in crowded housing? -->
+
+<!-- \[To come - breakdowns by income and race\] -->

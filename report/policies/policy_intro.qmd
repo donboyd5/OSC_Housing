@@ -1,27 +1,3 @@
-# Policies to address housing insecurity
+# Policies to Address Housing Insecurity
 
-Describe and categorize the different kinds of policies and the dimensions of housing insecurity that they address.
-
-I'd probably start this section off with the table we discussed. It might look something like this -- it would have headers that span similar columns (the 2 spending columns and the 4 dimensions-of-insecurity columns) and would have notes, etc. and probably would be landscape):
-
-| Policy    | Federal spending in NY | State spending in NY | Housing cost                                      | Housing quality & conditions                                       | Housing-related stress                       | Homelessness                                    |
-|-----------|------------------------|----------------------|---------------------------------------------------|--------------------------------------------------------------------|----------------------------------------------|-------------------------------------------------|
-| Program A | \$X                    | \$Y                  | Supports a, b, and c to help mitigate cost burden |                                                                    |                                              |                                                 |
-| Program B | \$Z                    |                      |                                                   | Supports d & e to help reduce crowding; approx 70% of B spent here | Activities f & g reduce the risk of eviction |                                                 |
-| Program C |                        | \$Q                  |                                                   |                                                                    |                                              | Provides services h & i to help provide shelter |
-| ...       |                        |                      |                                                   |                                                                    |                                              |                                                 |
-
-------------------------------------------------------------------------
-
-I haven't yet figured out how to organize the policy section. It probably will start with a section federal policies because that establishes a framework for states, and then a section on state policies and how they fit in and around federal policies.
-
-
-## Some background notes
-
-The notes below are from a Fed Reserve article [@bodyCurrentResponsesHousing2021]; I'm just storing them here now until I get to the policy section.
-
-Eviction diversion
-
-The State of New York extended its eviction moratorium for COVID-related residential and commercial evictions until January 15, 2022. New York's eviction protections for renters impacted by the pandemic are now one of the most expansive in the nation.23 Although the state, like many others, has struggled to disburse billions of dollars in rent relief, the extended eviction protections will potentially keep hundreds of thousands of struggling residents in their homes while they await emergency rental assistance. As of August 31, 2021, New York has obligated or distributed more than \$1.2 billion in funding, including more than \$300 million in direct payments to more than 23,000 landlords.
-
-The City of Philadelphia rolled out a robust Eviction Diversion Program, which involves mediation between landlords and tenants before an eviction can proceed.25 Eviction diversion programs not only keep parties out of costly court hearings, they also encourage reluctant or unaware tenants and landlords to access rent relief. A roundtable participant commented that the availability of rental assistance funds allowed for the City of Philadelphia to work in partnership with local court systems to address issues around nonpayment and avert evictions. As of July 2021, 91.2% of households that completed Philadelphia's mediation program avoided an eviction proceeding.
+[TO COME]

@@ -1,10 +1,4 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
-
-## Housing-related stress
+## Housing-Related Stress
 
 {{< include evictions.qmd >}}
 
