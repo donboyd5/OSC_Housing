@@ -1,4 +1,6 @@
-# Summary {.unnumbered}
+# Executive Summary {.unnumbered}
+
+*Maria and Todd: it is good to identify what numbers we'd like to include in the text, so that they can be computer generated, minimizing risk of copying error and costs of updating. You'll see some examples below of numbers I think we'll want, in square brackets. If you can think about what we want to include in text, would be great. The following text is early and rough of course.*
 
 {{< include _summary.qmd >}}
 

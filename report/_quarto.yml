@@ -2,6 +2,9 @@ project:
   type: book
   output-dir: _report
   
+# quarto publish netlify --no-render --no-browser --no-prompt
+# quarto publish netlify --no-browser --no-prompt
+  
 book:
   title: "Housing Insecurity in New York State"
   author: "Don Boyd"
@@ -21,15 +24,15 @@ book:
         - insecurity/stress/stress.qmd
         - insecurity/homelessness/homelessness.qmd
         - insecurity/crosscutting.qmd
-      # - insecurity/recent_events_housing.qmd
     - part: "Policies to Address Housing Insecurity"
-      chapters: 
+      chapters:
         - policies/policy_intro.qmd
-    #   - policies/federal.qmd
+        - policies/federal.qmd
     #   - policies/state.qmd
     - conclusions.qmd
     - bibliography.qmd
     # - part: "Appendix"
+      # - insecurity/recent_events_housing.qmd    
     #   chapters: 
     #     - appendix/appendix.qmd
     # - part: "Notes"
@@ -58,16 +61,16 @@ format:
   html:
     theme: cosmo
     toc-depth: 4
-  docx:
-    toc: true
-    toc-depth: 2
-    number-sections: true
-    highlight-style: github
-    # reference-doc: refdoc.docx
-  pdf:
-    toc: true
-    toc-depth: 2
-    documentclass: report
+  # docx:
+  #   toc: true
+  #   toc-depth: 2
+  #   number-sections: true
+  #   highlight-style: github
+  #   # reference-doc: refdoc.docx
+  # pdf:
+  #   toc: true
+  #   toc-depth: 2
+  #   documentclass: report
 # scrreprt scrartcl report
 
   

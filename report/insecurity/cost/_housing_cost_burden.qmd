@@ -1,10 +1,18 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 ## Housing Cost Burden
 
 <!-- Housing Cost Burden and Its Consequences -->
+
 <!-- import, measures, thresholds -->
 
 ### Key points
+
+[TO COME]
 
 ```{r}
 #| label: constants
@@ -16,7 +24,6 @@ nplaces <- 25
 tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
 
 ```
-
 
 ```{r}
 #| include: false
@@ -77,7 +84,6 @@ tabdata <- cost_wide |>
 
 ```
 
-
 ### Housing Cost Burden in New York and Other States
 
 ```{r}
@@ -94,6 +100,34 @@ tabdata_st <- tabdata |>
 #   geom_text(aes(label=stabbr), hjust=0, vjust=0) +
 #   geom_abline(slope=1, intercept=0)
 
+
+```
+
+*M&T: Maybe in the body of the report it would be best to have just a simple bar chart of the top 10 for counties, cities, towns, and villages (and maybe states, too), and push all long tables to the appendix.*
+
+
+```{r}
+
+#| label: hbar_states
+#| include: true
+#| echo: false
+
+p <- tabdata_st |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(row_number() <= 10) |> 
+  select(mininame, alltenure_pct) |>
+  ggplot() +
+  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Cost-burdened households as percent of all households",
+                     breaks=seq(0, 1, 0.05),
+                     labels=percent_format(accuracy=1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Cost-Burdened Households as Percent of All Households, by State") +
+  theme_bw() +
+  legend_notitle
+  
+p  
 
 ```
 
@@ -118,7 +152,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 <!-- {{< include C:/Users/donbo/Documents/R_projects/OSC_Housing/report/_gt_snippet.qmd >}} -->
 
 {{< include ../../_gt_snippet.qmd >}}
-
 
 ### Housing Cost Burden in New York's Regions
 
@@ -151,8 +184,43 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 ```
 
-
 {{< include ../../_gt_snippet.qmd >}}
+
+> *M&T: We might want to show how renters affect cost burden around the state. One approach is the bar chart below. It shows numbers of cost-burdened households, rather than cost-burdened as % of total, so it is getting at where the cost-burdened households rather than which region has the greatest proportion of cost-burdened as % of all. NYC has a large number of renters (shown in table above); most of the rest of NY has about 1/3 renters except Long Island, which is only 19.4% renters. NYC's high cost burden is driven by its large number of cost-burdened renters. Long Island's high cost burden is driven by its large number of cost-burdened owners. In the rest of the state the story is more complicated. Time permitting, after the analysis of policies is done, it would be good to break this down further into the role of high housing costs vs. the role of low income (a key issue in upstate, I believe).*
+
+```{r}
+#| label: hbar
+#| include: true
+#| echo: false
+
+p <- cost_wide |> 
+  # filter(nytype=="state", !stabbr %in% c("DC", "PR")) |> 
+  filter(stabbr=="NY", nytype %in% c("state", "region")) |> 
+  filter(mininame != "New York State") |> 
+  select(geoid, mininame, own_cost30, rent_cost30, alltenure_cost30) |> 
+  arrange(desc(alltenure_cost30)) |> 
+  filter(row_number() <= 11) |> 
+  select(geoid, mininame, own_cost30, rent_cost30, alltenure_cost30) |> 
+  pivot_longer(-c(geoid, mininame, alltenure_cost30)) |> 
+  mutate(namef=factor(name, 
+                      levels=c("rent_cost30", "own_cost30"),
+                      labels=c("renters", "owners"))) |> 
+  arrange(namef) |> 
+  ggplot() +
+  geom_col(aes(x=value, y=reorder(mininame, alltenure_cost30), fill=namef), width=0.5) +
+  scale_x_continuous(name="Number of cost-burdened households (thousands)",
+                     breaks=seq(0, 2e6, 100e3),
+                     labels=number_format(scale=1e-3)) +
+  scale_y_discrete(name=NULL) +
+  scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Number of Cost-Burdened Households in New York, by Region") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
 
 ### Housing Cost Burden in New York's Counties
 
@@ -182,6 +250,34 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```
 
 {{< include ../../_gt_snippet.qmd >}}
+
+
+**M&T: another bar chart**
+
+```{r}
+
+#| label: hbar_counties
+#| include: true
+#| echo: false
+
+p <- tabdata_cnty |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(row_number() <= 10) |> 
+  select(mininame, alltenure_pct) |>
+  ggplot() +
+  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Cost-burdened households as percent of all households",
+                     breaks=seq(0, 1, 0.05),
+                     labels=percent_format(accuracy=1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Cost-Burdened Households as Percent of All Households, by County") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
 
 ### Housing Cost Burden in New York's Cities
 
@@ -215,6 +311,34 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```
 
 {{< include ../../_gt_snippet.qmd >}}
+
+*M&T: cities*
+
+```{r}
+
+#| label: hbar_cities
+#| include: true
+#| echo: false
+
+p <- tabdata_city |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(row_number() <= 10) |> 
+  select(mininame, alltenure_pct) |>
+  ggplot() +
+  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Cost-burdened households as percent of all households",
+                     breaks=seq(0, 1, 0.05),
+                     labels=percent_format(accuracy=1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Cost-Burdened Households as Percent of All Households, by City") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
 
 ### Housing Cost Burden in New York's Towns
 

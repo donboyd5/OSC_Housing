@@ -1,3 +1,188 @@
 # Federal policies to address housing insecurity
 
+```{r}
+#| label: setup
+#| include: false
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+dfbhere <- here::here("data", "fedbud")
+dlihtc <- here::here("data", "hud", "lihtc")
+dpict <- here::here("data", "hud", "picture")
+
+budauth <- readRDS(path(dfbhere, "budauth.rds"))
+outlay <- readRDS(path(dfbhere, "outlay.rds"))
+
+lihtc <- readRDS(path(dlihtc, "lihtc.rds"))
+
+nypicture <- readRDS(path(dpict, "nypicture.rds"))
+
+```
+
+## Introduction[^federal-1]
+
+[^federal-1]: This section draws heavily on @mccartyOverviewFederalHousing2019.
+
+The federal government has been involved in housing assistance since the 1930s, but the federal role has changed considerably over time. Current federal policies to address housing insecurity fall into three broad categories:
+
+-   **Rental housing assistance**, including vouchers and other mechanisms to reduce monthly costs of private housing; federally subsidized public housing owned and operated by local public housing authorities (PHAs); and special programs for the elderly and disabled, and to support rural housing;
+-   **Assistance to state and local governments**, including low-income housing tax credits the federal government allocates to states, and Community Development Block Grants (CDBG), and several other housing-related grants;
+-   **Assistance for homeowners**, including federally insured mortgage loans and rural housing support.
+
+Most of these policies are administered by the Department of Housing and Urban Development (HUD), but several are administered by other federal agencies, particularly the U.S. Department of the Treasury and the U.S. Department of Agriculture (USDA).
+
+Federal housing assistance was boosted dramatically in each of the last two recessions (the 2007 housing bubble and Great Recession, and the 2020 Covid-19 recession). Increases were far smaller in the 1990 and 2001 recessions. (figure below)
+
+\[TODO: use real rather than nominal; add recession bands\]
+
+```{r}
+#| label: countercyclical
+#| include: true
+
+p <- budauth |> 
+  filter(subfuncode=="604") |> 
+  group_by(fyear) |> 
+  summarise(n=n(), budauth=sum(budauth), .groups="drop") |> 
+  filter(fyear %in% 1990:2027) |> 
+  ggplot(aes(fyear, budauth)) +
+  geom_line(colour="blue") +
+  geom_point(colour="blue") +
+  scale_y_continuous(name="Authorization ($ billions)",
+                     breaks=seq(0, 2e8, 5e7),
+                     labels = dollar_format(scale=1e-6),
+                     limits=c(0, NA)) +
+  scale_x_continuous(name="Federal fiscal year") +
+  ggtitle("Federal budget authorization for housing assistance") +
+  labs(caption="Source: Federal Budget Database, FFY 2023") +
+  theme_bw() +
+  caption_left
+
+p
+
+
+```
+
+There have been two major trends in federal housing assistance since the 1980s:
+
+1.    The direct federal role in **creating** assisted housing has been declining, while the state and local government role has been increasing. This reflects the end to new construction under project-based Section 8, as well as the creation of the LIHTC.
+2.    Shift to tenant-based assistance; project-based rental assistance contracts between private landlords and HUD began expiring in 1980s
+
+To come (not sure where yet) table that shows major federal, state, and local programs, their size, and which housing insecurity issues they address.
+
+Among other things, table will show (and text will describe) the extent to which spending policies are focused on renters. (Will note that if we consider housing policies more broadly, including mortgage interest deduction and now-limited property tax deduction, more money actually goes to homeowners.)
+
+
+*Make sure to cover: far more eligible than served, long waiting lists.*
+
+
+## Rental assistance
+
+[Discuss:
+tenant-based vs. project-based rental assistance, and pros and cons of each
+rising role of tenant-based assistnce
+]
+
+### Tenant-based rental assistance (Section 8 Housing Choice Vouchers)
+
+### Project-based rental assistance
+
+### Public housing
+
+Map of public housing developments \[just a placeholder for now\]
+
+![](images/image-1962356329.png)
+
+### Projects targeted toward the elderly and disabled
+
+Elderly section 202 projects \[again, just a placeholder\]
+
+![](images/image-1830231498.png)
+
+Section 811 projects for the disabled
+
+![](images/image-69299167.png)
+
+## Assistance to state and local governments
+
+### Low income housing tax credit
+
+LIHTC properties are spread far more broadly through the state than public housing. \[just a placeholder\]
+
+![](images/image-114005822.png)
+
+Low Income Housing Tax Credit-supported units by county
+
+```{r rows.print=65}
+#| label: lihtc
+#| include: true
+
+lihtc |> 
+  mutate(n_units=ifelse(li_units > n_units, li_units, n_units)) |> 
+  group_by(stcnty, county) |> 
+  summarise(across(c(n_units, li_units), ~ sum(.x, na.rm=TRUE)), .groups = "drop") |> 
+  mutate(lipct=li_units / n_units) |> 
+  arrange(desc(li_units))
+
+```
+
+### Issues
+
+## Assistance for homeowners
+
+### CDBG and HOME grants
+
+The Community Development Block Grant (CDBG), and HOME Investments Partnership Program (HOME) are federal block grants distributed (via formula) to states and local governments. Recipients use the grant funds to carry out housing, economic development, and public improvement efforts that serve low, and moderate-income communities. Approximately 3,300 properties in NY have benefited from these grants.
+
+![](images/image-369821993.png)
+
+## Beneficiaries of housing assistance
+
+HUD-subsidized households in NY in 2021
+
+```{r}
+#| label: nypicture
+#| include: true
+
+# nypicture
+# count(dfny, code, name) # 63: 57 xnyc, 5 nyc, 1 missing 36XXX
+
+# nypicture |> 
+#   group_by(program, program_label) |> 
+#   summarise(across(c(people_total), ~ sum(.x, na.rm=TRUE)), .groups = "drop")
+
+nypicture |> 
+  group_by(nyc, program, program_label) |> 
+  summarise(across(c(people_total), ~ sum(.x, na.rm=TRUE)), .groups = "drop") |> 
+  pivot_wider(names_from=nyc, values_from=people_total, values_fill = 0)
+
+```
+
+
+HUD-subsidized households by county
+
+```{r}
+#| label: nycounties
+#| include: true
+
+shortlab <- c("all", "pubhousing", "hcv", "modrehab", "projbased", "bmir", "elderly", "disabled")
+
+nypicture |> 
+  mutate(shortlab=factor(program, levels=c(1:5, 7:9), labels=shortlab),
+         shortlab=fct_other(shortlab, 
+                            drop=c("modrehab", "bmir"),
+                            other_level="other"),
+         code=ifelse(nyc=="nyc", "36NYC", code),
+         name=ifelse(nyc=="nyc", "New York City", name)) |> 
+  group_by(name, shortlab) |> 
+  summarise(across(c(people_total), ~ sum(.x, na.rm=TRUE)), .groups = "drop") |> 
+  pivot_wider(names_from=shortlab, values_from=people_total, values_fill = 0) |> 
+  mutate(diff=all - rowSums(across(-c(all, name))),
+         other=other + diff,
+         phpct=pubhousing / all) |> 
+  select(-diff) |> 
+  relocate(phpct, .after = all) |>
+  arrange(desc(phpct))
+```
+
 
