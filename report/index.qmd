@@ -1,6 +1,56 @@
 # Executive Summary {.unnumbered}
 
-*Maria and Todd: it is good to identify what numbers we'd like to include in the text, so that they can be computer generated, minimizing risk of copying error and costs of updating. You'll see some examples below of numbers I think we'll want, in square brackets. If you can think about what we want to include in text, would be great. The following text is early and rough of course.*
+\[To come\]
+
+## TODO:
+
+-   Dec 2: all data included, and all major pieces done; Dec 16 draft report
+
+-   definitely no need for town or village discussion. i tried to be thoughtful about how to limit data/presentation/discussion in terms of substate presentation for the relevant parts.
+
+-   without necessarily showing another presentation of data, can we show whether affordability burdens are higher or lower than say 10 years ago?
+
+-   i don't see any demographic type analysis - will that be added per the outline? perhaps we don'tneed to go into as many levels as specified in the outline, but the racial/ethnic and perhaps age categories are helpful at a minimum.
+
+-   housing quality (maybe NYCHA?)
+
+-   crowding:
+
+    -   renters usually in more crowded conditions than owners - give rates
+
+    -   Maria surprised at renter crowding rate in NYC (check - what do other sources say?)
+
+-   are state/regional data driven by cities? If so, perhaps discuss?
+
+-   evictions:
+
+    -   Maria wow to high Maryland rate, much lower NY rate (figure out why this might be so)
+
+-   Of course, add much more on federal programs...
+
+-   And homelessness...
+
+State table:
+
+-   Add national average
+-   Top 10 in report, full table in appendix
+-   no bar chart
+
+Regions:
+
+-   bar chart make owners/renters clearer
+
+Counties:
+
+-   table top 10:
+    -   as 2 tables one for owner burdens, 1 for renters,
+    -   or heat maps
+-   full table in appendix
+
+Cities:
+
+-   full table in appendix
+-   maybe limit main to the top 5
 
 {{< include _summary.qmd >}}
 

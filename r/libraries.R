@@ -6,10 +6,12 @@ options(tibble.print_max = tprint, tibble.print_min = tprint) # show up to tprin
 
 # general utilities
 library(fs)
+library(archive)
 
 # tools
 library(vroom)
 library(readxl)
+library(openxlsx) # useful for reading from urls
 library(lubridate)
 library(RColorBrewer)
 library(RcppRoll)
