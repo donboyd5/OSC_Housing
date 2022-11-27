@@ -16,6 +16,7 @@ report/results/
 *.pdf
 *.png
 *.rds
+*.sas7bdat
 *.woff
 *.xl*
 *.xml
