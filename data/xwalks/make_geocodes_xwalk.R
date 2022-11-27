@@ -301,21 +301,39 @@ acscodes7 <- acscodes6 |>
          pop, aland, awater,
          survey, endyear)
 
-saveRDS(acscodes7, path(dxwalks, "acs_geocodes.rds"))  
+# saveRDS(acscodes7, path(dxwalks, "acs_geocodes.rds"))  
 
 tmp <- acscodes7 |> filter(str_detect(fullname, "New York city"))
 tmp <- acscodes7 |> filter(str_detect(fullname, "New York city"))
 
 
 # final step - put NY region codes on the acscodes file -----------------------------------
-acscodes7 <- readRDS(path(dxwalks, "acs_geocodes.rds"))  
+# acscodes7 <- readRDS(path(dxwalks, "acs_geocodes.rds"))  
 rgns <- read_excel(path(dxwalks, "nycounty_xwalk.xlsx"), sheet="region_codes")
+
+glimpse(acscodes7)
+glimpse(rgns)
 
 acscodes8 <- acscodes7 |> 
   left_join(rgns |> 
-              select())
+              select(stcntyfips=geoid,
+                     tmpcounty=county, 
+                     rgn_num, rgn_code, rgn_osc), 
+            by = "stcntyfips")
+count(acscodes8, rgn_num, rgn_code, rgn_osc, stcntyfips, countyname, tmpcounty)
+# all good
+glimpse(acscodes8)
+
+acscodes9 <- acscodes8 |> 
+  select(-tmpcounty) |> 
+  relocate(rgn_num, rgn_code, rgn_osc, .after=lsad)
+glimpse(acscodes9)
+
+saveRDS(acscodes9, path(dxwalks, "acs_geocodes.rds"))  
 
 
+# explore -----------------------------------------------------------------
 
-
+acscodes <- readRDS(path(dxwalks, "acs_geocodes.rds"))  
+glimpse(acscodes)
 

@@ -1,6 +1,5 @@
 
 
-
 # libraries ---------------------------------------------------------------
 source(here::here("r", "libraries.r"))
 # census_apikey <- "b27cb41e46ffe3488af186dd80c64dce66bd5e87"
@@ -11,6 +10,7 @@ source(here::here("r", "libraries.r"))
 
 # constants ---------------------------------------------------------------
 dacs <- here::here("data", "acs")
+dxwalks <- here::here("data", "xwalks")
 
 nyc_counties <- read_delim(
 "geoid;borough
@@ -23,68 +23,18 @@ nyc_counties <- read_delim(
 nyc_counties
 
 
-# ONETIME get save table shells ---------------------------------------------------
-urlbase <- "https://www2.census.gov/programs-surveys/acs/tech_docs/table_shells/2019/"
-url <- "https://www2.census.gov/programs-surveys/acs/tech_docs/table_shells/2019/B25072.xlsx"
-# read_excel(path=url) # cannot read from url
-
-library(httr)
-library(XML)
-
-flist <- readHTMLTable(content(GET(urlbase), "text"))[[1]] |> 
-  select(-1) |> 
-  as_tibble() |> 
-  lcnames() |> 
-  filter(!is.na(name), name != "Parent Directory") |> 
-  select(name, modified=`last modified`, size)
-glimpse(flist)
-flist
-
-urllist <- flist |> 
-  filter(str_sub(name, 1, 1)=="B") |> 
-  mutate(name=paste0(urlbase, name)) |> 
-  pull(name)
-
-f <- function(url){
-  print(url)
-  # read_excel won't read directly from url so write to temporary file
-  httr::GET(url, write_disk(tf <- tempfile(fileext = ".xlsx")))
-  read_excel(tf, sheet=1, col_types="text")
-}
-
-df1 <- map_dfr(urllist, f) # get ALL of the table shells for 2019
-glimpse(df1)
-
-df2 <- df1 |> 
-  setNames(c("table", "line", "description")) |>
-  group_by(table) |> 
-  mutate(tabname=description[1],
-         universe=description[2]) |> 
-  filter(row_number() > 2) |> 
-  mutate(group=ifelse(str_sub(description, -1, -1)==":",
-                      str_sub(description, 1, -2) |> str_to_lower(),
-                      NA_character_),
-         nline=as.integer(line)) |> 
-  fill(group, .direction="down") |> 
-  ungroup() |> 
-  filter(nline > 0) |> # get rid of the oddballs that have noninteger values??
-  mutate(vname=paste0(table, "_", str_pad(line, width=3, side="left", pad="0")),
-         universe=str_remove(universe, "Universe: ")) |> 
-  select(table, line=nline, vname, description, group, tabname, universe)
-
-df2 |> 
-  filter(is.na(group))
-
-saveRDS(df2, path(dacs, "tabshells_2019.rds"))
-
+# get crosswalks and auxilliary data --------------------------------------
+# files created below or elsewhere
+tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
+acscodes <- readRDS(path(dxwalks, "acs_geocodes.rds"))  
 
 
 # explore table shells ----------------------------------------------------
-tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
 
 tabs <- tabshells |> 
   select(table, tabname, universe) |> 
   distinct()
+tabs
 
 vtab <- function(table) {
   # view table
@@ -175,109 +125,6 @@ fall <- function(table, year=2019, geom=FALSE){
   df
 }
 
-# check NY subtypes -------------------------------------------------------
-df <- fall("B01003", geom=TRUE) # get a table with only one variable, for exploring names
-
-names <- df |> 
-  select(geotype, geoid, name) |> 
-  distinct()
-
-names |> filter(geotype=="county") |> arrange(name) # 62 counties (incl NYC)
-# 36005 Bronx County, New York
-# 36047 Kings County, New York
-# 36061 New York County, New York
-# 36081 Queens County, New York
-# 36085 Richmond County, New York
-
-names |> 
-  filter(geotype == "cousub") |> # about 1023 cousubs
-  filter(str_detect(name, "city")) |> arrange(name)
-# 61 cities in cousubs -- 2 Genevas (one is not real), no NYC, no Sherrill
-
-names |> 
-  filter(type == "place") |> # about 1023 cousubs
-  filter(str_detect(name, "city")) |> arrange(name)
-# 62 cities in places - includes Sherrill, 1 Geneva, 1 NYC -- so maybe only use places for cities
-
-df |> 
-  filter(str_detect(name, "New York city"))
-
-df |> 
-  filter(!str_detect(name, "town")) |> 
-  filter(str_detect(name, "borough") |
-           geoid %in% c("36005", "36047", "36061", "36081", "36085")) |>
-  arrange(estimate)
-# good, boroughs and NY counties match
-
-# 36005 Bronx County, New York
-# 36047 Kings County, New York
-# 36061 New York County, New York
-# 36081 Queens County, New York
-# 36085 Richmond County, New York
-
-df |> 
-  filter(str_detect(name, "Geneva city"))
-
-df |> 
-  filter(str_detect(name, "Sherrill city"))
-
-df |> 
-  filter(str_detect(name, "New York city"))
-
-# what are the county subdivisions that aren't cities?
-names |> 
-  filter(type == "cousub") |> # about 1023 cousubs
-  filter(!str_detect(name, "city")) |> 
-  mutate(subtype=case_when(str_detect(name, "town") ~ "town",
-                           str_detect(name, "Reservation") ~ "reservation",
-                           str_detect(name, "borough") ~ "borough",
-                           str_detect(name, "not defined") ~ "undefined",
-                           TRUE ~ "other")) |> 
-  # filter(subtype=="other") # Chautauqua Lake UT
-  count(subtype)
-# 933 towns
-
-# what are the places that aren't cities?
-names |> 
-  filter(type == "place") |> 
-  filter(!str_detect(name, "city")) |> # about 1033 places that aren't cities
-  mutate(subtype=case_when(str_detect(name, "village") ~ "village",
-                           str_detect(name, "CDP") ~ "CDP",
-                           TRUE ~ "other")) |> 
-  count(subtype)
-# 538 villages
-# 595 CDPs
-
-
-# create geotypes xwalk ---------------------------------------------------
-cnty_xwalk <- read_excel(here::here("data", "crosswalks", "nycounty_xwalk_data.xlsx"),
-                    sheet="region_codes",
-                    col_types="text")
-
-xwalk
-names2 <- names |> 
-  mutate(nygeotype=case_when(
-    geotype %in% c("nation", "state", "county") ~ geotype,
-    
-    # cousubs
-    geotype=="cousub" & str_detect(name, "town") ~ "town",
-    geotype=="cousub" & str_detect(name, "Reservation") ~ "reservation",
-    geotype=="cousub" & str_detect(name, "borough") ~ "borough",
-    geotype=="cousub" & str_detect(name, "city") ~ "city_cousub",
-    geotype=="cousub" & str_detect(name, "not defined") ~ "undefined_cousub",
-    
-    # caution: places don't have a county assigned to them
-    geotype=="place" & str_detect(name, "city") ~ "city",
-    geotype=="place" & str_detect(name, "village") ~ "village",
-    geotype=="place" & str_detect(name, "CDP") ~ "CDP",
-    
-    TRUE ~ "other")) # Chautauqua Lake UT, Chautauqua County, New York
-
-count(names2, nygeotype, geotype)
-
-names2 |> filter(nygeotype=="undefined_cousub")
-names2 |> filter(nygeotype=="other")
-
 # tables of interest ------------------------------------------------------
 # here are tables PRB used:
 # PRB Household gross rent data are from table B25070. Homeowner data are from table B25091
@@ -321,9 +168,7 @@ tabs |>
   filter(str_detect(tabname, "PERCENTAGE"), str_sub(table, 1, 1)=="B")
 
 tname <- "B25101"
-vars |> 
-  filter(table==tname) |> 
-  select(-tabname)
+vtab(tname)
 
 
 # ONETIME: get tables of interest -----------------------------------------
@@ -335,7 +180,6 @@ gettabs <- c("B01003", "B02001", "B05001", "B17019", "B25001", "B25002",
 
 df <- map_dfr(gettabs, fall)
 saveRDS(df, here::here("data", "acs", "acs5yr_osc.rds"))
-
 
 
 # ONETIME clean and collapse tables of interest -----------------------------------
@@ -360,36 +204,96 @@ glimpse(toi1)
 count(toi1, table)
 count(toi1, geotype)
 
-## construct NY region data  ----
-# xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
-
 
 
 ## put stabbr and nygeotype on file, add NY regions, save ---------
+glimpse(acscodes)
 count(toi1, geotype)
-toi2 <- toi1 |> 
-  mutate(nygeotype=case_when(geotype %in% c("nation", "state", "county") ~ geotype,
-                             geotype=="cousub" & str_detect(name, "town") ~ "town",
-                             geotype=="cousub" & str_detect(name, "Reservation") ~ "reservation",
-                             geotype=="cousub" & str_detect(name, "borough") ~ "borough",
-                             geotype=="cousub" & str_detect(name, "not defined") ~ "undefined_cousub",
-                             geotype=="place" & str_detect(name, "city") ~ "city",
-                             geotype=="place" & str_detect(name, "village") ~ "village",
-                             TRUE ~ "other"))
-count(toi2, nygeotype, geotype)
+count(acscodes, nygeotype, geotype)
+names(acscodes)
+intersect(names(acscodes), names(toi1))
 
+# check for dups within geoid of acscodes -- none
+count(acscodes, geoid, geotype) |> filter(n>1) 
+# check for dups within geoid of toi1 -- none
+toi1 |> 
+  select(geoid, geotype) |> 
+  distinct() |> 
+  count(geoid, geotype) |> 
+  filter(n>1) 
+  
+
+toi2 <- toi1 |> 
+  left_join(acscodes |> 
+              select(-c(survey, endyear)),
+            by=c("geoid", "geotype"))
+glimpse(toi2)
+count(toi2, nygeotype, geotype)
+tmp <- count(toi2, geoid, geotype, nygeotype, name, shortname, fullname)
+tmp |> filter(name != fullname)
 
 tmp <- toi1 |> 
-  filter(geotype %in% c("county")
+  filter(geotype %in% c("county")) |> 
   select(geoid, geotype, name) |> 
   distinct()
 
+toi3 <- toi2 |> 
+  select(-name) |> 
+  relocate(geotype, nygeotype, shortname, fullname, .after=geoid)
+glimpse(toi3)  
 
-# get regions of NY
 
+# collapse to regions of NY ----
+count(toi3 |> filter(nygeotype=="county",
+                     !geoid %in% nyc_counties$geoid),
+      geoid, fullname) # upstate counties
+count(toi3 |> filter(nygeotype=="city", geoid=="3651000"),
+      geoid, fullname)
 
+nonnyc <- expression(nygeotype=="county" & !geoid %in% nyc_counties$geoid)
+nyc <- expression(nygeotype=="city" & geoid=="3651000")
+keep <- expression(eval(nonnyc) | eval(nyc))
 
+nyregions <- toi3 |> 
+  filter(eval(keep)) |> 
+  # do NOT include geotype, names etc. in grouping variables
+  # ONLY include estimate as a summed variable (not moe)
+  group_by(stabbr, stname, statefp, statens,
+           rgn_num, rgn_code, rgn_osc, 
+           table, variable, endyear, survey) |> 
+  summarise(estimate=sum(estimate),
+            pop=sum(pop),
+            .groups="drop") |> 
+  mutate(nygeotype="region")
+summary(nyregions)
+count(nyregions, stabbr, stname, rgn_num, rgn_code, rgn_osc)
 
+# cities within regions
+rgn_cities <- toi3 |> 
+  filter(nygeotype=="city") |> 
+  # do NOT include geotype, names etc. in grouping variables
+  # ONLY include estimate as a summed variable (not moe)
+  group_by(stabbr, stname, statefp, statens,
+           rgn_num, rgn_code, rgn_osc, 
+           table, variable, endyear, survey) |> 
+  summarise(estimate=sum(estimate),
+            pop=sum(pop),
+            .groups="drop") |> 
+  mutate(nygeotype="rgn_cities")
+count(rgn_cities, stabbr, stname, rgn_num, rgn_code, rgn_osc)
+
+# rest of region
+rgn_ror <- bind_rows(nyregions, rgn_cities) |> 
+  select(-pop) |> 
+  pivot_wider(names_from = nygeotype, values_from = estimate) |> 
+  mutate(ror=region - rgn_cities)
+
+vtab("B25071")
+# doesn't work for B25071_001 Median gross rent as a percentage of household income
+vtab("B25070")
+# B25070_010 50.0 percent or more
+rgn_ror |> 
+  filter(variable=="B25070_010") 
 
 
 # NEW SECTION get selected time series ------------------------------------------------
@@ -539,3 +443,110 @@ df2 <- df1 |>
                       NA_character_)) |> 
   relocate(vname, .after=table) |> 
   relocate(group, .after=description)
+
+
+# OLDER below here ----
+
+# check NY subtypes -------------------------------------------------------
+df <- fall("B01003", geom=TRUE) # get a table with only one variable, for exploring names
+
+names <- df |> 
+  select(geotype, geoid, name) |> 
+  distinct()
+
+names |> filter(geotype=="county") |> arrange(name) # 62 counties (incl NYC)
+# 36005 Bronx County, New York
+# 36047 Kings County, New York
+# 36061 New York County, New York
+# 36081 Queens County, New York
+# 36085 Richmond County, New York
+
+names |> 
+  filter(geotype == "cousub") |> # about 1023 cousubs
+  filter(str_detect(name, "city")) |> arrange(name)
+# 61 cities in cousubs -- 2 Genevas (one is not real), no NYC, no Sherrill
+
+names |> 
+  filter(type == "place") |> # about 1023 cousubs
+  filter(str_detect(name, "city")) |> arrange(name)
+# 62 cities in places - includes Sherrill, 1 Geneva, 1 NYC -- so maybe only use places for cities
+
+df |> 
+  filter(str_detect(name, "New York city"))
+
+df |> 
+  filter(!str_detect(name, "town")) |> 
+  filter(str_detect(name, "borough") |
+           geoid %in% c("36005", "36047", "36061", "36081", "36085")) |>
+  arrange(estimate)
+# good, boroughs and NY counties match
+
+# 36005 Bronx County, New York
+# 36047 Kings County, New York
+# 36061 New York County, New York
+# 36081 Queens County, New York
+# 36085 Richmond County, New York
+
+df |> 
+  filter(str_detect(name, "Geneva city"))
+
+df |> 
+  filter(str_detect(name, "Sherrill city"))
+
+df |> 
+  filter(str_detect(name, "New York city"))
+
+# what are the county subdivisions that aren't cities?
+names |> 
+  filter(type == "cousub") |> # about 1023 cousubs
+  filter(!str_detect(name, "city")) |> 
+  mutate(subtype=case_when(str_detect(name, "town") ~ "town",
+                           str_detect(name, "Reservation") ~ "reservation",
+                           str_detect(name, "borough") ~ "borough",
+                           str_detect(name, "not defined") ~ "undefined",
+                           TRUE ~ "other")) |> 
+  # filter(subtype=="other") # Chautauqua Lake UT
+  count(subtype)
+# 933 towns
+
+# what are the places that aren't cities?
+names |> 
+  filter(type == "place") |> 
+  filter(!str_detect(name, "city")) |> # about 1033 places that aren't cities
+  mutate(subtype=case_when(str_detect(name, "village") ~ "village",
+                           str_detect(name, "CDP") ~ "CDP",
+                           TRUE ~ "other")) |> 
+  count(subtype)
+# 538 villages
+# 595 CDPs
+
+
+# create geotypes xwalk ---------------------------------------------------
+cnty_xwalk <- read_excel(here::here("data", "crosswalks", "nycounty_xwalk_data.xlsx"),
+                         sheet="region_codes",
+                         col_types="text")
+
+xwalk
+names2 <- names |> 
+  mutate(nygeotype=case_when(
+    geotype %in% c("nation", "state", "county") ~ geotype,
+    
+    # cousubs
+    geotype=="cousub" & str_detect(name, "town") ~ "town",
+    geotype=="cousub" & str_detect(name, "Reservation") ~ "reservation",
+    geotype=="cousub" & str_detect(name, "borough") ~ "borough",
+    geotype=="cousub" & str_detect(name, "city") ~ "city_cousub",
+    geotype=="cousub" & str_detect(name, "not defined") ~ "undefined_cousub",
+    
+    # caution: places don't have a county assigned to them
+    geotype=="place" & str_detect(name, "city") ~ "city",
+    geotype=="place" & str_detect(name, "village") ~ "village",
+    geotype=="place" & str_detect(name, "CDP") ~ "CDP",
+    
+    TRUE ~ "other")) # Chautauqua Lake UT, Chautauqua County, New York
+
+count(names2, nygeotype, geotype)
+
+names2 |> filter(nygeotype=="undefined_cousub")
+names2 |> filter(nygeotype=="other")
+
