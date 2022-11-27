@@ -1,4 +1,12 @@
 
+# TODO: ----
+# when nygeotype=undefined_cousub
+#   I have not bothered to get the county code and county name, would not be hard
+#   there are 9 of these records
+#   shortname is missing for these records, although fullname is not
+# nygeotype=CDP
+#   I have not bothered to get the county code and county name, probably hard
+
 # Overview ----
 
 # Goal:
@@ -177,6 +185,9 @@ count(acscodes3 |> filter(geotype %in% "cousub"), countyfp)
 count(acscodes3 |> filter(geotype %in% "county"), countyfp)
 # we have countyfp for all but 9 cousub and all county recs, but none for place recs
 
+# look at how NYC is coded
+check <- acscodes3 |> filter(str_detect(fullname, "New York city"))
+# geoid 3651000, countyfp missing, placens 02395220
 
 # put dominant county on file ----
 # match placens (gnis code) to a NYS data file that has gnis and dominant county
@@ -209,6 +220,7 @@ count(df2, gnis) |> ht()
 str_pad("978659", width=8, side="left", pad="0")
 
 domco1 <- df2 |> 
+  filter(muni != "New York City") |> # not coded the way I want, we'll do NYC by hand
   filter(typef %in% c("City", "Village")) |> 
   mutate(placens=str_pad(gnis, width=8, side="left", pad="0")) |> 
   select(typef, placens, muni, cntycode, county)
@@ -217,7 +229,8 @@ acscodes4 <- acscodes3 |>
   left_join(domco1, by="placens")
 
 check <- acscodes4 |> filter(nygeotype %in% c("city", "village"))
-# we did not match:
+# we did not match (geoid, fullname, placens):
+#   3651000 New York city, New York 02395220 (intentional)
 #   3646085 Mastic Beach village, New York 02390131
 #   3664749 Salamanca city, New York 00979450
 
@@ -249,20 +262,39 @@ acscodes6 <- acscodes5 |>
   mutate(countyfp=ifelse(is.na(countyfp), cntycode, countyfp)) |> 
   left_join(counties |> 
               select(stabbr, countyfp, countyname=shortname),
-            by=c("stabbr", "countyfp"))
+            by=c("stabbr", "countyfp")) |> 
+  # handle NYC manually
+  mutate(countyfp=case_when(is.na(cntycode) & 
+                              geotype=="place" & 
+                              geoid=="3651000" ~ "51000",
+                            TRUE ~ countyfp),
+         countyname=case_when(is.na(cntycode) & 
+                              geotype=="place" & 
+                              geoid=="3651000" ~ "New York City",
+                            TRUE ~ countyname),
+         stcntyfips=ifelse(!is.na(countyfp),
+                           paste0(statefp, countyfp),
+                           NA_character_)) |> 
+  relocate(muni, .after = fullname) # make it easier to compare names
 count(acscodes6, countyname, county)
+
+# examine selected records
 check <- acscodes6 |> filter(countyname=="Albany")
+check <- acscodes6 |> filter(str_detect(fullname, "New York city"))
+check <- acscodes6 |> filter(nygeotype=="city")
+check <- acscodes6 |> filter(nygeotype=="village")
 
 acscodes6 |> 
   filter(is.na(countyname)) |> 
   count(geotype, nygeotype)
-# everything looks ok - we haven't bothered with counties for Census Designated Places
+# everything looks ok - I haven't bothered with counties for Census Designated Places
 
 # drop unneeded NY codes variables, put vars in desired order, and save
-acscodes7 <- acscodes6 |> 
+# we don't need cntycode, county, typef from the NY file
+acscodes7 <- acscodes6 |>
   select(affgeoid, geoid, geotype, nygeotype, shortname, fullname,
-         stabbr, statefp, statens, 
-         countyfp, countyns, countyname,
+         stabbr, stname, statefp, statens, 
+         stcntyfips, countyfp, countyns, countyname,
          cousubfp, cousubns, 
          placefp, placens, 
          lsad, 
@@ -271,8 +303,17 @@ acscodes7 <- acscodes6 |>
 
 saveRDS(acscodes7, path(dxwalks, "acs_geocodes.rds"))  
 
+tmp <- acscodes7 |> filter(str_detect(fullname, "New York city"))
+tmp <- acscodes7 |> filter(str_detect(fullname, "New York city"))
+
 
 # final step - put NY region codes on the acscodes file -----------------------------------
+acscodes7 <- readRDS(path(dxwalks, "acs_geocodes.rds"))  
+rgns <- read_excel(path(dxwalks, "nycounty_xwalk.xlsx"), sheet="region_codes")
+
+acscodes8 <- acscodes7 |> 
+  left_join(rgns |> 
+              select())
 
 
 
