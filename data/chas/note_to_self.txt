@@ -1,0 +1,3 @@
+11/24/2022
+
+This folder has custom files downloaded for this project. The main chas data are outside of the project, in the data folder, housing insecurity subfolder.
