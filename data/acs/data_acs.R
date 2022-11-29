@@ -36,16 +36,6 @@ tabs <- tabshells |>
   distinct()
 tabs
 
-vtab <- function(table) {
-  # view table
-  tab <- tabshells |> filter(table==!!table)
-  list(tab=tab |> select(-tabname, -universe),
-       table=table,
-       tabname=tab$tabname[1],
-       universe=tab$universe[1]
-       )
-}
-
 tmp <- vtab("B06008")
 
 tname <- "B04007"
@@ -261,8 +251,8 @@ nyregions <- toi3 |>
   group_by(stabbr, stname, statefp, statens,
            rgn_num, rgn_code, rgn_osc, 
            table, variable, endyear, survey) |> 
-  summarise(estimate=sum(estimate),
-            pop=sum(pop),
+  summarise(estimate=sum(estimate, na.rm=TRUE),
+            pop=sum(pop, na.rm=TRUE),
             .groups="drop") |> 
   mutate(nygeotype="region")
 summary(nyregions)
@@ -276,24 +266,55 @@ rgn_cities <- toi3 |>
   group_by(stabbr, stname, statefp, statens,
            rgn_num, rgn_code, rgn_osc, 
            table, variable, endyear, survey) |> 
-  summarise(estimate=sum(estimate),
-            pop=sum(pop),
+  summarise(estimate=sum(estimate, na.rm=TRUE),
+            pop=sum(pop, na.rm=TRUE),
             .groups="drop") |> 
   mutate(nygeotype="rgn_cities")
 count(rgn_cities, stabbr, stname, rgn_num, rgn_code, rgn_osc)
 
+rgn_villages <- toi3 |> 
+  filter(nygeotype=="village") |> 
+  # do NOT include geotype, names etc. in grouping variables
+  # ONLY include estimate as a summed variable (not moe)
+  group_by(stabbr, stname, statefp, statens,
+           rgn_num, rgn_code, rgn_osc, 
+           table, variable, endyear, survey) |> 
+  summarise(estimate=sum(estimate, na.rm=TRUE),
+            pop=sum(pop, na.rm=TRUE),
+            .groups="drop") |> 
+  mutate(nygeotype="rgn_villages")
+count(rgn_villages, stabbr, stname, rgn_num, rgn_code, rgn_osc)
+
 # rest of region
-rgn_ror <- bind_rows(nyregions, rgn_cities) |> 
-  select(-pop) |> 
-  pivot_wider(names_from = nygeotype, values_from = estimate) |> 
-  mutate(ror=region - rgn_cities)
+rgn_xcityvill <- bind_rows(nyregions, rgn_cities, rgn_villages) |>
+  # get differences for both pop and estimate
+  pivot_longer(cols = c(pop, estimate)) |> 
+  pivot_wider(names_from = nygeotype, values_fill = 0) |> 
+  mutate(rgn_xcityvill=region - rgn_cities - rgn_villages,
+         nygeotype="rgn_xcityvill") |>  
+  select(-c(region, rgn_cities, rgn_villages)) |> 
+  pivot_wider(values_from = rgn_xcityvill)
+  
+
+stack <- bind_rows(toi3, nyregions, rgn_cities, rgn_villages, rgn_xcityvill)
+glimpse(stack)  
+summary(stack)
+ns(stack)
+count(stack, nygeotype)
+saveRDS(stack, here::here("data", "acs", "acs5yr_tabdata.rds"))
+
+acs <- readRDS(here::here("data", "acs", "acs5yr_tabdata.rds"))
+
+
 
 vtab("B25071")
 # doesn't work for B25071_001 Median gross rent as a percentage of household income
 vtab("B25070")
 # B25070_010 50.0 percent or more
-rgn_ror |> 
+rgn_xcityvill |> 
   filter(variable=="B25070_010") 
+
+
 
 
 # NEW SECTION get selected time series ------------------------------------------------
@@ -424,26 +445,6 @@ cb |>
   scale_y_continuous(limits=c(0, NA)) +
   facet_wrap(~tenure)
   
-
-df2 <- df1 |> 
-  # as_tibble() |> 
-  setNames(c("table", "line", "description")) |>
-  # mutate(across(c(table, description), str_trim)) |> 
-  group_by(table) |> 
-  mutate(tabname=description[1],
-         universe=description[2],
-         group=ifelse(str_sub(description, -1, -1)==":",
-                      str_sub(description, 1, -2) |> str_to_lower(),
-                      NA_character_)) |> 
-  fill(group, .direction="down") |> 
-  ungroup() |> 
-  filter(!is.na(line)) |> 
-  mutate(vname=ifelse(line==round(line), # is value of line an integer?
-                      paste0(table, "_", str_pad(line, width=3, side="left", pad="0")),
-                      NA_character_)) |> 
-  relocate(vname, .after=table) |> 
-  relocate(group, .after=description)
-
 
 # OLDER below here ----
 

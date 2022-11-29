@@ -18,63 +18,86 @@ editor_options:
 #| label: constants
 #| include: false
 
-minunits <- 500
-nplaces <- 25
-
 tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
 
 ```
 
 ```{r}
+#| label: libraries
 #| include: false
 
 source(here::here("r", "libraries.r"))
 source(here::here("r", "functions.r"))
 source(here::here("r", "constants.r"))
 
-chdir <- here::here("data", "chas")
-chdir2019 <- path(chdir, "2015-2019")
+```
 
-# cost <- readRDS(here::here("data", "cost.rds"))
+```{r}
+#| label: data-prep
+#| include: false
 
-t9 <- readRDS(path(chdir2019, "t9long.rds"))
+
+# tabshells <- readRDS(here::here("data", "acs", "tabshells_2019.rds"))
+tabdict <- readRDS(path(dchas2019, "chasdict.rds"))
+glimpse(tabdict)
+
+tmp <- tabdict |> filter(table=="T9", str_detect(vname, "est"))
+t9 <- readRDS(path(dchwide, "tab9_enhanced.rds"))
+glimpse(t9)
 # we need cnty, cntyname maybe shortname also
 
-# use allrace for this set of tables
-cost_wide <- t9 |> 
-  filter(race=="allrace") |> 
-  # filter(nytype=="state", stabbr=="NY") |> # uncomment for testing
-  pivot_wider(names_from = c(tenure, cost)) |> 
-  # get own and rent sums where cost burden is computable
-  mutate(own_check=own_costle30 + own_costgt30le50 + own_costgt50,
-         rent_check=rent_costle30 + rent_costgt30le50 + rent_costgt50,
-         own_cost30=own_costgt30le50 + own_costgt50,
-         rent_cost30=rent_costgt30le50 + rent_costgt50,
+# get all-races cost burden
+# T9_est1 hunits
+# T9_est2 owner occupied
+# T9_est38 renter occupied
+tmp |> 
+  filter(str_detect(desc1, "Renter")) |> 
+  filter(str_detect(desc3, "greater than")) |> 
+  select(vname, desc2, desc3) |> 
+  mutate(desc2=str_sub(desc2, 20, 40))
+# 5, 6, 10, 11, 15, 16, 
+(owncb3050vars <- paste0("T9_est", seq(5, 35, 5)))
+(owncb50pvars <- paste0("T9_est", seq(6, 36, 5)))
+(rentcb3050vars <- paste0("T9_est", seq(41, 71, 5)))
+(rentcb50pvars <- paste0("T9_est", seq(42, 72, 5)))
+
+t9cb <- t9 |> 
+  mutate(owncb3050 = rowSums(across(all_of(c(owncb3050vars)))),
+         owncb50p = rowSums(across(all_of(c(owncb50pvars)))),
+         rentcb3050 = rowSums(across(all_of(c(rentcb3050vars)))),
+         rentcb50p = rowSums(across(all_of(c(rentcb50pvars)))),
+         ) |> 
+  relocate(owncb3050, owncb50p, rentcb3050, rentcb50p, .before=T9_est1)
+glimpse(t9cb)
+
+t9cb2 <- t9cb |> 
+  select(nygeotype, stabbr, geoid, affgeoid, shortname, fullname, countyfp, countyname,
+         T9_est1, T9_est2, T9_est38, owncb3050, owncb50p, rentcb3050, rentcb50p) |> 
+  mutate(own_cost30=owncb3050 + owncb50p,
+         rent_cost30=rentcb3050 + rentcb50p,
          alltenure_cost30=own_cost30 + rent_cost30,
-         own_cost50=own_costgt50,
-         rent_cost50=rent_costgt50,
-         alltenure_cost50=own_cost50 + rent_cost50) |> 
-  relocate(own_check, rent_check, .after=cntyname) |> 
-  # calc percentages
-  mutate(own_pct30=own_cost30 / own_allcost,
-         rent_pct30=rent_cost30 / rent_allcost,
-         alltenure_pct30=alltenure_cost30 / alltenure_allcost,
-         own_pct50=own_cost50 / own_allcost,
-         rent_pct50=rent_cost50 / rent_allcost,
-         alltenure_pct50=alltenure_cost50 / alltenure_allcost, 
-         renter_share=rent_allcost / alltenure_allcost)
+         own_pct30=own_cost30 / T9_est2,
+         rent_pct30=rent_cost30 / T9_est38,
+         alltenure_pct30=alltenure_cost30 / T9_est1,
+         renter_share=T9_est38 / T9_est1)
+count(t9cb2, nygeotype)
 
 # tabdata for all types
 # nytype groups: state, region, county, city, town, village
-tabdata <- cost_wide |> 
-  filter(nytype %in% c("state", "region", "county", "city", "town", "village")) |>
-  rename(allunits=alltenure_allcost,
+tabdata <- t9cb2 |> 
+  filter(nygeotype %in%
+           c("nation", "state", "region", "county", "city", "town", "village",
+             "rgn_cities", "rgn_villages", "rgn_xcityvill")) |>
+  rename(allunits=T9_est1,
          own_pct=own_pct30, rent_pct=rent_pct30, alltenure_pct=alltenure_pct30) |> 
-  group_by(nytype) |> 
+  group_by(nygeotype) |> 
   mutate(ownrank=row_number(desc(own_pct)),
          rentrank=row_number(desc(rent_pct)),
-         alltenurerank=row_number(desc(alltenure_pct)))  |> 
-  select(nytype, stabbr, mininame, cntyname, 
+         alltenurerank=row_number(desc(alltenure_pct)),
+         shortname=ifelse(nygeotype=="state" & stabbr=="NY",
+                          paste0(shortname, " State"),
+                          shortname))  |> 
+  select(nygeotype, stabbr, shortname, countyname, 
          allunits,
          own_pct, rent_pct, alltenure_pct, 
          ownrank, rentrank, alltenurerank,
@@ -82,7 +105,10 @@ tabdata <- cost_wide |>
   ungroup() |> 
   arrange(desc(alltenure_pct))
 
+saveRDS(tabdata, here::here("report", "results", "cb_tabdata.rds")) # for appendix
+
 ```
+
 
 ### Housing Cost Burden in New York and Other States
 
@@ -91,33 +117,29 @@ tabdata <- cost_wide |>
 #| include: false
 
 tabdata_st <- tabdata |> 
-  filter(nytype=="state", !stabbr %in% c("DC", "PR")) |> 
-  mutate(mininame=str_remove(mininame, " State"))
+  filter(nygeotype %in% c("nation", "state"), !stabbr %in% c("DC", "PR")) |> 
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", .x, NA_real_)),
+         shortname=ifelse(nygeotype=="state", 
+                          str_remove(shortname, " State"),
+                          shortname))
 
-# tabdata |> 
-#   ggplot(aes(own_pct, rent_pct))+
-#   geom_point() +
-#   geom_text(aes(label=stabbr), hjust=0, vjust=0) +
-#   geom_abline(slope=1, intercept=0)
-
+saveRDS(tabdata_st, here::here("report", "results", "cb_tabdata_st.rds")) # for appendix
 
 ```
 
-*M&T: Maybe in the body of the report it would be best to have just a simple bar chart of the top 10 for counties, cities, towns, and villages (and maybe states, too), and push all long tables to the appendix.*
-
 
 ```{r}
-
 #| label: hbar_states
-#| include: true
+#| eval: false
+#| include: false
 #| echo: false
 
 p <- tabdata_st |> 
   arrange(desc(alltenure_pct)) |> 
-  filter(row_number() <= 10) |> 
-  select(mininame, alltenure_pct) |>
+  filter(nygeotype=="nation" | row_number() <= 10) |> 
+  select(shortname, alltenure_pct) |>
   ggplot() +
-  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
+  geom_col(aes(x=alltenure_pct, y=reorder(shortname, alltenure_pct)), fill="blue", width=0.5) +
   scale_x_continuous(name="Cost-burdened households as percent of all households",
                      breaks=seq(0, 1, 0.05),
                      labels=percent_format(accuracy=1)) +
@@ -138,9 +160,13 @@ New York has the fourth highest cost burden among the states, measured by the pe
 #| include: true
 #| echo: false
 
-tt <- "States ranked by housing cost burden"
+tt <- "Top 10 states ranked by housing cost burden, plus United States"
 
-tab <- f_tabranks(tabdata_st, stubvar="mininame", stubhead="State",
+tabdata_topn <- tabdata_st |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(nygeotype=="nation" | row_number() <= 10) 
+
+tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
 tabfile <-  path(tabdir, "cost_states.png")
@@ -160,10 +186,12 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 #| include: false
 
 tabdata_rgn <- tabdata |> 
-  filter(stabbr=="NY", nytype %in% c("state", "region")) |>
-  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+  filter(stabbr=="NY", nygeotype %in% c("state", "region")) |>
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
 
 tabdata_rgn
+
+saveRDS(tabdata_rgn, here::here("report", "results", "cb_tabdata_rgn.rds")) # for appendix
 
 ```
 
@@ -175,10 +203,11 @@ High housing cost burden is far more prevalent in New York City, the Mid-Hudson 
 #| echo: false
 
 tt <- "New York regions ranked by housing cost burden"
-tab <- f_tabranks(tabdata_rgn, stubvar="mininame", stubhead="Region",
+tab <- f_tabranks(tabdata_rgn, stubvar="shortname", stubhead="Region",
          tabtitle=tt)
 
 tabfile <-  path(tabdir, "cost_regions.png")
+# tabfile <- "E:/R_projects/OSC_Housing/report/gtables/cost_regions.png"
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
@@ -186,28 +215,25 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-> *M&T: We might want to show how renters affect cost burden around the state. One approach is the bar chart below. It shows numbers of cost-burdened households, rather than cost-burdened as % of total, so it is getting at where the cost-burdened households rather than which region has the greatest proportion of cost-burdened as % of all. NYC has a large number of renters (shown in table above); most of the rest of NY has about 1/3 renters except Long Island, which is only 19.4% renters. NYC's high cost burden is driven by its large number of cost-burdened renters. Long Island's high cost burden is driven by its large number of cost-burdened owners. In the rest of the state the story is more complicated. Time permitting, after the analysis of policies is done, it would be good to break this down further into the role of high housing costs vs. the role of low income (a key issue in upstate, I believe).*
 
 ```{r}
-#| label: hbar
+#| label: region-hbar
 #| include: true
 #| echo: false
+names(t9cb2)
 
-p <- cost_wide |> 
-  # filter(nytype=="state", !stabbr %in% c("DC", "PR")) |> 
-  filter(stabbr=="NY", nytype %in% c("state", "region")) |> 
-  filter(mininame != "New York State") |> 
-  select(geoid, mininame, own_cost30, rent_cost30, alltenure_cost30) |> 
-  arrange(desc(alltenure_cost30)) |> 
-  filter(row_number() <= 11) |> 
-  select(geoid, mininame, own_cost30, rent_cost30, alltenure_cost30) |> 
-  pivot_longer(-c(geoid, mininame, alltenure_cost30)) |> 
+p <- t9cb2 |> 
+  filter(stabbr=="NY", nygeotype %in% c("region")) |> 
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  arrange(desc(alltenure_cost30)) |>
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  pivot_longer(-c(shortname, alltenure_cost30)) |> 
   mutate(namef=factor(name, 
                       levels=c("rent_cost30", "own_cost30"),
                       labels=c("renters", "owners"))) |> 
   arrange(namef) |> 
   ggplot() +
-  geom_col(aes(x=value, y=reorder(mininame, alltenure_cost30), fill=namef), width=0.5) +
+  geom_col(aes(x=value, y=reorder(shortname, alltenure_cost30), fill=namef), width=0.5) +
   scale_x_continuous(name="Number of cost-burdened households (thousands)",
                      breaks=seq(0, 2e6, 100e3),
                      labels=number_format(scale=1e-3)) +
@@ -221,6 +247,62 @@ p
 
 ```
 
+#### Within-Region Housing Cost Burden for City and Village vs. Other areas
+
+```{r}
+#| label: regional-breakdown-data
+#| include: false
+
+tabdata_rgn_brkdown <- tabdata |> 
+  filter(nygeotype %in% c("region", "rgn_cities", "rgn_villages", "rgn_xcityvill")) |> 
+  select(nygeotype, shortname, alltenure_pct) |> 
+  pivot_wider(names_from = nygeotype, values_from = alltenure_pct) |> 
+  select(shortname, region, rgn_cities, rgn_villages, rgn_xcityvill) |> 
+  arrange(desc(region))
+
+tabdata_rgn_brkdown
+
+saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "cb_tabdata_rgn_brkdown.rds")) # for appendix
+
+
+```
+
+
+```{r}
+#| label: regional-breakdown-table
+#| include: true
+#| echo: false
+
+# region rgn_cities rgn_villages rgn_xcityvill
+# New York regions ranked by housing cost burden
+# Percent of occupied housing units with housing costs greater than 30% of income
+
+tab <- tabdata_rgn_brkdown |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "Breakdown of housing cost burden within New York regions",
+      subtitle=tabst) |> 
+  cols_label(shortname="Region",
+             region=html("Region total"),
+             rgn_cities=html("Cities"),
+             rgn_villages=html("Villages"),
+             rgn_xcityvill=html("Remainder of region")) |> 
+  tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
+              label=html("Cost burden prevalence within region")) |> 
+  fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+  
+tabfile <-  path(tabdir, "cost_region_breakdown.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+# f_tabranks
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
 
 ### Housing Cost Burden in New York's Counties
 
@@ -229,10 +311,11 @@ p
 #| include: false
 
 tabdata_cnty <- tabdata |> 
-  filter(stabbr=="NY", nytype %in% c("state", "county")) |>  
-  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+  filter(stabbr=="NY", nygeotype %in% c("state", "county")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
 
 tabdata_cnty
+saveRDS(tabdata_cnty, here::here("report", "results", "cb_tabdata_cnty.rds")) # for appendix
 
 ```
 
@@ -240,8 +323,13 @@ tabdata_cnty
 #| label: county-cost-table
 #| include: true
 #| echo: false
-tt <- "Counties in New York ranked by housing cost burden"
-tab <- f_tabranks(tabdata_cnty, stubvar="mininame", stubhead="County",
+tt <- "Top 10 counties in New York with highest housing cost burden"
+
+tabdata_topn <- tabdata_cnty |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(nygeotype=="state" | row_number() <= 10) 
+
+tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="County",
          tabtitle=tt, tabsubtitle=tabst)
 
 tabfile <-  path(tabdir, "cost_counties.png")
@@ -252,57 +340,38 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 {{< include ../../_gt_snippet.qmd >}}
 
 
-**M&T: another bar chart**
-
-```{r}
-
-#| label: hbar_counties
-#| include: true
-#| echo: false
-
-p <- tabdata_cnty |> 
-  arrange(desc(alltenure_pct)) |> 
-  filter(row_number() <= 10) |> 
-  select(mininame, alltenure_pct) |>
-  ggplot() +
-  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
-  scale_x_continuous(name="Cost-burdened households as percent of all households",
-                     breaks=seq(0, 1, 0.05),
-                     labels=percent_format(accuracy=1)) +
-  scale_y_discrete(name=NULL) +
-  # scale_fill_manual(values=c("blue", "darkgreen")) +
-  ggtitle("Cost-Burdened Households as Percent of All Households, by County") +
-  theme_bw() +
-  legend_notitle
-  
-p  
-
-```
-
-### Housing Cost Burden in New York's Cities
+### Housing Cost Burden in New York's 6 Largest Cities
 
 ```{r}
 #| label: city-cost-data
 #| include: false
 
 tabdata_city <- tabdata |> 
-  filter(stabbr=="NY", nytype %in% c("state", "city")) |>  
-  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+  filter(stabbr=="NY", nygeotype %in% c("state", "city")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
 
 tabdata_city
 
+saveRDS(tabdata_city, here::here("report", "results", "cb_tabdata_city.rds")) # for appendix
 
 ```
 
-Note the high cost burden for Ithaca in Tompkins County. This probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located. *(It might make sense to examine differences by age.)*
 
 ```{r}
 #| label: city-cost-table
 #| include: true
 #| echo: false
 
-tt <- "Cities in New York ranked by housing cost burden"
-tab <- f_tabranks(tabdata_city, stubvar="mininame", stubhead="City",
+tt <- "Largest cities in New York ranked by housing cost burden"
+
+# get nyc and brysa
+bignames <- c("New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany")
+tabdata_bigcities <- tabdata_city |> 
+  filter(nygeotype=="state" |
+           (nygeotype=="city" & shortname %in% bignames)) |> 
+  arrange(desc(alltenure_pct))
+
+tab <- f_tabranks(tabdata_bigcities, stubvar="shortname", stubhead="City",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 
 tabfile <-  path(tabdir, "cost_cities.png")
@@ -312,26 +381,34 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-*M&T: cities*
 
 ```{r}
-
-#| label: hbar_cities
-#| include: true
+#| label: city-hbar
+#| eval: false
+#| include: false
 #| echo: false
 
-p <- tabdata_city |> 
-  arrange(desc(alltenure_pct)) |> 
-  filter(row_number() <= 10) |> 
-  select(mininame, alltenure_pct) |>
+# don't include this - using raw numbers, NYC is too big for us to make sense of other cities
+
+p <- t9cb2 |> 
+  filter(stabbr=="NY", nygeotype %in% c("city")) |> 
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  arrange(desc(alltenure_cost30)) |> 
+  filter(row_number() <= 10) |>
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  pivot_longer(-c(shortname, alltenure_cost30)) |> 
+  mutate(namef=factor(name, 
+                      levels=c("rent_cost30", "own_cost30"),
+                      labels=c("renters", "owners"))) |> 
+  arrange(namef) |> 
   ggplot() +
-  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
-  scale_x_continuous(name="Cost-burdened households as percent of all households",
-                     breaks=seq(0, 1, 0.05),
-                     labels=percent_format(accuracy=1)) +
+  geom_col(aes(x=value, y=reorder(shortname, alltenure_cost30), fill=namef), width=0.5) +
+  scale_x_continuous(name="Number of cost-burdened households (thousands)",
+                     breaks=seq(0, 2e6, 100e3),
+                     labels=number_format(scale=1e-3)) +
   scale_y_discrete(name=NULL) +
-  # scale_fill_manual(values=c("blue", "darkgreen")) +
-  ggtitle("Cost-Burdened Households as Percent of All Households, by City") +
+  scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Number of Cost-Burdened Households in New York, Top Cities") +
   theme_bw() +
   legend_notitle
   
@@ -340,91 +417,6 @@ p
 ```
 
 
-### Housing Cost Burden in New York's Towns
-
-There are more than 500 towns in New York, many of which are quite small. The table below ranks towns with at least 500 occupied housing units by the percentage of households with housing costs that exceed 30 percent of income.
-
-```{r}
-#| label: town-cost-data
-#| include: false
-
-tabdata_town <- tabdata |> 
-  filter(stabbr=="NY", nytype %in% c("state", "town"))  |> 
-  filter(allunits >= minunits) |> 
-  # rerank dropping excluded units
-  group_by(nytype) |> 
-  mutate(ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         alltenurerank=row_number(desc(alltenure_pct))) |> 
-  ungroup() |> 
-  filter(row_number() <= nplaces) |>  
-  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
-
-tabdata_town
-
-```
-
-Note that the town of Le Ray in Jefferson County is ranked in #5 overall (owners plus renters) among towns with 500+ housing units but is ranked much further down for owners only and for renters only. *This is not an error.* It is a result of Le Ray's extremely high percentage of renters, which means that the overall weighted value for all households is high because cost-burdened households generally are a much larger share for renters than for owners.
-
-```{r}
-#| label: town-cost-table
-#| include: true
-#| echo: false
-
-tt <- paste0("Towns in New York with ",
-             minunits, 
-             "+ housing units and greatest housing cost burden")
-tab <- f_tabranks(tabdata_town, stubvar="mininame", stubhead="Town",
-         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-
-tabfile <-  path(tabdir, "cost_towns.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
-```
-
-{{< include ../../_gt_snippet.qmd >}}
-
-### Housing Cost Burden in New York's Villages
-
-There are more than 500 villages in New York, many of which are quite small. The table below ranks villages with at least 500 occupied housing units by the percentage of households with housing costs that exceed 30 percent of income.
-
-```{r}
-#| label: village-cost-data
-#| include: false
-
-tabdata_village <- tabdata |> 
-  filter(stabbr=="NY", nytype %in% c("state", "village"))  |> 
-  filter(allunits >= minunits) |>   
-  # rerank dropping excluded units
-  group_by(nytype) |> 
-  mutate(ownrank=row_number(desc(own_pct)),
-         rentrank=row_number(desc(rent_pct)),
-         alltenurerank=row_number(desc(alltenure_pct))) |> 
-  ungroup() |> 
-  filter(row_number() <= nplaces) |>  
-  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
-
-tabdata_village
-
-```
-
-```{r}
-#| label: village-cost-table
-#| include: true
-#| echo: false
-
-tt <- paste0("Villages in New York with ",
-             minunits, 
-             "+ housing units and greatest housing cost burden")
-tab <- f_tabranks(tabdata_village, stubvar="mininame", stubhead="Village",
-         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
-
-tabfile <-  path(tabdir, "cost_villages.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
-```
-
-{{< include ../../_gt_snippet.qmd >}}
 
 <!-- ### Who has high housing costs? -->
 

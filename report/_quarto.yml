@@ -2,52 +2,9 @@ project:
   type: book
   output-dir: _report
   
-# quarto publish netlify --no-render --no-browser --no-prompt
-# quarto publish netlify --no-browser --no-prompt
-  
-book:
-  title: "Housing Insecurity in New York State"
-  author: "Don Boyd"
-  date: today
-  date-format: long
-  chapters:
-    - index.qmd
-    # - highlights.qmd
-    # - update.qmd
-    - intro.qmd
-    # - insert.qmd
-    - part: "Housing Insecurity"
-      chapters:
-        - insecurity/housing_insecurity.qmd
-        - insecurity/cost/cost.qmd
-        - insecurity/quality/quality.qmd
-        - insecurity/stress/stress.qmd
-        - insecurity/homelessness/homelessness.qmd
-        - insecurity/crosscutting.qmd
-    - part: "Policies to Address Housing Insecurity"
-      chapters:
-        - policies/policy_intro.qmd
-        - policies/federal.qmd
-    #   - policies/state.qmd
-    - conclusions.qmd
-    - bibliography.qmd
-    # - part: "Appendix"
-      # - insecurity/recent_events_housing.qmd    
-    #   chapters: 
-    #     - appendix/appendix.qmd
-    # - part: "Notes"
-    #   chapters: 
-    #   - notes/notes.qmd
-    #   - notes/articles.qmd
-    #   - notes/housing_insecurity_notes.qmd
-    #   - notes/housing_cost_burden_notes.qmd
-    #   - notes/housing_forced_removal_notes.qmd
-    #   - notes/mortgage_delinquencies.qmd
-  
-bibliography: _bibliography.bib
-nocite: |
-  @*
-  
+editor_options: 
+  chunk_output_type: console
+
 # https://quarto.org/docs/computations/execution-options.html
 # warning: false
 # error: false
@@ -57,6 +14,14 @@ execute:
   warning: false
   note: false
 
+# output
+# quarto render document.qmd --to html
+# quarto render --to pdf
+# quarto publish netlify --no-render --no-browser --no-prompt
+# quarto publish netlify --no-browser --no-prompt
+# web 
+#   site: https://osc-housing.netlify.app/
+#   password: oscdjb
 format:
   html:
     theme: cosmo
@@ -71,14 +36,51 @@ format:
   #   toc: true
   #   toc-depth: 2
   #   documentclass: report
-# scrreprt scrartcl report
+# scrreprt scrartcl report  
+  
+book:
+  title: "Housing Insecurity in New York State"
+  author: "Don Boyd"
+  date: today
+  date-format: long
+  chapters:
+    - index.qmd
+    - todo.qmd  # delete when done
+    - execsum.qmd
+    - part: "Housing Insecurity"
+      chapters:
+        - insecurity/housing_insecurity.qmd
+        - insecurity/cost/cost.qmd
+        - insecurity/quality/quality.qmd
+        - insecurity/stress/stress.qmd
+        - insecurity/homelessness/homelessness.qmd
+        - insecurity/crosscutting.qmd
+        - insecurity/trends.qmd
+    - part: "Policies to Address Housing Insecurity"
+      chapters:
+        - policies/policy_intro.qmd
+        - policies/federal.qmd
+    #   - policies/state.qmd
+    - conclusions.qmd
+    - bibliography.qmd
+    - part: "Appendix"
+      # - insecurity/recent_events_housing.qmd    
+      chapters: 
+        - appendix/appendix.qmd
+    # - part: "Notes"
+    #   chapters: 
+    #   - notes/notes.qmd
+    #   - notes/articles.qmd
+    #   - notes/housing_insecurity_notes.qmd
+    #   - notes/housing_cost_burden_notes.qmd
+    #   - notes/housing_forced_removal_notes.qmd
+    #   - notes/mortgage_delinquencies.qmd
+  
+bibliography: _bibliography.bib
+nocite: |
+  @*
+  
+
 
   
-# web 
-#   site: https://osc-housing.netlify.app/
-#   password: oscdjb
 
-# quarto render document.qmd --to html
-# quarto render --to pdf
-
-# devtools::install_github("rstudio/gt")  

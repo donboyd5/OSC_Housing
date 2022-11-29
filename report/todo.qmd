@@ -1,0 +1,50 @@
+# TO DO {.unnumbered}
+
+-   Dec 2: all data included, and all major pieces done; Dec 16 draft report
+
+-   definitely no need for town or village discussion. i tried to be thoughtful about how to limit data/presentation/discussion in terms of substate presentation for the relevant parts. \[removed\]
+
+-   without necessarily showing another presentation of data, can we show whether affordability burdens are higher or lower than say 10 years ago? \[done\]
+
+-   i don't see any demographic type analysis - will that be added per the outline? perhaps we don't need to go into as many levels as specified in the outline, but the racial/ethnic and perhaps age categories are helpful at a minimum.
+
+-   housing quality (maybe NYCHA?)
+
+-   crowding:
+
+    -   renters usually in more crowded conditions than owners - give rates
+
+    -   Maria surprised at renter crowding rate in NYC (check - what do other sources say?)
+
+-   are state/regional data driven by cities? If so, perhaps discuss? \[data done, not discussed yet\]
+
+-   evictions:
+
+    -   Maria wow to high Maryland rate, much lower NY rate (figure out why this might be so)
+
+-   Of course, add much more on federal programs...
+
+-   And homelessness...
+
+State table:
+
+-   Add national average \[done\]
+-   Top 10 in report, full table in appendix
+-   no bar chart \[done\]
+
+Regions:
+
+-   bar chart make owners/renters clearer
+
+Counties:
+
+-   table top 10: \[done\]
+    -   as 2 tables one for owner burdens, 1 for renters, \[can be done later\]
+    -   or heat maps
+-   full table in appendix
+
+Cities:
+
+-   maybe limit main to the top 5 \[done -- top 6 plus NYS\]
+
+-   full table in appendix \[done\]

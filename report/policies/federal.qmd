@@ -1,3 +1,9 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
 # Federal policies to address housing insecurity
 
 ```{r}
@@ -37,29 +43,71 @@ Federal housing assistance was boosted dramatically in each of the last two rece
 \[TODO: use real rather than nominal; add recession bands\]
 
 ```{r}
+#| label: ONETIME-deflator
+#| eval: false
+
+# get deflator OMB used in the FFY 2023 budget
+
+dftab <- r"(E:\data\FederalBudget\2023\BUDGET-2023-TAB\xls)"
+fn <- "BUDGET-2023-TAB-2-3.xlsx"
+
+df1 <- read_excel(path(dftab, fn))
+# note that deflator is 1 in 2012, we want it to be 1 in 2022
+
+df2 <- df1 |> 
+  select(fyear=1, deflator=8) |> 
+  mutate(fyear=str_sub(fyear, 1, 4) |> as.integer()) |>
+  filter(fyear %in% 1990:2027) |> 
+  mutate(deflator=as.numeric(deflator),
+         ideflator=deflator[fyear==2022] / deflator)
+saveRDS(df2, here::here("data", "fedbud", "deflator.rds"))
+
+
+# https://fred.stlouisfed.org/series/GDPCTPI
+# gdppi <- fredr(
+#   series_id = "GDPCTPI",
+#   observation_start = as.Date("1980-01-01"),
+#   observation_end = NULL # as.Date("2000-01-01")
+#   )
+
+```
+
+
+
+```{r}
 #| label: countercyclical
 #| include: true
 
-p <- budauth |> 
+deflator <- readRDS(here::here("data", "fedbud", "deflator.rds"))
+
+pdata <- budauth |> 
   filter(subfuncode=="604") |> 
   group_by(fyear) |> 
   summarise(n=n(), budauth=sum(budauth), .groups="drop") |> 
   filter(fyear %in% 1990:2027) |> 
-  ggplot(aes(fyear, budauth)) +
+  left_join(deflator |> select(fyear, ideflator), by="fyear") |> 
+  mutate(rbudauth=budauth * ideflator)
+
+capt1 <- "Recession periods are shaded. Amounts for FFY 2023 and later are budget proposals."
+capt2 <- "Source: Federal Budget FFY 2023: Federal Database and Historical Table 2.3" 
+capt <- paste0(capt1, "\n", capt2)
+
+p <- pdata |> 
+  ggplot(aes(fyear, rbudauth)) +
   geom_line(colour="blue") +
   geom_point(colour="blue") +
-  scale_y_continuous(name="Authorization ($ billions)",
-                     breaks=seq(0, 2e8, 5e7),
+  geom_band(recdata(pdata$fyear)) +
+  scale_y_continuous(name="Authorization (billions of 2022 dollars)",
+                     breaks=seq(0, 2e8, 2.5e7),
                      labels = dollar_format(scale=1e-6),
                      limits=c(0, NA)) +
-  scale_x_continuous(name="Federal fiscal year") +
+  scale_x_continuous(name="Federal fiscal year", breaks=seq(1990, 2030, 5)) +
   ggtitle("Federal budget authorization for housing assistance") +
-  labs(caption="Source: Federal Budget Database, FFY 2023") +
+  labs(caption=capt) +
   theme_bw() +
   caption_left
 
 p
-
 
 ```
 

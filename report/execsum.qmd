@@ -1,8 +1,10 @@
+# Executive Summary {.unnumbered}
+
 Adequate housing is essential to people's physical, social and psychological well-being. High housing costs relative to income, substandard or overcrowded housing, and stress related to these issues can lead to greater incidence of physical and mental health problems, and greater health care costs. These challenges often are particularly severe for children.
 
 ## High housing cost burden in New York
 
-Housing insecurity has many dimensions. A particularly important one is high cost relative to income, which we discuss here. The body of the report examines additional dimensions and measures of housing insecurity. \*\[M&T: for the summary, I'm thinking maybe just mention housing cost burden. However, if you think we need other dimensions, too, that is possible. It is also possible to have a summary measure, but I don't think that's a good idea.\]\*
+Housing insecurity has many dimensions. A particularly important one is high cost relative to income, which we discuss here. The body of the report examines additional dimensions and measures of housing insecurity.
 
 Over \[2.6\] million households in New York State have housing costs that exceed 30 percent of income. This amounts to \[36%\] of New York households, making us the fourth-highest housing cost burden state, after \[California, Hawaii, and New Jersey\].
 
@@ -15,3 +17,6 @@ High housing costs relative to income are far more common in New York City than 
 ## Policies to address housing insecurity
 
 \[TO COME\]
+
+
+{{< pagebreak >}}

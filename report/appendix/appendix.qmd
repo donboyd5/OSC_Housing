@@ -1,1 +1,90 @@
 # Appendix
+
+Supplemental housing cost burden tables below.
+
+```{r}
+#| label: constants
+#| include: false
+
+# subtitle
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+
+```
+
+```{r}
+#| label: libraries
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+```
+
+## All States
+
+```{r}
+#| label: state-cost-table
+#| include: true
+#| echo: false
+
+tabdata_st <- readRDS(here::here("report", "results", "cb_tabdata_st.rds")) 
+
+tt <- "States ranked by housing cost burden, plus United States"
+
+tab <- f_tabranks(tabdata_st, stubvar="shortname", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "cost_states_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+## All Counties
+
+```{r}
+#| label: county-cost-table
+#| include: true
+#| echo: false
+
+tabdata_cnty <- readRDS(here::here("report", "results", "cb_tabdata_cnty.rds")) 
+
+tt <- "Counties ranked by housing cost burden, plus New York State"
+
+tab <- f_tabranks(tabdata_cnty, stubvar="shortname", stubhead="County",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "cost_counties_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+## All Cities
+
+Note the high cost burden for Ithaca in Tompkins County. This probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located.
+
+```{r}
+#| label: city-cost-table
+#| include: true
+#| echo: false
+
+tabdata_city <- readRDS(here::here("report", "results", "cb_tabdata_city.rds")) 
+
+tt <- "Cities ranked by housing cost burden, plus New York State"
+
+tab <- f_tabranks(tabdata_city, stubvar="shortname", stubhead="City",
+           tabtitle=tt, tabsubtitle=tabst, keepcounty=TRUE)
+
+tabfile <-  path(tabdir, "cost_cities_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}

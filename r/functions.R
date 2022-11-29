@@ -1,4 +1,16 @@
 
+vtab <- function(table) {
+  # view details about an acs table
+  # assumes that tabshells already has been loaded
+  # tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
+  tab <- tabshells |> filter(table==!!table)
+  # print(tab)
+  list(tab=tab |> select(-tabname, -universe),
+       table=table,
+       tabname=tab$tabname[1],
+       universe=tab$universe[1]
+  )
+}
 
 f_tabranks <- function(tabdata,
                        stubvar,
@@ -12,7 +24,7 @@ f_tabranks <- function(tabdata,
                 "own_pct", "rent_pct", "alltenure_pct", 
                 "ownrank", "rentrank", "alltenurerank")
   
-  if(keepcounty) keepvars <- c("stub", "cntyname", mainvars) else
+  if(keepcounty) keepvars <- c("stub", "countyname", mainvars) else
     keepvars <- c("stub", mainvars)
   
   if(keepcounty) cntyhead <- "County" else
@@ -46,7 +58,7 @@ f_tabranks <- function(tabdata,
                    decimals=0) |>
     gt::tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
   
-  if(keepcounty) tab <- tab |> gt::cols_label(cntyname=cntyhead)
+  if(keepcounty) tab <- tab |> gt::cols_label(countyname=cntyhead)
   tab
 }
 

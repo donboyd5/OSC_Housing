@@ -1,0 +1,86 @@
+
+### Housing Cost Burden in New York's Towns
+
+There are more than 500 towns in New York, many of which are quite small. The table below ranks towns with at least 500 occupied housing units by the percentage of households with housing costs that exceed 30 percent of income.
+
+```{r}
+#| label: town-cost-data
+#| include: false
+
+tabdata_town <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "town"))  |> 
+  filter(allunits >= minunits) |> 
+  # rerank dropping excluded units
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct))) |> 
+  ungroup() |> 
+  filter(row_number() <= nplaces) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+
+tabdata_town
+
+```
+
+Note that the town of Le Ray in Jefferson County is ranked in #5 overall (owners plus renters) among towns with 500+ housing units but is ranked much further down for owners only and for renters only. *This is not an error.* It is a result of Le Ray's extremely high percentage of renters, which means that the overall weighted value for all households is high because cost-burdened households generally are a much larger share for renters than for owners.
+
+```{r}
+#| label: town-cost-table
+#| include: true
+#| echo: false
+
+tt <- paste0("Towns in New York with ",
+             minunits, 
+             "+ housing units and greatest housing cost burden")
+tab <- f_tabranks(tabdata_town, stubvar="mininame", stubhead="Town",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+
+tabfile <-  path(tabdir, "cost_towns.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing Cost Burden in New York's Villages
+
+There are more than 500 villages in New York, many of which are quite small. The table below ranks villages with at least 500 occupied housing units by the percentage of households with housing costs that exceed 30 percent of income.
+
+```{r}
+#| label: village-cost-data
+#| include: false
+
+tabdata_village <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "village"))  |> 
+  filter(allunits >= minunits) |>   
+  # rerank dropping excluded units
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct))) |> 
+  ungroup() |> 
+  filter(row_number() <= nplaces) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+
+tabdata_village
+
+```
+
+```{r}
+#| label: village-cost-table
+#| include: true
+#| echo: false
+
+tt <- paste0("Villages in New York with ",
+             minunits, 
+             "+ housing units and greatest housing cost burden")
+tab <- f_tabranks(tabdata_village, stubvar="mininame", stubhead="Village",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+
+tabfile <-  path(tabdir, "cost_villages.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}

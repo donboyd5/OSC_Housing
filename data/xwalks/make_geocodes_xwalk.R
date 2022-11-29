@@ -127,10 +127,18 @@ df2 <- df1 |>
   select(-c(variable, moe, table))
 glimpse(df2)
 tmp <- count(df2, shortname, fullname)
-saveRDS(df2, path(dxwalks, "acs_geocodes.rds"))
+saveRDS(df2, path(dxwalks, "acs_geocodes_raw.rds"))
 
 # prepare to enhance the ACS codes ----
-acscodes1 <- readRDS(path(dxwalks, "acs_geocodes.rds"))
+acscodes1 <- readRDS(path(dxwalks, "acs_geocodes_raw.rds"))
+
+# put "City" in New York City's shortname
+acscodes1 |> filter(str_detect(shortname, "New York")) |> select(1:6)
+acscodes1a <- acscodes1 |> 
+  mutate(shortname=ifelse(geotype=="place" & geoid=="3651000",
+                          "New York City", 
+                          shortname))
+acscodes1a |> filter(str_detect(shortname, "New York")) |> select(1:6)
 
 # put state abbreviation on file, with help from fips_codes in tidycensus ----
 data(fips_codes) # tidycensus
@@ -141,7 +149,7 @@ stdf <- fips_codes |>
   select(stabbr=state, statefp=state_code, stname=state_name) |> 
   distinct()
 
-acscodes2 <- acscodes1 |> 
+acscodes2 <- acscodes1a |> 
   left_join(stdf, by = "statefp") |> 
   mutate(stabbr=case_when(geoid=="1" ~ "US",
                           is.na(stabbr) & 
@@ -229,6 +237,7 @@ acscodes4 <- acscodes3 |>
   left_join(domco1, by="placens")
 
 check <- acscodes4 |> filter(nygeotype %in% c("city", "village"))
+# to see nonmatches, sort check by muni
 # we did not match (geoid, fullname, placens):
 #   3651000 New York city, New York 02395220 (intentional)
 #   3646085 Mastic Beach village, New York 02390131
@@ -251,7 +260,7 @@ domco2 <- domco1 |>
 acscodes5 <- acscodes3 |> # start with the previous good acscodes
   left_join(domco2, by="placens")
 check <- acscodes5 |> filter(nygeotype %in% c("city", "village"))  
-count(check, nygeotype, typef)
+count(check, nygeotype, typef) 
 
 ## put county names of dominant county on the file, for all records ----
 counties <- acscodes5 |> 

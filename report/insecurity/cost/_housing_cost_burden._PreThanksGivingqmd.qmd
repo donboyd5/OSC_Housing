@@ -1,0 +1,341 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Housing Cost Burden
+
+<!-- Housing Cost Burden and Its Consequences -->
+
+<!-- import, measures, thresholds -->
+
+### Key points
+
+[TO COME]
+
+```{r}
+#| label: constants
+#| include: false
+
+minunits <- 500
+nplaces <- 25
+
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+
+```
+
+```{r}
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+chdir <- here::here("data", "chas")
+chdir2019 <- path(chdir, "2015-2019")
+
+# cost <- readRDS(here::here("data", "cost.rds"))
+
+t9 <- readRDS(path(chdir2019, "t9long.rds"))
+# we need cnty, cntyname maybe shortname also
+
+# use allrace for this set of tables
+cost_wide <- t9 |> 
+  filter(race=="allrace") |> 
+  # filter(nytype=="state", stabbr=="NY") |> # uncomment for testing
+  pivot_wider(names_from = c(tenure, cost)) |> 
+  # get own and rent sums where cost burden is computable
+  mutate(own_check=own_costle30 + own_costgt30le50 + own_costgt50,
+         rent_check=rent_costle30 + rent_costgt30le50 + rent_costgt50,
+         own_cost30=own_costgt30le50 + own_costgt50,
+         rent_cost30=rent_costgt30le50 + rent_costgt50,
+         alltenure_cost30=own_cost30 + rent_cost30,
+         own_cost50=own_costgt50,
+         rent_cost50=rent_costgt50,
+         alltenure_cost50=own_cost50 + rent_cost50) |> 
+  relocate(own_check, rent_check, .after=cntyname) |> 
+  # calc percentages
+  mutate(own_pct30=own_cost30 / own_allcost,
+         rent_pct30=rent_cost30 / rent_allcost,
+         alltenure_pct30=alltenure_cost30 / alltenure_allcost,
+         own_pct50=own_cost50 / own_allcost,
+         rent_pct50=rent_cost50 / rent_allcost,
+         alltenure_pct50=alltenure_cost50 / alltenure_allcost, 
+         renter_share=rent_allcost / alltenure_allcost)
+
+# tabdata for all types
+# nytype groups: state, region, county, city, town, village
+tabdata <- cost_wide |> 
+  filter(nytype %in% c("state", "region", "county", "city", "town", "village")) |>
+  rename(allunits=alltenure_allcost,
+         own_pct=own_pct30, rent_pct=rent_pct30, alltenure_pct=alltenure_pct30) |> 
+  group_by(nytype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct)))  |> 
+  select(nytype, stabbr, mininame, cntyname, 
+         allunits,
+         own_pct, rent_pct, alltenure_pct, 
+         ownrank, rentrank, alltenurerank,
+         renter_share) |> 
+  ungroup() |> 
+  arrange(desc(alltenure_pct))
+
+```
+
+### Housing Cost Burden in New York and Other States
+
+```{r}
+#| label: state-cost-data
+#| include: false
+
+tabdata_st <- tabdata |> 
+  filter(nytype=="state", !stabbr %in% c("DC", "PR")) |> 
+  mutate(mininame=str_remove(mininame, " State"))
+
+# tabdata |> 
+#   ggplot(aes(own_pct, rent_pct))+
+#   geom_point() +
+#   geom_text(aes(label=stabbr), hjust=0, vjust=0) +
+#   geom_abline(slope=1, intercept=0)
+
+
+```
+
+
+```{r}
+
+#| label: hbar_states
+#| include: true
+#| echo: false
+
+p <- tabdata_st |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(row_number() <= 10) |> 
+  select(mininame, alltenure_pct) |>
+  ggplot() +
+  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Cost-burdened households as percent of all households",
+                     breaks=seq(0, 1, 0.05),
+                     labels=percent_format(accuracy=1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Cost-Burdened Households as Percent of All Households, by State") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
+New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 rank for both owners and renters. As is true in every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
+
+```{r}
+#| label: state-cost-table
+#| include: true
+#| echo: false
+
+tt <- "States ranked by housing cost burden"
+
+tab <- f_tabranks(tabdata_st, stubvar="mininame", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "cost_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+<!-- {{< include C:/Users/donbo/Documents/R_projects/OSC_Housing/report/_gt_snippet.qmd >}} -->
+
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing Cost Burden in New York's Regions
+
+```{r}
+#| label: region-cost-data
+#| include: false
+
+tabdata_rgn <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "region")) |>
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+
+tabdata_rgn
+
+```
+
+High housing cost burden is far more prevalent in New York City, the Mid-Hudson region, and Long Island than in upstate New York. In all regions, high cost burden for renters is more prevalent than it is for homeowners; this is particularly true in upstate regions.
+
+```{r}
+#| label: region-cost-table
+#| include: true
+#| echo: false
+
+tt <- "New York regions ranked by housing cost burden"
+tab <- f_tabranks(tabdata_rgn, stubvar="mininame", stubhead="Region",
+         tabtitle=tt)
+
+tabfile <-  path(tabdir, "cost_regions.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+> *M&T: We might want to show how renters affect cost burden around the state. One approach is the bar chart below. It shows numbers of cost-burdened households, rather than cost-burdened as % of total, so it is getting at where the cost-burdened households rather than which region has the greatest proportion of cost-burdened as % of all. NYC has a large number of renters (shown in table above); most of the rest of NY has about 1/3 renters except Long Island, which is only 19.4% renters. NYC's high cost burden is driven by its large number of cost-burdened renters. Long Island's high cost burden is driven by its large number of cost-burdened owners. In the rest of the state the story is more complicated. Time permitting, after the analysis of policies is done, it would be good to break this down further into the role of high housing costs vs. the role of low income (a key issue in upstate, I believe).*
+
+```{r}
+#| label: hbar
+#| include: true
+#| echo: false
+
+p <- cost_wide |> 
+  # filter(nytype=="state", !stabbr %in% c("DC", "PR")) |> 
+  filter(stabbr=="NY", nytype %in% c("state", "region")) |> 
+  filter(mininame != "New York State") |> 
+  select(geoid, mininame, own_cost30, rent_cost30, alltenure_cost30) |> 
+  arrange(desc(alltenure_cost30)) |> 
+  filter(row_number() <= 11) |> 
+  select(geoid, mininame, own_cost30, rent_cost30, alltenure_cost30) |> 
+  pivot_longer(-c(geoid, mininame, alltenure_cost30)) |> 
+  mutate(namef=factor(name, 
+                      levels=c("rent_cost30", "own_cost30"),
+                      labels=c("renters", "owners"))) |> 
+  arrange(namef) |> 
+  ggplot() +
+  geom_col(aes(x=value, y=reorder(mininame, alltenure_cost30), fill=namef), width=0.5) +
+  scale_x_continuous(name="Number of cost-burdened households (thousands)",
+                     breaks=seq(0, 2e6, 100e3),
+                     labels=number_format(scale=1e-3)) +
+  scale_y_discrete(name=NULL) +
+  scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Number of Cost-Burdened Households in New York, by Region") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
+
+### Housing Cost Burden in New York's Counties
+
+```{r}
+#| label: county-cost-data
+#| include: false
+
+tabdata_cnty <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "county")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+
+tabdata_cnty
+
+```
+
+```{r}
+#| label: county-cost-table
+#| include: true
+#| echo: false
+tt <- "Counties in New York ranked by housing cost burden"
+tab <- f_tabranks(tabdata_cnty, stubvar="mininame", stubhead="County",
+         tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "cost_counties.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+
+```{r}
+
+#| label: hbar_counties
+#| include: true
+#| echo: false
+
+p <- tabdata_cnty |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(row_number() <= 10) |> 
+  select(mininame, alltenure_pct) |>
+  ggplot() +
+  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Cost-burdened households as percent of all households",
+                     breaks=seq(0, 1, 0.05),
+                     labels=percent_format(accuracy=1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Cost-Burdened Households as Percent of All Households, by County") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
+### Housing Cost Burden in New York's Cities
+
+```{r}
+#| label: city-cost-data
+#| include: false
+
+tabdata_city <- tabdata |> 
+  filter(stabbr=="NY", nytype %in% c("state", "city")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nytype=="state", NA_real_, .x)))
+
+tabdata_city
+
+
+```
+
+Note the high cost burden for Ithaca in Tompkins County. This probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located. *(It might make sense to examine differences by age.)*
+
+```{r}
+#| label: city-cost-table
+#| include: true
+#| echo: false
+
+tt <- "Cities in New York ranked by housing cost burden"
+tab <- f_tabranks(tabdata_city, stubvar="mininame", stubhead="City",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+
+tabfile <-  path(tabdir, "cost_cities.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+
+```{r}
+
+#| label: hbar_cities
+#| include: true
+#| echo: false
+
+p <- tabdata_city |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(row_number() <= 10) |> 
+  select(mininame, alltenure_pct) |>
+  ggplot() +
+  geom_col(aes(x=alltenure_pct, y=reorder(mininame, alltenure_pct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Cost-burdened households as percent of all households",
+                     breaks=seq(0, 1, 0.05),
+                     labels=percent_format(accuracy=1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Cost-Burdened Households as Percent of All Households, by City") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
+
+
+<!-- ### Who has high housing costs? -->
+
+<!-- \[To come - breakdowns by income and race\] -->
