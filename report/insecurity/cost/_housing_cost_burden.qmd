@@ -110,6 +110,8 @@ saveRDS(tabdata, here::here("report", "results", "cb_tabdata.rds")) # for append
 ```
 
 
+Cost burden is the ratio of housing costs to household income. For renters, housing cost is gross rent (contract rent plus utilities). For owners, housing cost is "select monthly owner costs", which includes mortgage payment, utilities, association fees, insurance, and real estate taxes.
+
 ### Housing Cost Burden in New York and Other States
 
 ```{r}

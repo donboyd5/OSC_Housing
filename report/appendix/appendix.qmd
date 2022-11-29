@@ -1,13 +1,15 @@
-# Appendix
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
-Supplemental housing cost burden tables below.
+# Appendix
 
 ```{r}
 #| label: constants
 #| include: false
 
-# subtitle
-tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
 
 ```
 
@@ -21,7 +23,18 @@ source(here::here("r", "constants.r"))
 
 ```
 
-## All States
+## Supplemental Housing Cost Burden Tables
+
+```{r}
+#| include: false
+#| echo: false
+
+# subtitle
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+```
+
+
+### All States
 
 ```{r}
 #| label: state-cost-table
@@ -41,9 +54,10 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 ```
 
-{{< include ../../_gt_snippet.qmd >}}
+{{< include ../_gt_snippet.qmd >}}
 
-## All Counties
+
+### All Counties
 
 ```{r}
 #| label: county-cost-table
@@ -63,9 +77,9 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 ```
 
-{{< include ../../_gt_snippet.qmd >}}
+{{< include ../_gt_snippet.qmd >}}
 
-## All Cities
+### All Cities
 
 Note the high cost burden for Ithaca in Tompkins County. This probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located.
 
@@ -87,4 +101,170 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 ```
 
-{{< include ../../_gt_snippet.qmd >}}
+{{< include ../_gt_snippet.qmd >}}
+
+
+## Supplemental Housing Crowding Tables
+
+```{r}
+#| include: false
+#| echo: false
+
+# subtitle
+tabst <- "Percent of occupied housing units with more than one person per room"
+
+```
+
+
+### All States
+
+```{r}
+#| label: state-crowd-table
+#| include: true
+#| echo: false
+
+tabdata_st <- readRDS(here::here("report", "results", "crowd_tabdata_st.rds")) 
+
+tt <- "States ranked by housing crowding, plus United States"
+
+tab <- f_tabranks(tabdata_st, stubvar="shortname", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "crowd_states_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+
+### All Counties
+
+```{r}
+#| label: county-crowd-table
+#| include: true
+#| echo: false
+
+tabdata_cnty <- readRDS(here::here("report", "results", "crowd_tabdata_cnty.rds")) 
+
+tt <- "Counties ranked by housing crowding, plus New York State"
+
+tab <- f_tabranks(tabdata_cnty, stubvar="shortname", stubhead="County",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "crowd_counties_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+### All Cities
+
+Note that Ithaca in Tompkins County does NOT have high crowding even thought it had high cost burden in the table above. The high cost burden probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located, reflecting low incomes of college student even though they may have other means of support.
+
+```{r}
+#| label: city-crowd-table
+#| include: true
+#| echo: false
+
+tabdata_city <- readRDS(here::here("report", "results", "crowd_tabdata_city.rds")) 
+
+tt <- "Cities ranked by housing crowding, plus New York State"
+
+tab <- f_tabranks(tabdata_city, stubvar="shortname", stubhead="City",
+           tabtitle=tt, tabsubtitle=tabst, keepcounty=TRUE)
+
+tabfile <-  path(tabdir, "crowd_cities_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+
+## Supplemental Tables for Housing Lacking Complete Plumbing and Kitchen Facilities
+
+```{r}
+#| include: false
+#| echo: false
+
+# subtitle
+tabst <- "Percent of occupied housing units lacking complete plumbing or kitchen facilities"
+
+```
+
+
+### All States
+
+```{r}
+#| label: state-plumbkitch-table
+#| include: true
+#| echo: false
+
+tabdata_st <- readRDS(here::here("report", "results", "plumbkitch_tabdata_st.rds")) 
+
+tt <- "States ranked by lack of complete plumbing and kitchen facilities, plus United States"
+
+tab <- f_tabranks(tabdata_st, stubvar="shortname", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "plumbkitch_states_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+
+### All Counties
+
+```{r}
+#| label: county-plumbkitch-table
+#| include: true
+#| echo: false
+
+tabdata_cnty <- readRDS(here::here("report", "results", "plumbkitch_tabdata_cnty.rds")) 
+
+tt <- "Counties ranked by lack of complete plumbing and kitchen facilities, plus New York State"
+
+tab <- f_tabranks(tabdata_cnty, stubvar="shortname", stubhead="County",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "plumbkitch_counties_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+### All Cities
+
+Note that Ithaca in Tompkins County does NOT have high crowding even thought it had high cost burden in the table above. The high cost burden probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located, reflecting low incomes of college student even though they may have other means of support.
+
+```{r}
+#| label: city-plumbkitch-table
+#| include: true
+#| echo: false
+
+tabdata_city <- readRDS(here::here("report", "results", "plumbkitch_tabdata_city.rds")) 
+
+tt <- "Cities ranked by housing plumbkitching, plus New York State"
+
+tab <- f_tabranks(tabdata_city, stubvar="shortname", stubhead="City",
+           tabtitle=tt, tabsubtitle=tabst, keepcounty=TRUE)
+
+tabfile <-  path(tabdir, "plumbkitch_cities_all.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+

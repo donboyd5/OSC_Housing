@@ -6,6 +6,11 @@ editor_options:
 
 # Trends in housing cost burden
 
+Far greater percentages of renters have high housing costs, relative to income, than do homeowners. Furthermore, owner costs fell substantially during the last decade, in part a result of the fall in interest rates, which lowered mortgage costs. By contrast, renter costs were far more stable over the last decade.
+
+The share of both owner and renter New York households with housing costs has consistently been greater than the national share.
+
+
 ```{r}
 #| label: setup
 #| include: false
@@ -17,6 +22,7 @@ source(here::here("r", "constants.r"))
 dacs <- here::here("data", "acs")
 
 tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
+tmp <- tabshells |> select(table, tabname, universe) |> distinct()
 
 ```
 
@@ -28,12 +34,15 @@ tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
 vtab("B25070")
 
 b25070ts <- readRDS(here::here("data", "acs", "B25070_timeseries.rds"))
+
+# note the a and b versions of cost burden, where denominators differ
+#  a subtracts noncomputable from denominator, b does not
 rentcb <- b25070ts |>
   select(geoid, geotype, name, endyear, variable, estimate) |> 
   pivot_wider(names_from = variable, values_from = estimate) |> 
-  mutate(rentcb30=(B25070_007 + B25070_008 + B25070_009 + B25070_010) / (B25070_001 - B25070_011),
+  mutate(rentcb30a=(B25070_007 + B25070_008 + B25070_009 + B25070_010) /
+           (B25070_001 - B25070_011),
          rentcb30b=(B25070_007 + B25070_008 + B25070_009 + B25070_010) / B25070_001)
-
 
 ```
 
@@ -45,11 +54,20 @@ vtab("B25091")
 b25091ts <- readRDS(here::here("data", "acs", "B25091_timeseries.rds"))
 glimpse(b25091ts)
 
-ownmcb <- b25091ts |>
+# a and b versions have denominators as in renters, and are for housing with mortgage
+# the all version is all owner households, not just mortgages
+owncb <- b25091ts |>
   select(geoid, geotype, name, endyear, variable, estimate) |> 
   pivot_wider(names_from = variable, values_from = estimate) |> 
-  mutate(ownmcb30=(B25091_008 + B25091_009 + B25091_010 + B25091_011) / (B25091_002 - B25091_012))
-glimpse(ownmcb)
+  mutate(ownmort=B25091_008 + B25091_009 + B25091_010 + B25091_011,
+         ownxmort=B25091_019 + B25091_020 + B25091_021 + B25091_022,
+         ownmcb30a=ownmort / (B25091_002 - B25091_012),
+         ownmcb30b=ownmort / B25091_002,
+         owncb30all=(ownmort + ownxmort) / B25091_001)
+glimpse(owncb)
+
+owncb |> filter(geotype=="state" & geoid=="36") |> 
+  select(name, endyear, B25091_001, B25091_002, B25091_013, owncb30all, ownmcb30b, ownmcb30a)
 
 ```
 
@@ -61,18 +79,19 @@ glimpse(ownmcb)
 #| fig-column: page-right
 #| include: true
 
+# use the "b" version of the denominator, to be consistent with CHAS
 pdata <- bind_rows(rentcb |> 
-                  select(geoid, geotype, name, endyear, value=rentcb30) |> 
+                  select(geoid, geotype, name, endyear, value=rentcb30b) |> 
                   mutate(tenure="renter"),
-                ownmcb |> 
-                  select(geoid, geotype, name, endyear, value=ownmcb30) |> 
+                owncb |> 
+                  select(geoid, geotype, name, endyear, value=owncb30all) |> 
                   mutate(tenure="owner")) |> 
   mutate(geotypef=factor(geotype, 
                          levels=c("nation", "state"),
                          labels=c("United States", "New York")),
          tenuref=factor(tenure, 
                         levels=c("owner", "renter"),
-                        labels=c("Owners of houses with mortgages", "Renters")))
+                        labels=c("Owners", "Renters")))
 
 p <- pdata |> 
   filter((geotype=="nation") |
@@ -154,3 +173,5 @@ tabdata <- cost_wide |>
   arrange(desc(alltenure_pct))
 ```
 
+
+Note: To get trends over time we have to use a slightly different data source. Elswhere in this document we use HUD CHAS data, an enhanced version of the American Community Survey that is based on the 5-year ACS 2015-2019. The graph above uses annual data from the ACS.

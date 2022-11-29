@@ -2,7 +2,10 @@
 
 {{< include _crowding.qmd >}}
 
-<!-- {{< include plumb_kitch.qmd >}} -->
+{{< include _plumb_kitch.qmd >}}
+
+{{< include _deficiencies.qmd >}}
+
 
 
 

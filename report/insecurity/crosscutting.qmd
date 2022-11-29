@@ -1,1 +1,84 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # Summarizing Housing Insecurity in New York
+
+
+```{r}
+#| label: constants
+#| include: false
+
+
+```
+
+```{r}
+#| label: libraries
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+```
+
+```{r}
+#| label: get-data
+#| include: false
+
+# get cost, crowding, and plumbkitch regional data
+
+cost <- readRDS(here::here("report", "results", "cb_tabdata_rgn.rds"))
+crowd <- readRDS(here::here("report", "results", "crowd_tabdata_rgn.rds")) 
+plumbkitch <- readRDS(here::here("report", "results", "plumbkitch_tabdata_rgn.rds")) 
+
+stack <- bind_rows(cost |> mutate(measure="cost"),
+                   crowd |> mutate(measure="crowd"),
+                   plumbkitch |> mutate(measure="plumbkitch")) |> 
+  select(measure, shortname, contains("_pct"), contains("rank")) |> # 
+  arrange(shortname, measure)
+
+```
+
+```{r}
+
+tabdata <- stack |> 
+  select(measure, shortname, alltenure_pct, alltenurerank) |> 
+  pivot_wider(names_from = measure, values_from = c(alltenure_pct, alltenurerank))
+
+saveRDS(tabdata, here::here("report", "results", "crosscutting_tabdata_rgn.rds")) # for appendix
+
+tab <- tabdata |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "Housing insecurity measures: cost burden, crowding, and lack of complete plumbing or kitchen facilities",
+    subtitle="Universe is all occupied housing units (owner plus renter)"
+    ) |>
+  cols_label(shortname="Region",
+             alltenure_pct_cost="Cost burden",
+             alltenure_pct_crowd="Crowding",
+             alltenure_pct_plumbkitch=html("Lacks complete plumbing or kitchen facilities"),	
+             alltenurerank_cost="Cost burden",
+             alltenurerank_crowd="Crowding",
+             alltenurerank_plumbkitch=html("Lacks complete plumbing or kitchen facilities")) |> 
+  tab_spanner(columns = contains("_pct"),
+                    label=html("Percent of households with this problem")) |> 
+  tab_spanner(columns = contains("rank"),
+                    label=html("Rank among regions (1=Most prevalent)")) |> 
+  fmt_percent(columns=contains("_pct"), decimals=1)|> 
+  fmt_number(columns=contains("rank"),
+             decimals=0) |>
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab  
+
+tabfile <-  path(tabdir, "cost_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+
+```
+
+
+{{< include ../_gt_snippet.qmd >}}

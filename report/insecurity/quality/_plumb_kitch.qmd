@@ -4,25 +4,21 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Housing Crowding
+## Plumbing and kitchen facilities
 
-Living in overcrowded housing can lead to poor mental health, food insecurity, and infectious diseases such as Meningitis, Hepatitis, and Tuberculosis; overcrowding can have negative effects on neighborhoods as well. [@officeofdiseasepreventionandhealthpromotionQualityHousingLiterature2022], [@blakeMeasuringOvercrowdingHousing2007]
-
-The most commonly used measure of overcrowding is persons-per-room in a dwelling unit. [@blakeMeasuringOvercrowdingHousing2007] This measure includes all rooms in a dwelling unit in the denominator, not just bedrooms. The number of persons per room generally will be lower than the number of persons per bedroom. One reason persons-per-room is used so commonly is that it can be computed readily using important data sources such as the American Community Survey (ACS) and the American Housing Survey. It is available in a crucially important data source prepared by the U.S. Department of Housing and Urban Development (HUD) known as Comprehensive Housing Affordability Strategy (CHAS), which is used in developing housing polices. HUD develops CHAS data using detailed nonpublic ACS data, 
-
-There is no universally accepted threshold of persons-per-room above which a housing unit is considered crowded. Some studies have used a cutoff of 1 person per room, some have used a cutoff of 1.5 persons, and others have used different thresholds depending on specific health risks being examined. An important review conducted for HUD by Econometrica, Inc. used a cutoff of 1 person per room. [@blakeMeasuringOvercrowdingHousing2007] Crowding measures based on alternative thresholds tend to be highly correlated. In the analysis below we calculate the percentage of housing units in New York and other areas that are crowded using a threshold of 1 person per room.
+Why this is important [to come]
 
 
 ```{r}
-#| label: constants
+#| label: constants-plumbkitch
 #| include: false
 
-tabst <- "Percent of occupied housing units with more than one person per room"
+tabst <- "Percent of occupied housing units lacking complete plumbing or kitchen facilities"
 
 ```
 
 ```{r}
-#| label: libraries
+#| label: libraries-plumbkitch
 #| include: false
 
 source(here::here("r", "libraries.r"))
@@ -32,7 +28,7 @@ source(here::here("r", "constants.r"))
 ```
 
 ```{r}
-#| label: data-prep
+#| label: data-prep-plumbkitch
 #| include: false
 
 
@@ -40,48 +36,49 @@ source(here::here("r", "constants.r"))
 tabdict <- readRDS(path(dchas2019, "chasdict.rds"))
 glimpse(tabdict)
 
-tmp <- tabdict |> filter(table=="T10", str_detect(vname, "est"))
-t10 <- readRDS(path(dchwide, "tab10_enhanced.rds"))
-glimpse(t10)
+tmp <- tabdict |> filter(table=="T3", str_detect(vname, "est"))
+t3 <- readRDS(path(dchwide, "tab3_enhanced.rds"))
+glimpse(t3)
 tmp |> 
   filter(coltype %in% c("Total", "Subtotal"),
          is.na(desc3), is.na(desc4), is.na(desc5)) |> 
+  filter(str_detect(desc2, "lacking")) |> 
   select(vname, desc1, desc2)
 
 
-# trimmed slightly #  vname      desc1 desc2                                                               
-# <chr>      <chr> <chr>                                                               
-# T10_est1   Total:NA                                                                  
-# T10_est2   Owner NA                                                                  
-# T10_est3   Owner AND persons per room is less than or equal to 1                     
-# T10_est24  Owner AND persons per room is greater than 1 but less than or equal to 1.5
-# T10_est45  Owner AND persons per room is greater than 1.5                            
-# T10_est66  RenterNA                                                                  
-# T10_est67  RenterAND persons per room is less than or equal to 1                     
-# T10_est88  RenterAND persons per room is greater than 1 but less than or equal to 1.5
-# T10_est109 RenterAND persons per room is greater than 1.5   
+# trimmed slightly      
+# vname    desc1   desc2                                                                     
+# <chr>    <chr>   <chr>                                                                     
+# T3_est1  Total:  NA                                                                        
+# T3_est2  Owner   NA                                                                        
+# T3_est3  Owner   AND lacking complete plumbing or kitchen facilities                       
+# T3_est45 Renter  NA                                                                        
+# T3_est46 Renter  AND lacking complete plumbing or kitchen facilities                       
 
-(keepests <- paste0("T10_est", c(1, 2, 24, 45, 66, 88, 109)))
+(keepests <- paste0("T3_est", c(1, 2, 3, 45, 46)))
 
-t10crowd <- t10 |> 
+t3plumbkitch <- t3 |> 
   select(nygeotype, stabbr, geoid, affgeoid, shortname, fullname, countyfp, countyname,
          all_of(keepests)) |> 
-  rename(allunits=T10_est1) |> 
-  mutate(owncrowd = T10_est24 + T10_est45,
-         rentcrowd= T10_est88 + T10_est109,
-         allcrowd=owncrowd + rentcrowd,
-         own_pct=owncrowd / T10_est2,
-         rent_pct=rentcrowd / T10_est66,
-         alltenure_pct=allcrowd / allunits,
-         renter_share=T10_est66 / allunits)
-glimpse(t10crowd)
-tmp <- t10crowd |> filter(nygeotype=="state", stabbr=="NY")
-count(t10crowd, nygeotype)
+  rename(allunits=T3_est1,
+         owners=T3_est2,
+         renters=T3_est45) |> 
+  mutate(ownplumbkitch = T3_est3,
+         rentplumbkitch= T3_est46,
+         allplumbkitch=ownplumbkitch + rentplumbkitch,
+         own_pct=ownplumbkitch / owners,
+         rent_pct=rentplumbkitch / renters,
+         alltenure_pct=allplumbkitch / allunits,
+         renter_share=renters / allunits)
+glimpse(t3plumbkitch)
+tmp <- t3plumbkitch |> filter(nygeotype=="state", stabbr=="NY")
+tmp |> pivot_longer(-c(nygeotype:countyname))
+count(t3plumbkitch, nygeotype)
 
 
 # tabdata for all types
 # nytype groups: state, region, county, city, town, village
-tabdata <- t10crowd |> 
+tabdata <- t3plumbkitch |> 
   filter(nygeotype %in%
            c("nation", "state", "region", "county", "city", "town", "village",
              "rgn_cities", "rgn_villages", "rgn_xcityvill")) |>
@@ -100,16 +97,15 @@ tabdata <- t10crowd |>
   ungroup() |> 
   arrange(desc(alltenure_pct))
 
-saveRDS(tabdata, here::here("report", "results", "crowd_tabdata.rds")) # for appendix
+saveRDS(tabdata, here::here("report", "results", "plumbkitch_tabdata.rds")) # for appendix
 
 ```
 
 
-
-### Housing Crowding in New York and Other States
+### Housing Lacking Complete Plumbing and Kitchen Facilities in New York and Other States
 
 ```{r}
-#| label: state-crowd-data
+#| label: state-plumbkitch-data
 #| include: false
 
 tabdata_st <- tabdata |> 
@@ -119,7 +115,7 @@ tabdata_st <- tabdata |>
                           str_remove(shortname, " State"),
                           shortname))
 
-saveRDS(tabdata_st, here::here("report", "results", "crowd_tabdata_st.rds")) # for appendix
+saveRDS(tabdata_st, here::here("report", "results", "plumbkitch_tabdata_st.rds")) # for appendix
 
 ```
 
@@ -127,20 +123,20 @@ saveRDS(tabdata_st, here::here("report", "results", "crowd_tabdata_st.rds")) # f
 New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 rank for both owners and renters. As is true in every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
 
 ```{r}
-#| label: state-crowd-table
+#| label: state-plumbkitch-table
 #| include: true
 #| echo: false
 
-tt <- "Top 10 states ranked by housing crowding, plus United States"
+tt <- "Top 10 states ranked by housing lacking complete plumbing and kitchen facilities, plus U.S. and New York"
 
 tabdata_topn <- tabdata_st |> 
   arrange(desc(alltenure_pct)) |> 
-  filter(nygeotype=="nation" | row_number() <= 10) 
+  filter(nygeotype=="nation" | row_number() <= 10 | stabbr=="NY") 
 
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "crowd_states.png")
+tabfile <-  path(tabdir, "plumbkitch_states.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
@@ -150,10 +146,10 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-### Housing Crowding in New York's Regions
+### Housing Lacking Complete Plumbing and Kitchen Facilities in New York's Regions
 
 ```{r}
-#| label: region-crowd-data
+#| label: region-plumbkitch-data
 #| include: false
 
 tabdata_rgn <- tabdata |> 
@@ -162,22 +158,22 @@ tabdata_rgn <- tabdata |>
 
 tabdata_rgn
 
-saveRDS(tabdata_rgn, here::here("report", "results", "crowd_tabdata_rgn.rds")) # for appendix
+saveRDS(tabdata_rgn, here::here("report", "results", "plumbkitch_tabdata_rgn.rds")) # for appendix
 
 ```
 
 High housing cost burden is far more prevalent in New York City, the Mid-Hudson region, and Long Island than in upstate New York. In all regions, high cost burden for renters is more prevalent than it is for homeowners; this is particularly true in upstate regions.
 
 ```{r}
-#| label: region-crowd-table
+#| label: region-plumbkitch-table
 #| include: true
 #| echo: false
 
-tt <- "New York regions ranked by housing crowding"
+tt <- "New York regions ranked by housing plumbkitching"
 tab <- f_tabranks(tabdata_rgn, stubvar="shortname", stubhead="Region",
          tabtitle=tt)
 
-tabfile <-  path(tabdir, "crowd_regions.png")
+tabfile <-  path(tabdir, "plumbkitch_regions.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
@@ -186,39 +182,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 {{< include ../../_gt_snippet.qmd >}}
 
 
-```{r}
-#| label: region-hbar
-#| eval: false
-#| include: false
-#| echo: false
-names(t10crowd)
-
-p <- t10crowd |> 
-  filter(stabbr=="NY", nygeotype %in% c("region")) |> 
-  select(shortname, owncrowd, rentcrowd, allcrowd) |> 
-  arrange(desc(allcrowd)) |>
-  select(shortname, owncrowd, rentcrowd, allcrowd) |> 
-  pivot_longer(-c(shortname, allcrowd)) |> 
-  mutate(namef=factor(name, 
-                      levels=c("rentcrowd", "owncrowd"),
-                      labels=c("renters", "owners"))) |> 
-  arrange(namef) |> 
-  ggplot() +
-  geom_col(aes(x=value, y=reorder(shortname, allcrowd), fill=namef), width=0.5) +
-  scale_x_continuous(name="Number of households in crowded conditions (thousands)",
-                     breaks=seq(0, 2e6, 100e3),
-                     labels=number_format(scale=1e-3)) +
-  scale_y_discrete(name=NULL) +
-  scale_fill_manual(values=c("blue", "darkgreen")) +
-  ggtitle("Number of Households in crowded conditions in New York, by Region") +
-  theme_bw() +
-  legend_notitle
-  
-p  
-
-```
-
-#### Within-Region Housing Crowding for City and Village vs. Other areas
+#### Within-Region Housing Lacking Complete Plumbing and Kitchen Facilities for City and Village vs. Other areas
 
 ```{r}
 #| label: regional-breakdown-data
@@ -233,7 +197,7 @@ tabdata_rgn_brkdown <- tabdata |>
 
 tabdata_rgn_brkdown
 
-saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "crowd_tabdata_rgn_brkdown.rds")) # for appendix
+saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "plumbkitch_tabdata_rgn_brkdown.rds")) # for appendix
 
 
 ```
@@ -252,7 +216,7 @@ tab <- tabdata_rgn_brkdown |>
   gt() |> 
   sub_missing(columns = everything()) |> 
   tab_header(
-      title = "Breakdown of housing crowding within New York regions",
+      title = "Breakdown of housing lacking complete plumbing and kitchen facilities within New York regions",
       subtitle=tabst) |> 
   cols_label(shortname="Region",
              region=html("Region total"),
@@ -260,11 +224,11 @@ tab <- tabdata_rgn_brkdown |>
              rgn_villages=html("Villages"),
              rgn_xcityvill=html("Remainder of region")) |> 
   tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
-              label=html("Crowding prevalence within region")) |> 
+              label=html("Prevalence within region")) |> 
   fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
   
-tabfile <-  path(tabdir, "crowd_region_breakdown.png")
+tabfile <-  path(tabdir, "plumbkitch_region_breakdown.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
@@ -275,10 +239,10 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 {{< include ../../_gt_snippet.qmd >}}
 
 
-### Housing Crowding in New York's Counties
+### Housing Lacking Complete Plumbing and Kitchen Facilities in New York's Counties
 
 ```{r}
-#| label: county-crowd-data
+#| label: county-plumbkitch-data
 #| include: false
 
 tabdata_cnty <- tabdata |> 
@@ -286,15 +250,15 @@ tabdata_cnty <- tabdata |>
   mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
 
 tabdata_cnty
-saveRDS(tabdata_cnty, here::here("report", "results", "crowd_tabdata_cnty.rds")) # for appendix
+saveRDS(tabdata_cnty, here::here("report", "results", "plumbkitch_tabdata_cnty.rds")) # for appendix
 
 ```
 
 ```{r}
-#| label: county-crowd-table
+#| label: county-plumbkitch-table
 #| include: true
 #| echo: false
-tt <- "Top 10 counties in New York with highest housing crowding"
+tt <- "Top 10 counties in New York with greatest lack of complete plumbing and kitchen facilities"
 
 tabdata_topn <- tabdata_cnty |> 
   arrange(desc(alltenure_pct)) |> 
@@ -303,7 +267,7 @@ tabdata_topn <- tabdata_cnty |>
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="County",
          tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "crowd_counties.png")
+tabfile <-  path(tabdir, "plumbkitch_counties.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 ```
@@ -314,7 +278,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ### Housing Cost Burden in New York's 6 Largest Cities
 
 ```{r}
-#| label: city-crowd-data
+#| label: city-plumbkitch-data
 #| include: false
 
 tabdata_city <- tabdata |> 
@@ -323,7 +287,7 @@ tabdata_city <- tabdata |>
 
 tabdata_city
 
-saveRDS(tabdata_city, here::here("report", "results", "crowd_tabdata_city.rds")) # for appendix
+saveRDS(tabdata_city, here::here("report", "results", "plumbkitch_tabdata_city.rds")) # for appendix
 
 ```
 
@@ -333,7 +297,7 @@ saveRDS(tabdata_city, here::here("report", "results", "crowd_tabdata_city.rds"))
 #| include: true
 #| echo: false
 
-tt <- "Largest cities in New York ranked by housing crowding"
+tt <- "Largest cities in New York ranked by lack of complete plumbing and kitchen facilities"
 
 # get nyc and brysa
 bignames <- c("New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany")
@@ -345,10 +309,11 @@ tabdata_bigcities <- tabdata_city |>
 tab <- f_tabranks(tabdata_bigcities, stubvar="shortname", stubhead="City",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 
-tabfile <-  path(tabdir, "crowd_cities.png")
+tabfile <-  path(tabdir, "plumbkitch_cities.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 ```
 
 {{< include ../../_gt_snippet.qmd >}}
+
 
