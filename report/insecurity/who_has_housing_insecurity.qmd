@@ -4,11 +4,12 @@ editor_options:
   chunk_output_type: console
 ---
 
-# Who has housing insecurity?
+# Who is housing insecure?
 
 ```{r}
 #| label: constants-whohas
 #| include: false
+#| echo: false
 
 tabst <- "Percent of occupied housing units lacking complete plumbing or kitchen facilities"
 
@@ -404,7 +405,7 @@ tab <- tabdata_st  |>
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
-    title = "States: Percentage of households in each income group with housing problems",
+    title = "States: Percentage of households in each racial and ethnic group with housing problems",
     subtitle=hprobs
     ) |>
   tab_spanner(columns = -c(shortname, allrace),
@@ -445,7 +446,7 @@ tab <- tabdata_rgn  |>
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
-    title = "NY regions: Percentage of households in each income group with housing problems",
+    title = "NY regions: Percentage of households in each racial and ethnic group with housing problems",
     subtitle=hprobs
     ) |>
   tab_spanner(columns = -c(shortname, allrace),

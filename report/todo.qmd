@@ -1,4 +1,8 @@
-# TO DO {.unnumbered}
+# TO DO List {.unnumbered}
+
+Maria's comments followed by my notes usually in \[square brackets\]
+
+## Housing insecurity
 
 -   Dec 2: all data included, and all major pieces done; Dec 16 draft report
 
@@ -6,9 +10,9 @@
 
 -   without necessarily showing another presentation of data, can we show whether affordability burdens are higher or lower than say 10 years ago? \[done, using 1-year ACS (not HUD CHAS 5-year ACS) -- see graph, which I think provides a nice overview\]
 
--   i don't see any demographic type analysis - will that be added per the outline? perhaps we don't need to go into as many levels as specified in the outline, but the **racial/ethnic** and perhaps **age** categories are helpful at a minimum.
+-   i don't see any demographic type analysis - will that be added per the outline? perhaps we don't need to go into as many levels as specified in the outline, but the **racial/ethnic** and perhaps **age** categories are helpful at a minimum. \[added problems by income group, racial/ethnic group, and age (elderly) group, from HUD CHAS\]
 
--   housing quality (maybe NYCHA?)
+-   housing quality (maybe NYCHA?) \[added HUD data on lack of complete plumbing and kitchen facilities; not much data are available on cracks, holes, etc.; I inserted a table from NYCHA 2021 survey for NYC, but don't have data for rest of state\]
 
 -   crowding:
 
@@ -30,29 +34,37 @@
 
     -   Maria wow to high Maryland rate, much lower NY rate (figure out why this might be so)
 
+-   Misc table notes
+
+    State table:
+
+    -   Add national average \[done\]
+    -   Top 10 in report, full table in appendix \[done\]
+    -   no bar chart \[done\]
+
+    Regions:
+
+    -   bar chart perhaps was not clear (djb -- perhaps different colors to make owners/renters clearer?)
+
+    Counties:
+
+    -   table top 10: \[done\]
+        -   as 2 tables one for owner burdens, 1 for renters, \[have **not** done this - can be done later, I can provide all data\]
+        -   or heat maps
+    -   full table in appendix \[done for housing cost burden, we can figure out if needed for others\]
+
+    Cities:
+
+    -   maybe limit main to the top 5 \[done -- top 6 plus NYS\]
+
+    -   full table in appendix \[done for housing cost burden\]
+
+-   \[I added a table summarizing the different measures of housing insecurity\]
+
+-   Add homelessness...
+
+## Federal policies
+
 -   Of course, add much more on federal programs...
 
--   And homelessness...
-
-State table:
-
--   Add national average \[done\]
--   Top 10 in report, full table in appendix \[done\]
--   no bar chart \[done\]
-
-Regions:
-
--   bar chart perhaps was not clear (djb -- perhaps different colors to make owners/renters clearer?)
-
-Counties:
-
--   table top 10: \[done\]
-    -   as 2 tables one for owner burdens, 1 for renters, \[have **not** done this - can be done later, I can provide all data\]
-    -   or heat maps
--   full table in appendix \[done for housing cost burden, we can figure out if needed for others\]
-
-Cities:
-
--   maybe limit main to the top 5 \[done -- top 6 plus NYS\]
-
--   full table in appendix \[done for housing cost burden\]
+-   

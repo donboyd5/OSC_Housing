@@ -186,6 +186,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```{r}
 #| label: region-cost-data
 #| include: false
+#| echo: false
 
 tabdata_rgn <- tabdata |> 
   filter(stabbr=="NY", nygeotype %in% c("state", "region")) |>
@@ -201,7 +202,7 @@ High housing cost burden is far more prevalent in New York City, the Mid-Hudson 
 
 ```{r}
 #| label: region-cost-table
-#| include: true
+#| include: false
 #| echo: false
 
 tt <- "New York regions ranked by housing cost burden"
@@ -222,7 +223,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 #| label: region-hbar
 #| include: true
 #| echo: false
-names(t9cb2)
+# names(t9cb2)
 
 p <- t9cb2 |> 
   filter(stabbr=="NY", nygeotype %in% c("region")) |> 
@@ -253,6 +254,7 @@ p
 
 ```{r}
 #| label: regional-breakdown-data-cost
+#| echo: false
 #| include: false
 
 tabdata_rgn_brkdown <- tabdata |> 
@@ -311,6 +313,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```{r}
 #| label: county-cost-data
 #| include: false
+#| echo: false
 
 tabdata_cnty <- tabdata |> 
   filter(stabbr=="NY", nygeotype %in% c("state", "county")) |>  
@@ -325,6 +328,7 @@ saveRDS(tabdata_cnty, here::here("report", "results", "cb_tabdata_cnty.rds")) # 
 #| label: county-cost-table
 #| include: true
 #| echo: false
+
 tt <- "Top 10 counties in New York with highest housing cost burden"
 
 tabdata_topn <- tabdata_cnty |> 
@@ -347,6 +351,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```{r}
 #| label: city-cost-data
 #| include: false
+#| echo: false
 
 tabdata_city <- tabdata |> 
   filter(stabbr=="NY", nygeotype %in% c("state", "city")) |>  

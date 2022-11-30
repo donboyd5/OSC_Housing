@@ -4,29 +4,29 @@
 
 {{< include _housing_affordability.qmd >}}
 
-## Housing Availability and Related Measures
+<!-- ## Housing Availability and Related Measures -->
 
-I mention below a few data sources under investigation.
+<!-- I mention below a few data sources under investigation. -->
 
-### FHFA housing prices
+<!-- ### FHFA housing prices -->
 
--   [FHFA](https://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index-Datasets.asp) All-Transactions House Price Index, [FRED](https://fred.stlouisfed.org/series/ATNHPIUS36001A)
+<!-- -   [FHFA](https://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index-Datasets.asp) All-Transactions House Price Index, [FRED](https://fred.stlouisfed.org/series/ATNHPIUS36001A) -->
 
-    -   Counties (Developmental Index; Not Seasonally Adjusted) -- Annual House Price Indexes (see Working Papers 16-01, 16-02, and 16-04)
+<!--     -   Counties (Developmental Index; Not Seasonally Adjusted) -- Annual House Price Indexes (see Working Papers 16-01, 16-02, and 16-04) -->
 
-At the end I show price change since 2016.
+<!-- At the end I show price change since 2016. -->
 
-### Census building permits
+<!-- ### Census building permits -->
 
-Monthly and annual to the county level.
+<!-- Monthly and annual to the county level. -->
 
-https://www.census.gov/construction/bps/ https://www2.census.gov/econ/bps/
+<!-- https://www.census.gov/construction/bps/ https://www2.census.gov/econ/bps/ -->
 
-### Realtor.com
+<!-- ### Realtor.com -->
 
-> Data Attribution: Files in the realtor.com real estate data library are free to use, we just ask that you attribute any full or partial use of the data to realtor.com with a link to this page. See specific notes on attribution for each data series...
+<!-- > Data Attribution: Files in the realtor.com real estate data library are free to use, we just ask that you attribute any full or partial use of the data to realtor.com with a link to this page. See specific notes on attribution for each data series... -->
 
-Several county-level data sets.
+<!-- Several county-level data sets. -->
 
 <!-- ## Selected data (exploratory at this point) -->
 

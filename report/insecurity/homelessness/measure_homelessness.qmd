@@ -1,3 +1,9 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
 # Measuring Homelessness
 
 ## This is the first part of measuring homelessness
