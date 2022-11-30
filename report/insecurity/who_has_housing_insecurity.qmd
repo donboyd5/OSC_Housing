@@ -1,0 +1,739 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Who has housing insecurity?
+
+```{r}
+#| label: constants-whohas
+#| include: false
+
+tabst <- "Percent of occupied housing units lacking complete plumbing or kitchen facilities"
+
+```
+
+```{r}
+#| label: libraries-whohas
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+```
+
+```{r}
+#| label: data-prep-get_table1
+#| include: false
+
+# Table 1	 Tenure (2) by Housing Unit Problems (2) by Household Income (5) by Race (6)
+# Table 2	 Tenure (2) by Severe Housing Unit Problems (2) by Household Income (5) by Race (6)
+# Table 3	 Tenure (2) by Housing Unit Problem Severity (7) by Household Income (5)
+# Table 4	 Tenure (2) by Housing Unit Problems (3) by Household Type (3) by Household Size (2)
+# Table 5	 Tenure (2) by Housing Unit Problems (3) by Household Income (5) by Elderly Status (3)
+# Table 6	 Tenure (2) by Disability Status (5) by Household Income (4) by Housing Unit Problems (3)
+# Table 7	 Tenure (2) by Household Income (5) by Household Type (5) by Housing Cost Burden (3)
+# Table 8	 Tenure (2) by Household Income (5) by Housing Cost Burden (4) by Substandard Housing (2)
+# Table 9	 Tenure (2) by Race (7) by Housing Cost Burden (4)
+# Table 10	 Tenure (2) by Overcrowding (3) by Household Income (5) by Family Status (3)
+# Table 11	 Tenure (2) by Housing Unit Problems (3) by Household Income (13)
+
+
+
+# tabshells <- readRDS(here::here("data", "acs", "tabshells_2019.rds"))
+tabdict <- readRDS(path(dchas2019, "chasdict.rds"))
+glimpse(tabdict)
+
+t1info <- tabdict |> filter(table=="T1", str_detect(vname, "est"))
+glimpse(t1info)
+t1 <- readRDS(path(dchwide, "tab1_enhanced.rds"))
+glimpse(t1)
+
+
+```
+
+
+```{r}
+#| label: data-prep-problem-income-race-basedata
+#| include: false
+#| echo: false
+
+# set data for tenure, income, race
+
+# For problems x tenure x income we need:
+#  coltype Total, subtotal
+#  tenure - any desc1 so don't need to filter
+#  problems - desc2 is has 1 or more...
+#  income - any desc3
+#  all races - desc4 is NA
+#  to be safe: desc5 is NA
+t1keep1 <- t1info |> 
+  # race does not sum to total, so get All to calc other race
+  # I probably should calc other for income also, and maybe tenure and problems, 
+  #   differences there are minimal
+  filter(coltype=="Detail" | 
+           (desc4=="All" &
+              desc1!="All" &
+              desc2!="All" &
+              desc3!="All")) |> 
+  mutate(vorder=row_number()) |> 
+  select(vorder, vname, desc1, desc2, desc3, desc4, desc5)
+t1keep1
+count(t1keep1, desc1) # tenure
+count(t1keep1, desc2) # problem
+count(t1keep1, desc3) # hamfi
+count(t1keep1, desc4) # race note that we have All here but not for other groups
+count(t1keep1, desc5) # NA
+
+# create categorical dataframes to merge against the t1keep data
+tenuredf <- t1keep1 |> 
+  distinct(desc1) |> 
+  mutate(tenorder=row_number(),
+         tenure=c("owner", "renter"))
+
+problemdf <- t1keep1 |> 
+  distinct(desc2) |> 
+  mutate(proborder=row_number(),
+         problem=c("problem", "noproblem"))
+
+# a little more work for hamfidf
+inclevs <- c("le30", "gt30le50", "gt50le80", "gt80le100", "gt100")
+inclabs <- c("<= 30% of HAMFI", ">30 to <= 50% of HAMFI", 
+              ">50 to <= 80% of HAMFI", ">80 to <= 100% of HAMFI",
+              "> 100% of HAMFI")
+hamfidf <- t1keep1 |> 
+  distinct(desc3) |> 
+  mutate(incorder=row_number(),
+         income=inclevs, 
+         inclab=inclabs)
+hamfidf
+
+# and a little more work for race/ethnicity
+racelevs <- c("allrace", "white", "black", "asian", "aian", "pi", "hispanic")
+racedf <- t1keep1 |> 
+  distinct(desc4) |> 
+  mutate(raceorder=row_number(),
+         race=racelevs,
+         racelab=desc4,
+         racelab=ifelse(race=="allrace", "All races & ethnicities", racelab))
+racedf
+
+t1keep <- t1keep1 |> 
+  select(-desc5) |> 
+  left_join(tenuredf, by = "desc1") |>
+  left_join(problemdf, by = "desc2") |> 
+  left_join(hamfidf, by = "desc3") |> 
+  left_join(racedf, by="desc4")
+count(t1keep, tenure, desc1)
+count(t1keep, problem, desc2)
+count(t1keep, incorder, income, inclab, desc3)
+count(t1keep, raceorder, race, racelab, desc4)
+check <- count(t1keep, vorder, vname, tenure, problem,
+      incorder, income, inclab,
+      raceorder, race, racelab)
+
+t1keep$vname
+
+# get desired variables and put category variables on the data frame
+t1a <- t1 |> 
+  select(nygeotype, stabbr, geoid, affgeoid,
+         shortname, fullname, countyfp, countyname,
+         all_of(t1keep$vname)) |> 
+  pivot_longer(cols=starts_with("T1_est"), names_to = "vname") |> 
+  left_join(t1keep |> 
+              select(vorder, vname, tenure, problem,
+                     incorder, income, inclab,
+                     raceorder, race, racelab),
+            by = "vname")
+count(t1a, tenure)
+count(t1a, problem)
+count(t1a, incorder, income, inclab)
+count(t1a, raceorder, race, racelab)
+
+# drop non-needed variables, pivot each categorical variable, calc total,
+#   remerge to get labels, adding labels for totals
+(racextot <- setdiff(racedf$race, "allrace"))
+
+t1b <- t1a |> 
+  select(-c(vorder, vname, incorder, inclab, raceorder, racelab)) |> 
+  pivot_wider(names_from = tenure) |> 
+  mutate(alltenure=owner + renter) |> 
+  pivot_longer(cols=c(owner, renter, alltenure),
+               names_to = "tenure") |> 
+  pivot_wider(names_from = problem) |> 
+  mutate(allproblem=problem + noproblem) |> 
+  pivot_longer(cols=c(problem, noproblem, allproblem),
+               names_to = "problem") |> 
+  pivot_wider(names_from = income) |> 
+  mutate(allincome = rowSums(across(all_of(hamfidf$income)))) |> 
+  pivot_longer(cols=c(all_of(c(hamfidf$income, "allincome"))),
+               names_to = "income") |> 
+  pivot_wider(names_from = race) |> 
+  mutate(raceother = allrace - rowSums(across(all_of(racextot)))) |> 
+  pivot_longer(cols=c(all_of(c(racedf$race, "raceother"))),
+               names_to = "race")
+count(t1b, tenure)
+count(t1b, problem)
+count(t1b, income)
+count(t1b, race)
+summary(t1b) # no missings, but there is a negative value
+t1b |> filter(value < 0) # 15 records, almost all asian or pi, in rgn_xcityvill, set these to 0???
+
+# merge back against labels and add order for totals
+hamfidf2 <- hamfidf |> 
+  add_row(incorder=6, income="allincome", inclab="All incomes") |> 
+  arrange(incorder)
+hamfidf2
+
+racedf2 <- racedf |>
+  add_row(raceorder=8, race="raceother", racelab="Other races & ethnicities") |> 
+  mutate(raceorder=ifelse(race=="allrace", max(raceorder), raceorder-1)) |> 
+  arrange(raceorder)
+racedf2
+
+t1c <- t1b |>
+  left_join(hamfidf2 |> select(incorder, income, inclab), by = "income") |> 
+  left_join(racedf2 |> select(raceorder, race, racelab), by = "race")
+count(t1c, incorder, income, inclab)
+count(t1c, raceorder, race, racelab)
+
+
+# check NYS against HUD tables online
+check <- t1c |> 
+  filter(nygeotype=="state", stabbr=="NY")
+# first table
+check |> 
+  filter(tenure=="alltenure", race=="allrace") |> 
+  select(shortname, problem, incorder, income, inclab, value) |> 
+  pivot_wider(names_from = problem) |> 
+  arrange(incorder)
+check |> 
+  filter(tenure=="renter", race=="allrace") |> 
+  select(shortname, problem, incorder, income, inclab, value) |> 
+  pivot_wider(names_from = problem) |> 
+  arrange(incorder)
+
+check |> 
+  filter(tenure=="owner", race=="allrace") |> 
+  select(shortname, problem, incorder, income, inclab, value) |> 
+  pivot_wider(names_from = problem) |> 
+  arrange(incorder)
+
+# now we have data needed for tables below
+basedata <- t1c
+
+```
+
+
+## Housing insecurity by income level - what % of households in each income group have housing problems?
+
+```{r}
+#| label: state-data-prep-income
+#| include: false
+#| echo: false
+
+# data prep for income level
+count(basedata, income)
+count(basedata, race)
+count(basedata, problem)
+
+tabdata <- basedata |> 
+  filter(race=="allrace", tenure=="alltenure") |> 
+  select(nygeotype, stabbr, geoid, affgeoid, shortname, problem, starts_with("inc"), value) |> 
+  # make income a grouping variable
+  group_by(nygeotype, shortname, income) |> 
+  mutate(pct=value / value[problem=="allproblem"]) |> 
+  ungroup() |> 
+  filter(problem=="problem")
+
+hprobs <- "Problems: cost burden (>= 30% of income), crowded (> 1 person per room), or lacks complete plumbing or kitchen facilities"
+
+ygroups <- list(le30=html("<= 30%"),
+               gt30le50=html("> 30 to <= 50%"),
+               gt50le80=html("> 50 to <= 80%"),
+               gt80le100=html("> 80 to <= 100%"),
+               gt100=html("> 100%"),
+               allincome=html("All incomes"))
+
+```
+
+### States
+
+```{r}
+#| label: table-income-state
+#| include: true
+#| echo: false
+
+tabdata_st <- tabdata |> 
+  filter(nygeotype=="state" | stabbr=="US") |> 
+  select(nygeotype, stabbr, shortname, income, pct) |> 
+  pivot_wider(names_from = income, values_from = pct) |> 
+  group_by(nygeotype) |> 
+  arrange(desc(allincome)) |> 
+  mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
+  ungroup()
+
+tab <- tabdata_st  |> 
+  filter(stabbr %in% c(state.abb, "US")) |> 
+  filter(stabbr=="US" | row_number() <= 10) |>
+  select(-stabbr, -nygeotype, -rank) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "States: Percentage of households in each income group with housing problems",
+    subtitle=hprobs
+    ) |>
+  tab_spanner(columns = c(le30, gt30le50, gt50le80, gt80le100,  gt100),
+                label=html("Income relative to area median income")) |>
+  cols_label(.list=c(shortname="State", ygroups)) |> 
+  fmt_percent(columns=-shortname, decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab               
+  
+tabfile <-  path(tabdir, "problems_income_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+### Regions in New York
+
+
+```{r}
+#| label: table-income-region
+#| include: true
+#| echo: false
+
+tabdata_rgn <- tabdata |> 
+  filter(stabbr=="NY" & (nygeotype %in% c("region", "state"))) |> 
+  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |> 
+  select(nygeotype, stabbr, shortname, income, pct) |> 
+  pivot_wider(names_from = income, values_from = pct) |> 
+  group_by(nygeotype) |> 
+  arrange(desc(allincome)) |> 
+  mutate(rank=ifelse(nygeotype=="region", row_number(), NA_real_)) |> 
+  ungroup()
+
+tab <- tabdata_rgn  |> 
+  filter(nygeotype=="region") |>
+  select(-stabbr, -nygeotype, -rank) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "NY regions: Percentage of households in each income group with housing problems",
+    subtitle=hprobs
+    ) |>
+  tab_spanner(columns = c(le30, gt30le50, gt50le80, gt80le100,  gt100),
+                label=html("Income relative to area median income")) |>
+  cols_label(.list=c(shortname="Region", ygroups)) |> 
+  fmt_percent(columns=-shortname, decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab
+  
+tabfile <-  path(tabdir, "problems_income_regions.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+## Housing insecurity by race and ethnicity - what % of households in each group have housing problems?
+
+
+```{r}
+#| label: state-data-prep-race
+#| include: false
+#| echo: false
+
+# data prep for income level
+count(basedata, income)
+count(basedata, race)
+count(basedata, problem)
+ns(basedata)
+
+tabdata <- basedata |> 
+  filter(income=="allincome", tenure=="alltenure") |> 
+  select(nygeotype, stabbr, geoid, affgeoid, shortname, problem, starts_with("race"), value) |> 
+  # make race a grouping variable - first, redefining it
+  mutate(race=ifelse(race %in% c("aian", "pi", "raceother"), "raceother", race),
+         raceorder=ifelse(race %in% c("aian", "pi", "raceother"), 7, raceorder)) |> 
+  group_by(nygeotype, stabbr, geoid, affgeoid, shortname, problem, raceorder, race) |> 
+  summarise(value=sum(value), .groups="drop") |> 
+  group_by(nygeotype, shortname, raceorder, race) |> 
+  mutate(pct=value / value[problem=="allproblem"]) |> 
+  ungroup() |> 
+  filter(problem=="problem")
+
+count(tabdata, raceorder, race)
+
+racegroups <- list(white=html("White alone, non-Hispanic"),
+               black=html("Black or African-American alone, non-Hispanic"),
+               asian=html("Asian alone, non-Hispanic"),
+               hispanic=html("Hispanic, any race"),
+               raceother=html("Other races & ethnicities"),
+               allrace=html("All races & ethnicities"))
+
+```
+
+### States
+
+```{r}
+#| label: table-race-state
+#| include: true
+#| echo: false
+
+tabdata_st <- tabdata |> 
+  filter(nygeotype=="state" | stabbr=="US") |> 
+  select(nygeotype, stabbr, shortname, race, pct) |> 
+  pivot_wider(names_from = race, values_from = pct) |> 
+  relocate(hispanic, .before=asian) |> 
+  group_by(nygeotype) |> 
+  arrange(desc(allrace)) |> 
+  mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
+  ungroup()
+
+tab <- tabdata_st  |> 
+  filter(stabbr %in% c(state.abb, "US")) |> 
+  filter(stabbr=="US" | row_number() <= 10) |>
+  select(-stabbr, -nygeotype, -rank) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "States: Percentage of households in each income group with housing problems",
+    subtitle=hprobs
+    ) |>
+  tab_spanner(columns = -c(shortname, allrace),
+                label=html("Race and ethnicity categories")) |>
+  cols_label(.list=c(shortname="State", racegroups)) |> 
+  fmt_percent(columns=-shortname, decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab               
+  
+tabfile <-  path(tabdir, "problems_race_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+### Regions in New York
+
+```{r}
+#| label: table-race-region
+#| include: true
+#| echo: false
+
+tabdata_rgn <- tabdata |> 
+  filter(stabbr=="NY" & (nygeotype %in% c("region", "state"))) |> 
+  select(nygeotype, stabbr, shortname, race, pct) |> 
+  pivot_wider(names_from = race, values_from = pct) |> 
+  relocate(hispanic, .before=asian) |> 
+  group_by(nygeotype) |> 
+  arrange(desc(allrace)) |> 
+  mutate(rank=ifelse(nygeotype=="region", row_number(), NA_real_)) |> 
+  ungroup()
+
+tab <- tabdata_rgn  |> 
+  filter(nygeotype=="region") |>
+  select(-stabbr, -nygeotype, -rank) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "NY regions: Percentage of households in each income group with housing problems",
+    subtitle=hprobs
+    ) |>
+  tab_spanner(columns = -c(shortname, allrace),
+                label=html("Race and ethnicity categories")) |>
+  cols_label(.list=c(shortname="Region", racegroups)) |> 
+  fmt_percent(columns=-shortname, decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab
+  
+tabfile <-  path(tabdir, "problems_race_regions.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+
+## Housing insecurity by elderly and nonelderly - what % of households in each group have housing problems?
+
+
+```{r}
+#| label: data-prep-get_table5
+#| include: false
+
+# Table 1	 Tenure (2) by Housing Unit Problems (2) by Household Income (5) by Race (6)
+# Table 2	 Tenure (2) by Severe Housing Unit Problems (2) by Household Income (5) by Race (6)
+# Table 3	 Tenure (2) by Housing Unit Problem Severity (7) by Household Income (5)
+# Table 4	 Tenure (2) by Housing Unit Problems (3) by Household Type (3) by Household Size (2)
+# Table 5	 Tenure (2) by Housing Unit Problems (3) by Household Income (5) by Elderly Status (3)
+# Table 6	 Tenure (2) by Disability Status (5) by Household Income (4) by Housing Unit Problems (3)
+# Table 7	 Tenure (2) by Household Income (5) by Household Type (5) by Housing Cost Burden (3)
+# Table 8	 Tenure (2) by Household Income (5) by Housing Cost Burden (4) by Substandard Housing (2)
+# Table 9	 Tenure (2) by Race (7) by Housing Cost Burden (4)
+# Table 10	 Tenure (2) by Overcrowding (3) by Household Income (5) by Family Status (3)
+# Table 11	 Tenure (2) by Housing Unit Problems (3) by Household Income (13)
+
+glimpse(tabdict)
+
+t5info <- tabdict |> filter(table=="T5", str_detect(vname, "est"))
+glimpse(t5info)
+t5 <- readRDS(path(dchwide, "tab5_enhanced.rds"))
+glimpse(t5)
+
+
+```
+
+
+```{r}
+#| label: data-prep-problem-income-elderly-basedata
+#| include: false
+#| echo: false
+
+# set data for tenure, income, race
+
+# For problems x elderly we need:
+#  coltype Total, subtotal
+#  tenure - any desc1 so don't need to filter
+#  problems - desc2 is has 1 or more...
+#  income - any desc3
+#  all races - desc4 is NA
+#  to be safe: desc5 is NA
+
+count(t5info, desc1) # tenure - own, rent, total
+count(t5info, desc2) # problem - 1 or more, none, cb not computed and no other
+count(t5info, desc3) # hamfi 
+count(t5info, desc4) # elderly 
+count(t5info, desc5) # NA
+
+check <- t5 |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(nygeotype, stabbr, shortname, contains("est")) |> 
+  pivot_longer(-c(nygeotype, stabbr, shortname))
+
+
+t5keep1 <- t5info |> 
+  # I probably should calc other for income also, and maybe tenure and problems, 
+  #   differences there are minimal
+  filter(!is.na(desc2), !is.na(desc4)) |> 
+  mutate(vorder=row_number()) |> 
+  select(vorder, vname, desc1, desc2, desc3, desc4, desc5)
+t5keep1
+count(t5keep1, desc1) # tenure - own, rent, total
+count(t5keep1, desc2) # problem - 1 or more, none, cb not computed and no other
+count(t5keep1, desc3) # hamfi 
+count(t5keep1, desc4) # elderly 
+count(t5keep1, desc5) # NA
+
+# create categorical dataframes to merge against the t1keep data
+tenuredf <- t5keep1 |> 
+  distinct(desc1) |> 
+  mutate(tenorder=row_number(),
+         tenure=c("owner", "renter"))
+tenuredf
+
+problemdf <- t5keep1 |> 
+  distinct(desc2) |> 
+  mutate(proborder=row_number(),
+         problem=c("problem", "noproblem", "probnocomp"))
+problemdf
+
+agedf <- t5keep1 |> 
+  distinct(desc4) |> 
+  mutate(ageorder=row_number(),
+         age=c("age6274", "age75p", "agelt62"))
+agedf
+
+
+t5keep <- t5keep1 |> 
+  select(-c(desc3, desc5)) |> 
+  left_join(tenuredf, by = "desc1") |>
+  left_join(problemdf, by = "desc2") |> 
+  left_join(agedf, by = "desc4")
+
+count(t5keep, tenure, desc1)
+count(t5keep, problem, desc2)
+count(t5keep, ageorder, age, desc4)
+check <- count(t5keep, vorder, vname, tenure, problem,
+      ageorder, age)
+
+t5keep$vname
+
+# get desired variables and put category variables on the data frame
+t5a <- t5 |> 
+  select(nygeotype, stabbr, geoid, affgeoid,
+         shortname, fullname, countyfp, countyname,
+         all_of(t5keep$vname)) |> 
+  pivot_longer(cols=starts_with("T5_est"), names_to = "vname") |> 
+  left_join(t5keep |> 
+              select(vorder, vname, tenure, problem,
+                     ageorder, age),
+            by = "vname")
+count(t5a, tenure)
+count(t5a, problem)
+count(t5a, ageorder, age)
+
+# collapse by our 3 groups |> 
+t5b <- t5a |> 
+  select(nygeotype:countyname, tenure, problem, age, value) |> 
+  group_by(across(-value)) |> 
+  summarise(value=sum(value), .groups="drop")
+summary(t5b)  
+
+t5c <- t5b |> 
+  pivot_wider(names_from = tenure) |> 
+  mutate(alltenure=owner + renter) |> 
+  pivot_longer(cols=c(owner, renter, alltenure),
+               names_to = "tenure") |> 
+  pivot_wider(names_from = problem) |> 
+  mutate(# problem=problem + probnocomp,
+         noproblem=noproblem + probnocomp,
+         allproblem=problem + noproblem) |> 
+  select(-probnocomp) |> 
+  pivot_longer(cols=c(problem, noproblem, allproblem),
+               names_to = "problem") |> 
+  pivot_wider(names_from = age) |> 
+  mutate(allage=agelt62 + age6274 + age75p) |>
+  pivot_longer(cols=c(starts_with("age"), allage),
+               names_to = "age")
+count(t5c, tenure)
+count(t5c, problem)
+count(t5c, age)
+summary(t5c) # no missings, no negatives
+
+# check NYS against HUD tables online
+check <- t5c |> 
+  filter(nygeotype=="state", stabbr=="NY")
+# first table
+check |> 
+  filter(tenure=="alltenure", age=="allage")
+# now we have data needed for tables below
+basedata <- t5c
+
+```
+
+```{r}
+#| label: state-data-prep-age
+#| include: false
+#| echo: false
+
+# data prep for income level
+count(basedata, tenure)
+count(basedata, age)
+count(basedata, problem)
+glimpse(basedata)
+
+tabdata <- basedata |> 
+  filter(tenure=="alltenure") |> 
+  select(nygeotype, stabbr, geoid, affgeoid, shortname, problem, age, value) |> 
+  # make age a grouping variable
+  group_by(nygeotype, shortname, age) |> 
+  mutate(pct=value / value[problem=="allproblem"]) |> 
+  ungroup() |> 
+  filter(problem=="problem")
+
+hprobs <- "Problems: cost burden (>= 30% of income), crowded (> 1 person per room), or lacks complete plumbing or kitchen facilities"
+
+# agedf
+agegroups <- list(agelt62=html("No one age 62+"),
+               age6274=html("At least 1 person age 62-74, no one age 75+"),
+               age75p=html("At least one person age 75+"),
+               allage=html("All ages"))
+
+```
+
+
+### States
+
+```{r}
+#| label: table-age-state
+#| include: true
+#| echo: false
+
+tabdata_st <- tabdata |> 
+  filter(nygeotype=="state" | stabbr=="US") |> 
+  select(nygeotype, stabbr, shortname, age, pct) |> 
+  pivot_wider(names_from = age, values_from = pct) |> 
+  select(nygeotype, stabbr, shortname, agelt62, age6274, age75p, allage) |> 
+  group_by(nygeotype) |> 
+  arrange(desc(allage)) |> 
+  mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
+  ungroup()
+
+tab <- tabdata_st  |> 
+  filter(stabbr %in% c(state.abb, "US")) |> 
+  filter(stabbr=="US" | row_number() <= 10) |>
+  select(-stabbr, -nygeotype, -rank) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "States: Percentage of households in each age group with housing problems",
+    subtitle=hprobs
+    ) |>
+  tab_spanner(columns = -c(shortname, allage),
+                label=html("Age categories")) |>
+  cols_label(.list=c(shortname="State", agegroups)) |> 
+  fmt_percent(columns=-shortname, decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab               
+  
+tabfile <-  path(tabdir, "problems_age_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+### Regions in New York
+
+```{r}
+#| label: table-age-region
+#| include: true
+#| echo: false
+
+tabdata_rgn <- tabdata |> 
+  filter(stabbr=="NY" & (nygeotype %in% c("region", "state"))) |> 
+  select(nygeotype, stabbr, shortname, age, pct) |> 
+  pivot_wider(names_from = age, values_from = pct) |>  
+  select(nygeotype, stabbr, shortname, agelt62, age6274, age75p, allage) |> 
+  group_by(nygeotype) |> 
+  arrange(desc(allage)) |> 
+  mutate(rank=ifelse(nygeotype=="region", row_number(), NA_real_)) |> 
+  ungroup()
+
+tab <- tabdata_rgn  |> 
+  filter(nygeotype=="region") |>
+  select(-stabbr, -nygeotype, -rank) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "NY regions: Percentage of households in each age group with housing problems",
+    subtitle=hprobs
+    ) |>
+  tab_spanner(columns = -c(shortname, allage),
+                label=html("Age categories")) |>
+  cols_label(.list=c(shortname="Region", agegroups)) |> 
+  fmt_percent(columns=-shortname, decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab
+
+
+tabfile <-  path(tabdir, "problems_age_regions.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+
+
+```
+
+{{< include ../_gt_snippet.qmd >}}

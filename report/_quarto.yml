@@ -55,7 +55,7 @@ book:
         - insecurity/quality/quality.qmd
         - insecurity/stress/stress.qmd
         - insecurity/crosscutting.qmd
-        - insecurity/who_has_cost_burden.qmd
+        - insecurity/who_has_housing_insecurity.qmd
         - insecurity/homelessness/homelessness.qmd
     - part: "Policies to Address Housing Insecurity"
       chapters:
