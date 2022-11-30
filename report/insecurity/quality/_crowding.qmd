@@ -221,7 +221,7 @@ p
 #### Within-Region Housing Crowding for City and Village vs. Other areas
 
 ```{r}
-#| label: regional-breakdown-data
+#| label: regional-breakdown-data-crowd
 #| include: false
 
 tabdata_rgn_brkdown <- tabdata |> 
@@ -240,7 +240,7 @@ saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "crowd_tabdata_rgn_
 
 
 ```{r}
-#| label: regional-breakdown-table
+#| label: regional-breakdown-table-crowd
 #| include: true
 #| echo: false
 
@@ -329,7 +329,7 @@ saveRDS(tabdata_city, here::here("report", "results", "crowd_tabdata_city.rds"))
 
 
 ```{r}
-#| label: city-cost-table
+#| label: city-crowd-table
 #| include: true
 #| echo: false
 

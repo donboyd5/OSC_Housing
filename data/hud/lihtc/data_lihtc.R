@@ -21,7 +21,7 @@ fn1 <- "LIHTCPUB.CSV"
 
 
 # get data ----------------------------------------------------------------
-xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
+xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
 
 xwalk |> filter(rgn_num==9) |> select(geoid, county)
 

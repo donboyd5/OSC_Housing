@@ -523,7 +523,7 @@ names |>
 
 
 # create geotypes xwalk ---------------------------------------------------
-cnty_xwalk <- read_excel(here::here("data", "crosswalks", "nycounty_xwalk_data.xlsx"),
+cnty_xwalk <- read_excel(here::here("data", "xwalks", "nycounty_xwalk_data.xlsx"),
                          sheet="region_codes",
                          col_types="text")
 

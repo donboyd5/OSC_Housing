@@ -252,7 +252,7 @@ p
 #### Within-Region Housing Cost Burden for City and Village vs. Other areas
 
 ```{r}
-#| label: regional-breakdown-data
+#| label: regional-breakdown-data-cost
 #| include: false
 
 tabdata_rgn_brkdown <- tabdata |> 
@@ -271,7 +271,7 @@ saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "cb_tabdata_rgn_brk
 
 
 ```{r}
-#| label: regional-breakdown-table
+#| label: regional-breakdown-table-cost
 #| include: true
 #| echo: false
 

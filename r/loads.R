@@ -7,7 +7,7 @@ source(here::here("r", "functions_maps.r"))
 # data
 ## map-related data
 nycentroids <- readRDS(here::here("data", "maps", "nycentroids.rds"))
-xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
+# xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
 nycos_shape <- readRDS(here::here("data", "maps", "nycos_shape.rds"))
 
 acsdata <- readRDS(here::here("data", "acs", "acsdata.rds"))

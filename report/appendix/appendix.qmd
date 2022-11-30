@@ -37,7 +37,7 @@ tabst <- "Percent of occupied housing units with housing costs greater than 30% 
 ### All States
 
 ```{r}
-#| label: state-cost-table
+#| label: state-cost-table-appendix
 #| include: true
 #| echo: false
 
@@ -60,7 +60,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ### All Counties
 
 ```{r}
-#| label: county-cost-table
+#| label: county-cost-table-appendix
 #| include: true
 #| echo: false
 
@@ -84,7 +84,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 Note the high cost burden for Ithaca in Tompkins County. This probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located.
 
 ```{r}
-#| label: city-cost-table
+#| label: city-cost-table-appendix
 #| include: true
 #| echo: false
 
@@ -119,7 +119,7 @@ tabst <- "Percent of occupied housing units with more than one person per room"
 ### All States
 
 ```{r}
-#| label: state-crowd-table
+#| label: state-crowd-table-appendix
 #| include: true
 #| echo: false
 
@@ -142,7 +142,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ### All Counties
 
 ```{r}
-#| label: county-crowd-table
+#| label: county-crowd-table-appendix
 #| include: true
 #| echo: false
 
@@ -166,7 +166,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 Note that Ithaca in Tompkins County does NOT have high crowding even thought it had high cost burden in the table above. The high cost burden probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located, reflecting low incomes of college student even though they may have other means of support.
 
 ```{r}
-#| label: city-crowd-table
+#| label: city-crowd-table-appendix
 #| include: true
 #| echo: false
 
@@ -201,7 +201,7 @@ tabst <- "Percent of occupied housing units lacking complete plumbing or kitchen
 ### All States
 
 ```{r}
-#| label: state-plumbkitch-table
+#| label: state-plumbkitch-table-appendix
 #| include: true
 #| echo: false
 
@@ -224,7 +224,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ### All Counties
 
 ```{r}
-#| label: county-plumbkitch-table
+#| label: county-plumbkitch-table-appendix
 #| include: true
 #| echo: false
 
@@ -248,7 +248,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 Note that Ithaca in Tompkins County does NOT have high crowding even thought it had high cost burden in the table above. The high cost burden probably is an artifact of the high student population in Ithaca, where Cornell University and Ithaca College are located, reflecting low incomes of college student even though they may have other means of support.
 
 ```{r}
-#| label: city-plumbkitch-table
+#| label: city-plumbkitch-table-appendix
 #| include: true
 #| echo: false
 

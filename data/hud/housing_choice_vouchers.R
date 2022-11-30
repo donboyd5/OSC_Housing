@@ -19,7 +19,7 @@ fn1 <- "Housing_Choice_Vouchers_by_Tract.csv"
 
 
 # get data ----------------------------------------------------------------
-xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
+xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
 
 df1 <- read_csv(fpath, col_types = cols(.default = col_character()))
 glimpse(df1)

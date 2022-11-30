@@ -66,7 +66,7 @@ ny1 <- readRDS(here::here("data", "nycos_shape.rds")) |>
 # download.file("https://data.ny.gov/api/views/imem-myat/rows.csv?accessType=DOWNLOAD&sorting=true",
 #               here::here("data", "crosswalks", "Labor_Market_Regions.csv"))
 
-ny2 <- read_csv(here::here("data", "crosswalks", "Labor_Market_Regions.csv")) |> 
+ny2 <- read_csv(here::here("data", "xwalks", "Labor_Market_Regions.csv")) |> 
   setNames(c("rgn_labor", "county"))
 
 nycounty_xwalk1 <- ny1 |> 

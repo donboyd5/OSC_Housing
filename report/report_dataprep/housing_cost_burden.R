@@ -19,7 +19,7 @@ nycos_shape <- readRDS(here::here("data", "maps", "nycos_shape.rds"))
 acsdata <- readRDS(here::here("data", "acs", "acsdata.rds"))
 nycentroids <- readRDS(here::here("data", "maps", "nycentroids.rds"))
 nygeom <- readRDS(here::here("data", "maps", "nycentroids.rds"))
-xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
+xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
 
 
 # make a wide file with counties as rows, pcts as columns -----------------

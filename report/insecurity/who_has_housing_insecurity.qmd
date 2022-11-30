@@ -732,8 +732,6 @@ tabfile <-  path(tabdir, "problems_age_regions.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
-
-
 ```
 
 {{< include ../_gt_snippet.qmd >}}

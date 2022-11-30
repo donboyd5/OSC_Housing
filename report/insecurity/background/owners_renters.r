@@ -12,7 +12,7 @@ source(here::here("r", "functions_maps.r"))
 acsdata <- readRDS(here::here("data", "acs", "acsdata.rds"))
 nycentroids <- readRDS(here::here("data", "maps", "nycentroids.rds"))
 nygeom <- readRDS(here::here("data", "maps", "nycentroids.rds"))
-xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
+xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
 
 
 # get owner percentages ----------------------------------------

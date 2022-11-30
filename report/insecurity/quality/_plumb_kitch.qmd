@@ -185,7 +185,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 #### Within-Region Housing Lacking Complete Plumbing and Kitchen Facilities for City and Village vs. Other areas
 
 ```{r}
-#| label: regional-breakdown-data
+#| label: regional-breakdown-data-plumbkitch
 #| include: false
 
 tabdata_rgn_brkdown <- tabdata |> 
@@ -204,7 +204,7 @@ saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "plumbkitch_tabdata
 
 
 ```{r}
-#| label: regional-breakdown-table
+#| label: regional-breakdown-table-plumbkitch
 #| include: true
 #| echo: false
 
@@ -293,7 +293,7 @@ saveRDS(tabdata_city, here::here("report", "results", "plumbkitch_tabdata_city.r
 
 
 ```{r}
-#| label: city-cost-table
+#| label: city-plumbkitch-table
 #| include: true
 #| echo: false
 

@@ -19,7 +19,7 @@ fnz <- r"(E:\R_projects\OSC_Housing\data\hud\QCT2023CSV.zip)"
 fn1 <- "QCT2023.csv"
 
 # get data ----------------------------------------------------------------
-# xwalk <- readRDS(here::here("data", "crosswalks", "nycounty_xwalk.rds"))
+# xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
 fn <- "Boyd OSC Housing Report.xlsx"
 fn2 <- r"(C:\Users\donbo\OneDrive\Documents\OSC Housing\Boyd OSC Housing Report.xlsx)"
 
