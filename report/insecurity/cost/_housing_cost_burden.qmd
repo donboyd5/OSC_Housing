@@ -131,7 +131,7 @@ saveRDS(tabdata_st, here::here("report", "results", "cb_tabdata_st.rds")) # for 
 
 
 ```{r}
-#| label: hbar_states
+#| label: hbar-states
 #| eval: false
 #| include: false
 #| echo: false
@@ -241,12 +241,14 @@ p <- t9cb2 |>
                      breaks=seq(0, 2e6, 100e3),
                      labels=number_format(scale=1e-3)) +
   scale_y_discrete(name=NULL) +
-  scale_fill_manual(values=c("blue", "darkgreen")) +
+  scale_fill_manual(values=c("blue", "green")) +
   ggtitle("Number of Cost-Burdened Households in New York, by Region") +
   theme_bw() +
   legend_notitle
   
 p  
+
+ggsave(here::here("report", "results", "region_cost_hbar.png"), p, width = 10, height = 6, scale=1.5)
 
 ```
 

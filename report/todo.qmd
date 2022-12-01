@@ -32,7 +32,8 @@ Maria's comments followed by my notes usually in \[square brackets\]
 
 -   evictions:
 
-    -   Maria wow to high Maryland rate, much lower NY rate (figure out why this might be so)
+    -   Maria wow to high Maryland rate, much lower NY rate (figure out why this might be so) \[Maryland's high eviction rates have been a longstanding issue. This article says the following (\@gromisEstimatingEvictionPrevalence2022); I removed footnotes:
+        -   "To illustrate how notice requirements shape risk of receiving an eviction filing, consider Maryland, which reported a seemingly impossibly highfiling rate of 69.6% in 2018. In Maryland, eviction lawsuits can be filed immediately following nonpayment of rent for relatively low cost (\$15 to \$25) ...; no prior notice is required from the landlord. If tenants promptly pay the rent due (plus any additional fees), they are able to remain in the residence. This policy environment creates an incentive for landlords to enforce rent collection by using filings as a threat of eviction. Repeated filings against the same households constituted 57.4% of all cases in Maryland, demonstrating that many tenants face recurring threats of displacement while ultimately continuing to make rent payments and remaining at a property."\]
 
 -   Misc table notes
 
@@ -44,7 +45,7 @@ Maria's comments followed by my notes usually in \[square brackets\]
 
     Regions:
 
-    -   bar chart perhaps was not clear (djb -- perhaps different colors to make owners/renters clearer?)
+    -   bar chart perhaps was not clear (djb -- perhaps different colors to make owners/renters clearer?) \[I changed dark green to light green for better contrast; I assume OSC graphics folks will figure out what they like if we end up using the chart\]
 
     Counties:
 
@@ -61,7 +62,7 @@ Maria's comments followed by my notes usually in \[square brackets\]
 
 -   \[I added a table summarizing the different measures of housing insecurity\]
 
--   Add homelessness...
+-   Add homelessness \[added analysis of states, and of NY's COCs; there does not seem to be a readily available source of all--in-one place that gives the general population of each COC, or the geographic areas each includes, so there is no easy way to obtain or construct a population denominator for each COC so that we can calculate \# of homeless per 1,000 population in each COC; I reversed engineered the data from a spreadsheet tool HUD has\]
 
 ## Federal policies
 

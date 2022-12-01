@@ -10,8 +10,7 @@ source(here::here("r", "constants.r"))
 dhless <- here::here("data", "hud", "homelessness")
 fn <- "System-Performance-Measures-Data-Since-FY-2015.xlsx"
 
-
-# get data ----------------------------------------------------------------
+# get 2021 data ----------------------------------------------------------------
 
 cols1 <- read_excel(path(dhless, fn), 
                   sheet="2021",
@@ -65,6 +64,88 @@ df3 <- df2 |>
          category=ifelse(name=="cocaward", "cocaward", category)) |> 
   select(stabbr, cocnum, cocname, colnum, category, vname, value)
 glimpse(df3)
+count(df3, category, vname)
+
+saveRDS(df3, path(dhless, "homeless.rds"))
+
+
+
+# ONETIME get state populations ---------------------------------------------------
+uspops <- get_acs(geography = "us", 
+                  table = "B01003", # total population
+                  year=2021,
+                  survey="acs1",
+                  state=NULL,
+                  geometry = FALSE,
+                  keep_geo_vars = FALSE,
+                  cache_table = TRUE) |> 
+  mutate(geotype="state")
+
+stpops <- get_acs(geography = "state", 
+                  table = "B01003", # total population
+                  year=2021,
+                  survey="acs1",
+                  state=NULL,
+                  geometry = FALSE,
+                  keep_geo_vars = FALSE,
+                  cache_table = TRUE) |> 
+  mutate(geotype="state")
+
+stpops2 <- stpops |> 
+  select(stfips=GEOID, stname=NAME, pop=estimate) |> 
+  left_join(stcodes |> select(stfips, stabbr),
+            by = join_by(stfips))
+
+stpops3 <- stpops2 |> 
+  add_row(stfips="00", stabbr="US", stname="United States", pop=uspops$estimate) |> 
+  select(stabbr, stname, pop)
+
+
+saveRDS(stpops3, here::here("data", "acs", "stpop2021.rds"))
+
+# states ------------------------------------------------------------------
+
+stpop <- readRDS(here::here("data", "acs", "stpop2021.rds"))
+glimpse(stpop)
+count(stpop, stabbr)
+
+hless1 <- readRDS(path(dhless, "homeless.rds"))
+glimpse(hless1)
+count(hless1, colnum, category, vname)
+
+# get count by state
+hlpop1 <- hless1 |> 
+  filter(colnum==55) |> # hmis co unt
+  select(stabbr, hlpop=value) |>
+  summarise(hlpop=sum(hlpop, na.rm=TRUE), .by=stabbr) 
+
+hlpop2 <- hlpop1 |> 
+  add_row(stabbr="US", hlpop=sum(hlpop1$hlpop, na.rm=TRUE)) |> 
+  left_join(stpop, by = join_by(stabbr)) |> 
+  mutate(hlpct=hlpop / pop,
+         ussum=sum(hlpop),
+         pctus=hlpop / ussum) |> 
+  arrange(desc(hlpop))
+
+
+p <- hlpop2 |>
+  filter(stabbr %in% c(state.abb, "US")) |> 
+  arrange(desc(hlpct)) |>
+  select(stname, hlpct) |>
+  ggplot() +
+  geom_col(aes(x=hlpct, y=reorder(stname, hlpct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Percentage",
+                     breaks=seq(0, 1, 0.001),
+                     labels=percent_format(accuracy=.1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Number of homeless individuals as percentage of general population") +
+  theme_bw() +
+  legend_notitle
+
+p  
+
+
 
 tmp <- df3 |> 
   filter(cocnum=="NY-503") |> 

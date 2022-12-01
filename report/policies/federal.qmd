@@ -23,6 +23,7 @@ outlay <- readRDS(path(dfbhere, "outlay.rds"))
 lihtc <- readRDS(path(dlihtc, "lihtc.rds"))
 
 nypicture <- readRDS(path(dpict, "nypicture.rds"))
+picture <- readRDS(path(dpict, "picture.rds"))
 
 ```
 
@@ -40,7 +41,6 @@ Most of these policies are administered by the Department of Housing and Urban D
 
 Federal housing assistance was boosted dramatically in each of the last two recessions (the 2007 housing bubble and Great Recession, and the 2020 Covid-19 recession). Increases were far smaller in the 1990 and 2001 recessions. (figure below)
 
-\[TODO: use real rather than nominal; add recession bands\]
 
 ```{r}
 #| label: ONETIME-deflator
@@ -95,7 +95,7 @@ capt <- paste0(capt1, "\n", capt2)
 p <- pdata |> 
   ggplot(aes(fyear, rbudauth)) +
   geom_line(colour="blue") +
-  geom_point(colour="blue") +
+  geom_point(colour="blue", size=0.75) +
   geom_band(recdata(pdata$fyear)) +
   scale_y_continuous(name="Authorization (billions of 2022 dollars)",
                      breaks=seq(0, 2e8, 2.5e7),
@@ -130,6 +130,16 @@ Among other things, table will show (and text will describe) the extent to which
 tenant-based vs. project-based rental assistance, and pros and cons of each
 rising role of tenant-based assistnce
 ]
+
+### Overview of federal programs that provide housing assistance to low-income renters
+
+```{r}
+
+
+```
+
+
+
 
 ### Tenant-based rental assistance (Section 8 Housing Choice Vouchers)
 
@@ -186,7 +196,123 @@ The Community Development Block Grant (CDBG), and HOME Investments Partnership P
 
 ## Beneficiaries of housing assistance
 
-HUD-subsidized households in NY in 2021
+### HUD-subsidized households in the nation and state
+
+only 1 in 5 households that qualify for housing assistance gets it (https://www.urban.org/research/publication/case-more-not-less-shortfalls-federal-housing-assistance-and-gaps-evidence-proposed-policy-changes)
+
+
+
+
+```{r}
+glimpse(picture)
+
+picture |> 
+  filter(nygeotype=="nation") |> 
+  select(program, programf, people_total, hh_income,
+         pct_female_head,	pct_female_head_child)
+
+picture |> 
+  filter(nygeotype=="nation") |> 
+  select(program, programf, people_total, hh_income,
+         pct_disabled_lt62,	pct_disabled_ge62, pct_disabled_all)
+
+picture |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         pct_female_head,	pct_female_head_child)
+
+picture |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         pct_disabled_lt62,	pct_disabled_ge62, pct_disabled_all)
+
+pct_lt24_head
+picture |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         pct_lt24_head, starts_with("pct_age"))
+
+picture |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         pct_minority:pct_multi)
+
+picture |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         pct_black_nonhsp, pct_white_nothsp, pct_hispanic)
+
+picture |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         months_waiting, months_from_movein)
+
+picture |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         tpoverty, tminority)
+
+picture |> 
+  filter(nygeotype=="county", stabbr=="NY", program==1) |> 
+  select(geoid, shortname, programf, total_units, people_total, hh_income,
+         tpoverty, tminority) |> 
+  mutate(pctny=people_total / sum(people_total, na.rm=TRUE)) |> 
+  arrange(desc(people_total))
+
+picture |> 
+  filter(nygeotype=="county", stabbr=="NY", program==1) |> 
+  select(geoid, shortname, programf, total_units, people_total, hh_income,
+         pct_black_nonhsp, pct_white_nothsp, pct_hispanic) |> 
+  arrange(desc(pct_white_nothsp))
+
+picture |> 
+  filter(nygeotype=="county", stabbr=="NY", program==1) |> 
+  select(geoid, shortname, programf, total_units, people_total, hh_income,
+          pct_movein, months_waiting, months_from_movein) |> 
+  arrange(desc(months_waiting))
+
+
+picture |> 
+  filter(nygeotype=="county", stabbr=="NY", program==1) |> 
+  select(geoid, shortname, programf, total_units, people_total, hh_income,
+          pct_movein, months_waiting, months_from_movein) |> 
+  ggplot(aes(months_from_movein, pct_movein)) +
+  geom_point()
+
+picture |> 
+  filter(nygeotype=="county", stabbr=="NY", program==1, !str_detect(geoname, "Missing")) |> 
+  select(geoid, shortname, geoname, programf, total_units, people_total, hh_income,
+          pct_movein, months_waiting, months_from_movein) |> 
+  mutate(geoname=str_remove(geoname, " County")) |> 
+  ggplot(aes(months_waiting, pct_movein)) +
+  geom_point(colour="blue") +
+  geom_text_repel(aes(label=geoname), size=3.5, nudge_y=0.5) +
+  theme_bw()
+
+picture |> 
+  filter(nygeotype=="county", stabbr=="NY", program==1, !str_detect(geoname, "Missing")) |> 
+  select(geoid, shortname, geoname, programf, total_units, people_total, hh_income,
+          pct_movein, months_waiting, months_from_movein) |> 
+  mutate(geoname=str_remove(geoname, " County")) |> 
+  ggplot(aes(months_from_movein, months_waiting)) +
+  geom_point(colour="blue") +
+  geom_text_repel(aes(label=geoname), size=3.5, nudge_y=0.5) +
+  theme_bw()
+
+
+picture |>  
+  group_by(program, programf) |> 
+  summarise(across(c(people_total), ~ sum(.x, na.rm=TRUE)), .groups = "drop")
+
+picture |>  
+  group_by(stabbr, program, programf) |> 
+  summarise(across(c(people_total), ~ sum(.x, na.rm=TRUE)), .groups = "drop")
+
+```
+
+
+
+### HUD-subsidized households in NY in 2021
 
 ```{r}
 #| label: nypicture
