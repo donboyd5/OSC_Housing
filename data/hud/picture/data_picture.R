@@ -144,6 +144,9 @@ glimpse(df5)
 
 saveRDS(df5, path(dpict, "picture.rds"))
 
+
+
+
 # get picture data --------------------------------------------------------
 
 df1 <- read_excel(path(dpict, fn),
