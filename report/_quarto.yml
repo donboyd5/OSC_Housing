@@ -5,39 +5,6 @@ project:
 editor_options: 
   chunk_output_type: console
 
-# https://quarto.org/docs/computations/execution-options.html
-# warning: false
-# error: false
-execute:
-  echo: false
-  message: false
-  warning: false
-  note: false
-
-# output
-# quarto render document.qmd --to html
-# quarto render --to pdf
-# quarto publish netlify --no-render --no-browser --no-prompt
-# quarto publish netlify --no-browser --no-prompt
-# web 
-#   site: https://osc-housing.netlify.app/
-#   password: oscdjb
-format:
-  html:
-    theme: cosmo
-    toc-depth: 4
-  # docx:
-  #   toc: true
-  #   toc-depth: 2
-  #   number-sections: true
-  #   highlight-style: github
-  #   # reference-doc: refdoc.docx
-  # pdf:
-  #   toc: true
-  #   toc-depth: 2
-  #   documentclass: report
-# scrreprt scrartcl report  
-  
 book:
   title: "Housing Insecurity in New York State"
   author: "Don Boyd"
@@ -45,8 +12,8 @@ book:
   date-format: long
   chapters:
     - index.qmd
-    - todo.qmd  # delete when done
     - execsum.qmd
+    - intro.qmd
     - part: "Housing Insecurity"
       chapters:
         - insecurity/housing_insecurity.qmd
@@ -68,7 +35,9 @@ book:
       # - insecurity/recent_events_housing.qmd    
       chapters: 
         - appendix/appendix.qmd
+        
     # - part: "Notes"
+    # - todo.qmd  # delete when done    
     #   chapters: 
     #   - notes/notes.qmd
     #   - notes/articles.qmd
@@ -80,6 +49,42 @@ book:
 bibliography: _bibliography.bib
 nocite: |
   @*
+  
+format:
+  html:
+    theme: cosmo
+    toc-depth: 4
+  # docx:
+  #   toc: true
+  #   toc-depth: 2
+  #   number-sections: true
+  #   highlight-style: github
+  #   # reference-doc: refdoc.docx
+  # pdf:
+  #   toc: true
+  #   toc-depth: 2
+  #   documentclass: report
+# scrreprt scrartcl report    
+    
+# https://quarto.org/docs/computations/execution-options.html
+# warning: false
+# error: false
+execute:
+  echo: false
+  message: false
+  warning: false
+  note: false
+  freeze: auto  # during global project renders, re-render only when source changes
+
+# output
+# quarto render document.qmd --to html
+# quarto render --to pdf
+# quarto publish netlify --no-render --no-browser --no-prompt
+# quarto publish netlify --no-browser --no-prompt
+# web 
+#   site: https://osc-housing.netlify.app/
+#   password: oscdjb
+
   
 
 

@@ -1,6 +1,365 @@
 # Housing Cost and Availability
 
-{{< include _housing_cost_burden.qmd >}}
+```{r}
+#| label: libraries
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+```
+
+```{r}
+#| label: prepare-cost-data
+#| include: false
+#| eval: false
+
+# prepare all the data for this chapter, other than extracts needed for tables
+# and graphs
+
+source(here::here("report", "insecurity", "cost", "cost.r"))
+
+```
+
+```{r}
+#| label: constants
+#| include: false
+
+tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
+tabcb <- "Percent of occupied housing units with housing costs greater than 30% of income"
+
+```
+
+```{r}
+#| label: get-chapter-data
+#| include: false
+
+# full table 9 cost burden data
+t9cb_full <- readRDS(here::here("report", "results", "t9cb_full.rds"))
+
+tabdata <- readRDS(here::here("report", "results", "cb_tabdata.rds")) # for appendix
+
+
+```
+
+```{r}
+#| label: get-text-constants
+#| include: false
+
+# What will we want to say in the text in this chapter?
+
+
+
+# number of cost burdened households
+nycb_num <- t9cb_full |> 
+  filter(stabbr=="NY", nygeotype=="state") |> 
+  pull(alltenure_cost30)
+nycb_num
+
+nycb_pct <- t9cb_full |> 
+  filter(stabbr=="NY", nygeotype=="state") |> 
+  pull(alltenure_pct30)
+
+
+# number(1234567, big.mark = ",", scale=1e-6, accuracy=.01)
+# scales::label_comma()(1234567)
+# scales::label_percent(accuracy=.001)(0.1234567)
+# f_pct(0.1234567, accuracy=.01)
+
+
+```
+
+New York has `r f_comma(nycb_num, scale=1e-6, accuracy=.1)` million cost-burdened households, constituting `r f_pct(nycb_pct, accuracy=.1)` of the state's households.
+
+### Introduction
+
+Analysts commonly define the cost burden of housing as the ratio of housing costs to household income.[^cost-1] Households for which housing costs exceed 30 percent of income are typically considered cost-burdened. 
+
+[^cost-1]: For renters, housing cost is gross rent (contract rent plus utilities). For owners, housing cost is "select monthly owner costs", which includes mortgage payment, utilities, association fees, insurance, and real estate taxes.
+
+### Housing Cost Burden in New York and Other States
+
+```{r}
+#| label: state-cost-data
+#| include: false
+
+tabdata_st <- tabdata |> 
+  filter(nygeotype %in% c("nation", "state"), !stabbr %in% c("DC", "PR")) |> 
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", .x, NA_real_)),
+         shortname=ifelse(nygeotype=="state", 
+                          str_remove(shortname, " State"),
+                          shortname))
+
+saveRDS(tabdata_st, here::here("report", "results", "cb_tabdata_st.rds")) # for appendix
+
+```
+
+New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 rank for both owners and renters. As is true in every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
+
+```{r}
+#| label: state-cost-table
+#| include: true
+#| echo: false
+
+tt <- "Top 10 states ranked by housing cost burden, plus United States"
+
+tabdata_topn <- tabdata_st |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(nygeotype=="nation" | row_number() <= 10) 
+
+tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "cost_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+<!-- {{< include C:/Users/donbo/Documents/R_projects/OSC_Housing/report/_gt_snippet.qmd >}} -->
+
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing Cost Burden in New York's Regions
+
+```{r}
+#| label: region-cost-data
+#| include: false
+#| echo: false
+
+tabdata_rgn <- tabdata |> 
+  filter(stabbr=="NY", nygeotype %in% c("state", "region")) |>
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
+
+tabdata_rgn
+
+saveRDS(tabdata_rgn, here::here("report", "results", "cb_tabdata_rgn.rds")) # for appendix
+
+```
+
+High housing cost burden is far more prevalent in New York City, the Mid-Hudson region, and Long Island than in upstate New York. In all regions, high cost burden for renters is more prevalent than it is for homeowners; this is particularly true in upstate regions.
+
+```{r}
+#| label: region-cost-table
+#| include: false
+#| echo: false
+
+tt <- "New York regions ranked by housing cost burden"
+tab <- f_tabranks(tabdata_rgn, stubvar="shortname", stubhead="Region",
+         tabtitle=tt)
+
+tabfile <-  path(tabdir, "cost_regions.png")
+# tabfile <- "E:/R_projects/OSC_Housing/report/gtables/cost_regions.png"
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+```{r}
+#| label: region-hbar
+#| include: true
+#| echo: false
+# names(t9cb_full)
+
+p <- t9cb_full |> 
+  filter(stabbr=="NY", nygeotype %in% c("region")) |> 
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  arrange(desc(alltenure_cost30)) |>
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  pivot_longer(-c(shortname, alltenure_cost30)) |> 
+  mutate(namef=factor(name, 
+                      levels=c("rent_cost30", "own_cost30"),
+                      labels=c("renters", "owners"))) |> 
+  arrange(namef) |> 
+  ggplot() +
+  geom_col(aes(x=value, y=reorder(shortname, alltenure_cost30), fill=namef), width=0.5) +
+  scale_x_continuous(name="Number of cost-burdened households (thousands)",
+                     breaks=seq(0, 2e6, 100e3),
+                     labels=number_format(scale=1e-3)) +
+  scale_y_discrete(name=NULL) +
+  scale_fill_manual(values=c("blue", "green")) +
+  ggtitle("Number of Cost-Burdened Households in New York, by Region") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+ggsave(here::here("report", "results", "region_cost_hbar.png"), p, width = 10, height = 6, scale=1.5)
+
+```
+
+#### Within-Region Housing Cost Burden for City and Village vs. Other areas
+
+```{r}
+#| label: regional-breakdown-data-cost
+#| echo: false
+#| include: false
+
+tabdata_rgn_brkdown <- tabdata |> 
+  filter(nygeotype %in% c("region", "rgn_cities", "rgn_villages", "rgn_xcityvill")) |> 
+  select(nygeotype, shortname, alltenure_pct) |> 
+  pivot_wider(names_from = nygeotype, values_from = alltenure_pct) |> 
+  select(shortname, region, rgn_cities, rgn_villages, rgn_xcityvill) |> 
+  arrange(desc(region))
+
+tabdata_rgn_brkdown
+
+saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "cb_tabdata_rgn_brkdown.rds")) # for appendix
+
+
+```
+
+```{r}
+#| label: regional-breakdown-table-cost
+#| include: true
+#| echo: false
+
+# region rgn_cities rgn_villages rgn_xcityvill
+# New York regions ranked by housing cost burden
+# Percent of occupied housing units with housing costs greater than 30% of income
+
+tab <- tabdata_rgn_brkdown |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "Breakdown of housing cost burden within New York regions",
+      subtitle=tabst) |> 
+  cols_label(shortname="Region",
+             region=html("Region total"),
+             rgn_cities=html("Cities"),
+             rgn_villages=html("Villages"),
+             rgn_xcityvill=html("Remainder of region")) |> 
+  tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
+              label=html("Cost burden prevalence within region")) |> 
+  fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+  
+tabfile <-  path(tabdir, "cost_region_breakdown.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+# f_tabranks
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing Cost Burden in New York's Counties
+
+```{r}
+#| label: county-cost-data
+#| include: false
+#| echo: false
+
+tabdata_cnty <- tabdata |> 
+  filter(stabbr=="NY", nygeotype %in% c("state", "county")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
+
+tabdata_cnty
+saveRDS(tabdata_cnty, here::here("report", "results", "cb_tabdata_cnty.rds")) # for appendix
+
+```
+
+```{r}
+#| label: county-cost-table
+#| include: true
+#| echo: false
+
+tt <- "Top 10 counties in New York with highest housing cost burden"
+
+tabdata_topn <- tabdata_cnty |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(nygeotype=="state" | row_number() <= 10) 
+
+tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="County",
+         tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "cost_counties.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing Cost Burden in New York's 6 Largest Cities
+
+```{r}
+#| label: city-cost-data
+#| include: false
+#| echo: false
+
+tabdata_city <- tabdata |> 
+  filter(stabbr=="NY", nygeotype %in% c("state", "city")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
+
+tabdata_city
+
+saveRDS(tabdata_city, here::here("report", "results", "cb_tabdata_city.rds")) # for appendix
+
+```
+
+```{r}
+#| label: city-cost-table
+#| include: true
+#| echo: false
+
+tt <- "Largest cities in New York ranked by housing cost burden"
+
+# get nyc and brysa
+bignames <- c("New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany")
+tabdata_bigcities <- tabdata_city |> 
+  filter(nygeotype=="state" |
+           (nygeotype=="city" & shortname %in% bignames)) |> 
+  arrange(desc(alltenure_pct))
+
+tab <- f_tabranks(tabdata_bigcities, stubvar="shortname", stubhead="City",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+
+tabfile <-  path(tabdir, "cost_cities.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+```{r}
+#| label: city-hbar
+#| eval: false
+#| include: false
+#| echo: false
+
+# don't include this - using raw numbers, NYC is too big for us to make sense of other cities
+
+p <- t9cb_full |> 
+  filter(stabbr=="NY", nygeotype %in% c("city")) |> 
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  arrange(desc(alltenure_cost30)) |> 
+  filter(row_number() <= 10) |>
+  select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
+  pivot_longer(-c(shortname, alltenure_cost30)) |> 
+  mutate(namef=factor(name, 
+                      levels=c("rent_cost30", "own_cost30"),
+                      labels=c("renters", "owners"))) |> 
+  arrange(namef) |> 
+  ggplot() +
+  geom_col(aes(x=value, y=reorder(shortname, alltenure_cost30), fill=namef), width=0.5) +
+  scale_x_continuous(name="Number of cost-burdened households (thousands)",
+                     breaks=seq(0, 2e6, 100e3),
+                     labels=number_format(scale=1e-3)) +
+  scale_y_discrete(name=NULL) +
+  scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Number of Cost-Burdened Households in New York, Top Cities") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
+<!-- {{< include _housing_cost_burden.qmd >}} -->
 
 {{< include _housing_affordability.qmd >}}
 
@@ -31,3 +390,36 @@
 <!-- ## Selected data (exploratory at this point) -->
 
 <!-- {{< include prices.qmd >}} -->
+
+```{r}
+#| label: OLD-STUFF-BELOW-HERE
+#| eval: false
+
+
+
+```
+
+```{r}
+#| label: hbar-states
+#| eval: false
+#| include: false
+#| echo: false
+
+p <- tabdata_st |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(nygeotype=="nation" | row_number() <= 10) |> 
+  select(shortname, alltenure_pct) |>
+  ggplot() +
+  geom_col(aes(x=alltenure_pct, y=reorder(shortname, alltenure_pct)), fill="blue", width=0.5) +
+  scale_x_continuous(name="Cost-burdened households as percent of all households",
+                     breaks=seq(0, 1, 0.05),
+                     labels=percent_format(accuracy=1)) +
+  scale_y_discrete(name=NULL) +
+  # scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Cost-Burdened Households as Percent of All Households, by State") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```

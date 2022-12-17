@@ -2,21 +2,48 @@
 
 Adequate housing is essential to people's physical, social and psychological well-being. High housing costs relative to income, substandard or overcrowded housing, and stress related to these issues can lead to greater incidence of physical and mental health problems, and greater health care costs. These challenges often are particularly severe for children.
 
-## High housing cost burden in New York
+## Housing insecurity
 
-Housing insecurity has many dimensions. A particularly important one is high cost relative to income, which we discuss here. The body of the report examines additional dimensions and measures of housing insecurity.
+### High housing cost burden in New York
 
-Over \[2.6\] million households in New York State have housing costs that exceed 30 percent of income. This amounts to \[36%\] of New York households, making us the fourth-highest housing cost burden state, after \[California, Hawaii, and New Jersey\].
+Over 2.6 million households in New York State have housing costs that exceed 30 percent of income. This is 36 percent of New York households, making us the fourth-highest housing cost burden state, after California, Hawaii, and New Jersey.
 
-High costs are particularly common among renters: \[47.2\] percent of New York renter households have housing costs that exceed 30 percent of income, compared to \[26.4\] percent of New York homeowner households.
+The share of renters who are cost burdened in New York (47.2 percent) is far greater than the share of owners (26.4 percent), as is true in every state.
 
-High housing costs are most prevalent among low-income households and among people of color. \[key facts to come\]
+High housing costs relative to income are far more common in New York City (42.9 percent of households), the Mid-Hudson region (37.3 percent), and Long Island (37.2 percent) than in the rest of New York (about 25-27 percent depending on which upstate region). In all regions, especially upstate, high cost burden for renters is more prevalent than it is for homeowners.
 
-High housing costs relative to income are far more common in New York City than in the rest of the state, in part because of the extraordinarily high real estate prices and in part because two-thirds of New York City households are renter households. of housing in
+The 10 counties in New York with the greatest concentration of high housing cost burden were all downstate. This downstate concentration of high housing cost burden in part reflects high real estate prices and a high concentration of renters - in New York City two-thirds of households are renters - but the factors at work vary. Suffolk County has the third-highest rate outside New York City of high housing cost burden, but only 19.4 percent of households are renters.
+
+Within each region, high housing cost burden is far more prevalent in urbanized areas - cities and villages - than in the remainder of the region. For example, in the Mid-Hudson region, 43.6 percent of city households had housing costs of more than 30 percent of income, compared to 32.8 percent of households in the region living outside cities and villages.
+
+Although high housing cost burden is most common in downstate New York, it is a major problem in upstate cities as well. The prevalence of high housing cost burden in Rochester (41.5 percent) and Albany (39.9 percent) is almost as great as in New York City (42.9 percent) and in fact high housing costs are more common among renters in these two upstate cities than they are in New York City.
+
+Owner cost burdens fell substantially during the last decade, in part a result of the fall in interest rates, which lowered mortgage costs. By contrast, renter cost burdens were far more stable over most of the last decade. Both owner cost burden and renter cost burden rose sharply in 2021, reflecting the rise inflation and, for owner cost burden, the rise in mortgage interest rates.
+
+The share of both owner and renter New York households with housing costs has consistently been greater than the national share.
+
+![](images/image-1373425369.png){width="611"}
+
+### Other aspects of housing insecurity
+
+Other important elements of housing insecurity are housing crowding, inadequate plumbing and kitchen facilities, deficiencies in housing such as holes in the walls and presence of rats, and stress related to poor housing conditions and to challenges in paying for adequate housing.
+
+Living in overcrowded housing can lead to poor mental health, food insecurity, and infectious diseases such as Meningitis, Hepatitis, and Tuberculosis; overcrowding can have negative effects on neighborhoods as well. Inadequate plumbing or kitchen facilities can pose health risks as well. Other deficiencies can make housing uninhabitable, unhealthy, or inhospitable.
+
+Fortunately, housing crowding and inadequate plumbing and kitchen facilities are far less common than high housing costs relative to income: While 36 percent of New York houshoulds had high housing cost burden, a far smaller 5.1 percent lived in crowded housing, and 0.9 percent lived in housing with inadequate plumbing or kitchen facilities.[^execsum-1] Comparable data for the state are not available for other housing deficiencies, but data collected by New York City \[insert fact\].
+
+[^execsum-1]: These numbers are not additive: households with crowding or inadequate facilities often are households with high cost burden. In combination, 39 percent of New York households, faced one or more of hihg housing cost burden, crowding, or inadequate plumbing or kitchen facilities.
+
+![](images/image-730735472.png)
+
+### Characteristics of people with housing insecurity
+
+Housing insecurity is most prevalent among low-income households and among people of color.
+
+Approximately 80 percent of New York households with income at or below the area median had one or more of the main housing problems that HUD reports - high costs relative to income, crowding, or incomplete plumbing or kitchen facilities. In the next group of households, with income between 30 and 50 percent of the area median, 72 percent of households had one of these problems. By contrast, only 10.7 percent of households with income above the area median had one of these problems.
 
 ## Policies to address housing insecurity
 
 \[TO COME\]
-
 
 {{< pagebreak >}}

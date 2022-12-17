@@ -1,10 +1,363 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
 # Housing Quality and Conditions
 
-{{< include _crowding.qmd >}}
+## Housing Crowding
 
-{{< include _plumb_kitch.qmd >}}
+Living in overcrowded housing can lead to poor mental health, food insecurity, and infectious diseases such as Meningitis, Hepatitis, and Tuberculosis; overcrowding can have negative effects on neighborhoods as well. [@officeofdiseasepreventionandhealthpromotionQualityHousingLiterature2022], [@blakeMeasuringOvercrowdingHousing2007]
 
-{{< include _deficiencies.qmd >}}
+The most commonly used measure of overcrowding is persons-per-room in a dwelling unit. [@blakeMeasuringOvercrowdingHousing2007] This measure includes all rooms in a dwelling unit in the denominator, not just bedrooms. The number of persons per room generally will be lower than the number of persons per bedroom. One reason persons-per-room is used so commonly is that it can be computed readily using important data sources such as the American Community Survey (ACS) and the American Housing Survey. It is available in a crucially important data source prepared by the U.S. Department of Housing and Urban Development (HUD) known as Comprehensive Housing Affordability Strategy (CHAS), which is used in developing housing polices. HUD develops CHAS data using detailed nonpublic ACS data, 
+
+There is no universally accepted threshold of persons-per-room above which a housing unit is considered crowded. Some studies have used a cutoff of 1 person per room, some have used a cutoff of 1.5 persons, and others have used different thresholds depending on specific health risks being examined. An important review conducted for HUD by Econometrica, Inc. used a cutoff of 1 person per room. [@blakeMeasuringOvercrowdingHousing2007] Crowding measures based on alternative thresholds tend to be highly correlated. In the analysis below we calculate the percentage of housing units in New York and other areas that are crowded using a threshold of 1 person per room.
+
+
+```{r}
+#| label: constants
+#| include: false
+
+tabst <- "Percent of occupied housing units with more than one person per room"
+
+```
+
+```{r}
+#| label: libraries
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+```
+
+```{r}
+#| label: data-prep
+#| include: false
+
+
+# tabshells <- readRDS(here::here("data", "acs", "tabshells_2019.rds"))
+tabdict <- readRDS(path(dchas2019, "chasdict.rds"))
+glimpse(tabdict)
+
+tmp <- tabdict |> filter(table=="T10", str_detect(vname, "est"))
+t10 <- readRDS(path(dchwide, "tab10_enhanced.rds"))
+glimpse(t10)
+tmp |> 
+  filter(coltype %in% c("Total", "Subtotal"),
+         is.na(desc3), is.na(desc4), is.na(desc5)) |> 
+  select(vname, desc1, desc2)
+
+
+# trimmed slightly #  vname      desc1 desc2                                                               
+# <chr>      <chr> <chr>                                                               
+# T10_est1   Total:NA                                                                  
+# T10_est2   Owner NA                                                                  
+# T10_est3   Owner AND persons per room is less than or equal to 1                     
+# T10_est24  Owner AND persons per room is greater than 1 but less than or equal to 1.5
+# T10_est45  Owner AND persons per room is greater than 1.5                            
+# T10_est66  RenterNA                                                                  
+# T10_est67  RenterAND persons per room is less than or equal to 1                     
+# T10_est88  RenterAND persons per room is greater than 1 but less than or equal to 1.5
+# T10_est109 RenterAND persons per room is greater than 1.5   
+
+(keepests <- paste0("T10_est", c(1, 2, 24, 45, 66, 88, 109)))
+
+t10crowd <- t10 |> 
+  select(nygeotype, stabbr, geoid, affgeoid, shortname, fullname, countyfp, countyname,
+         all_of(keepests)) |> 
+  rename(allunits=T10_est1) |> 
+  mutate(owncrowd = T10_est24 + T10_est45,
+         rentcrowd= T10_est88 + T10_est109,
+         allcrowd=owncrowd + rentcrowd,
+         own_pct=owncrowd / T10_est2,
+         rent_pct=rentcrowd / T10_est66,
+         alltenure_pct=allcrowd / allunits,
+         renter_share=T10_est66 / allunits)
+glimpse(t10crowd)
+tmp <- t10crowd |> filter(nygeotype=="state", stabbr=="NY")
+count(t10crowd, nygeotype)
+
+
+# tabdata for all types
+# nytype groups: state, region, county, city, town, village
+tabdata <- t10crowd |> 
+  filter(nygeotype %in%
+           c("nation", "state", "region", "county", "city", "town", "village",
+             "rgn_cities", "rgn_villages", "rgn_xcityvill")) |>
+  group_by(nygeotype) |> 
+  mutate(ownrank=row_number(desc(own_pct)),
+         rentrank=row_number(desc(rent_pct)),
+         alltenurerank=row_number(desc(alltenure_pct)),
+         shortname=ifelse(nygeotype=="state" & stabbr=="NY",
+                          paste0(shortname, " State"),
+                          shortname))  |> 
+  select(nygeotype, stabbr, shortname, countyname, 
+         allunits,
+         own_pct, rent_pct, alltenure_pct, 
+         ownrank, rentrank, alltenurerank,
+         renter_share) |> 
+  ungroup() |> 
+  arrange(desc(alltenure_pct))
+
+saveRDS(tabdata, here::here("report", "results", "crowd_tabdata.rds")) # for appendix
+
+```
+
+
+### Housing Crowding in New York and Other States
+
+```{r}
+#| label: state-crowd-data
+#| include: false
+
+tabdata_st <- tabdata |> 
+  filter(nygeotype %in% c("nation", "state"), !stabbr %in% c("DC", "PR")) |> 
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", .x, NA_real_)),
+         shortname=ifelse(nygeotype=="state", 
+                          str_remove(shortname, " State"),
+                          shortname))
+
+saveRDS(tabdata_st, here::here("report", "results", "crowd_tabdata_st.rds")) # for appendix
+
+```
+
+
+New York has the fourth highest crowding among the states, measured by the percentage of households with 1 or more persons per room (counting all rooms, not just bedrooms). Overcrowding was more common for renters than for homeowners.
+
+```{r}
+#| label: state-crowd-table
+#| include: true
+#| echo: false
+
+tt <- "Top 10 states ranked by housing crowding, plus United States"
+
+tabdata_topn <- tabdata_st |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(nygeotype=="nation" | row_number() <= 10) 
+
+tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "crowd_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+<!-- {{< include C:/Users/donbo/Documents/R_projects/OSC_Housing/report/_gt_snippet.qmd >}} -->
+
+{{< include ../../_gt_snippet.qmd >}}
+
+### Housing Crowding in New York's Regions
+
+```{r}
+#| label: region-crowd-data
+#| include: false
+
+tabdata_rgn <- tabdata |> 
+  filter(stabbr=="NY", nygeotype %in% c("state", "region")) |>
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
+
+tabdata_rgn
+
+saveRDS(tabdata_rgn, here::here("report", "results", "crowd_tabdata_rgn.rds")) # for appendix
+
+```
+
+High housing cost burden is far more prevalent in New York City, the Mid-Hudson region, and Long Island than in upstate New York. In all regions, high cost burden for renters is more prevalent than it is for homeowners; this is particularly true in upstate regions.
+
+```{r}
+#| label: region-crowd-table
+#| include: true
+#| echo: false
+
+tt <- "New York regions ranked by housing crowding"
+tab <- f_tabranks(tabdata_rgn, stubvar="shortname", stubhead="Region",
+         tabtitle=tt)
+
+tabfile <-  path(tabdir, "crowd_regions.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+
+```{r}
+#| label: region-hbar
+#| eval: false
+#| include: false
+#| echo: false
+names(t10crowd)
+
+p <- t10crowd |> 
+  filter(stabbr=="NY", nygeotype %in% c("region")) |> 
+  select(shortname, owncrowd, rentcrowd, allcrowd) |> 
+  arrange(desc(allcrowd)) |>
+  select(shortname, owncrowd, rentcrowd, allcrowd) |> 
+  pivot_longer(-c(shortname, allcrowd)) |> 
+  mutate(namef=factor(name, 
+                      levels=c("rentcrowd", "owncrowd"),
+                      labels=c("renters", "owners"))) |> 
+  arrange(namef) |> 
+  ggplot() +
+  geom_col(aes(x=value, y=reorder(shortname, allcrowd), fill=namef), width=0.5) +
+  scale_x_continuous(name="Number of households in crowded conditions (thousands)",
+                     breaks=seq(0, 2e6, 100e3),
+                     labels=number_format(scale=1e-3)) +
+  scale_y_discrete(name=NULL) +
+  scale_fill_manual(values=c("blue", "darkgreen")) +
+  ggtitle("Number of Households in crowded conditions in New York, by Region") +
+  theme_bw() +
+  legend_notitle
+  
+p  
+
+```
+
+### Within-Region Housing Crowding for City and Village vs. Other areas
+
+```{r}
+#| label: regional-breakdown-data-crowd
+#| include: false
+
+tabdata_rgn_brkdown <- tabdata |> 
+  filter(nygeotype %in% c("region", "rgn_cities", "rgn_villages", "rgn_xcityvill")) |> 
+  select(nygeotype, shortname, alltenure_pct) |> 
+  pivot_wider(names_from = nygeotype, values_from = alltenure_pct) |> 
+  select(shortname, region, rgn_cities, rgn_villages, rgn_xcityvill) |> 
+  arrange(desc(region))
+
+tabdata_rgn_brkdown
+
+saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "crowd_tabdata_rgn_brkdown.rds")) # for appendix
+
+
+```
+
+
+```{r}
+#| label: regional-breakdown-table-crowd
+#| include: true
+#| echo: false
+
+# region rgn_cities rgn_villages rgn_xcityvill
+# New York regions ranked by housing cost burden
+# Percent of occupied housing units with housing costs greater than 30% of income
+
+tab <- tabdata_rgn_brkdown |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "Breakdown of housing crowding within New York regions",
+      subtitle=tabst) |> 
+  cols_label(shortname="Region",
+             region=html("Region total"),
+             rgn_cities=html("Cities"),
+             rgn_villages=html("Villages"),
+             rgn_xcityvill=html("Remainder of region")) |> 
+  tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
+              label=html("Crowding prevalence within region")) |> 
+  fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+  
+tabfile <-  path(tabdir, "crowd_region_breakdown.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+# f_tabranks
+
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+
+### Housing Crowding in New York's Counties
+
+```{r}
+#| label: county-crowd-data
+#| include: false
+
+tabdata_cnty <- tabdata |> 
+  filter(stabbr=="NY", nygeotype %in% c("state", "county")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
+
+tabdata_cnty
+saveRDS(tabdata_cnty, here::here("report", "results", "crowd_tabdata_cnty.rds")) # for appendix
+
+```
+
+```{r}
+#| label: county-crowd-table
+#| include: true
+#| echo: false
+tt <- "Top 10 counties in New York with highest housing crowding"
+
+tabdata_topn <- tabdata_cnty |> 
+  arrange(desc(alltenure_pct)) |> 
+  filter(nygeotype=="state" | row_number() <= 10) 
+
+tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="County",
+         tabtitle=tt, tabsubtitle=tabst)
+
+tabfile <-  path(tabdir, "crowd_counties.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+
+### Housing Cost Burden in New York's 6 Largest Cities
+
+```{r}
+#| label: city-crowd-data
+#| include: false
+
+tabdata_city <- tabdata |> 
+  filter(stabbr=="NY", nygeotype %in% c("state", "city")) |>  
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", NA_real_, .x)))
+
+tabdata_city
+
+saveRDS(tabdata_city, here::here("report", "results", "crowd_tabdata_city.rds")) # for appendix
+
+```
+
+
+```{r}
+#| label: city-crowd-table
+#| include: true
+#| echo: false
+
+tt <- "Largest cities in New York ranked by housing crowding"
+
+# get nyc and brysa
+bignames <- c("New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany")
+tabdata_bigcities <- tabdata_city |> 
+  filter(nygeotype=="state" |
+           (nygeotype=="city" & shortname %in% bignames)) |> 
+  arrange(desc(alltenure_pct))
+
+tab <- f_tabranks(tabdata_bigcities, stubvar="shortname", stubhead="City",
+         tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
+
+tabfile <-  path(tabdir, "crowd_cities.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+```
+
+{{< include ../../_gt_snippet.qmd >}}
+
+
+
+<!-- {{< include _plumb_kitch.qmd >}} -->
+
+<!-- {{< include _deficiencies.qmd >}} -->
 
 
 

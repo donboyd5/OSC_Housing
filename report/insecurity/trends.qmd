@@ -6,7 +6,9 @@ editor_options:
 
 # Trends in housing cost burden
 
-Far greater percentages of renters have high housing costs, relative to income, than do homeowners. Furthermore, owner costs fell substantially during the last decade, in part a result of the fall in interest rates, which lowered mortgage costs. By contrast, renter costs were far more stable over the last decade.
+Far greater percentages of renters have high housing costs, relative to income, than do homeowners. Furthermore, owner cost burdens fell substantially during the last decade, in part a result of the fall in interest rates, which lowered mortgage costs. By contrast, renter cost burdens were far more stable over most of the last decade.
+
+Both owner cost burden and renter cost burden rose sharply in 2021, reflecting the rise inflation and, for owner cost burden, the rise in mortgage interest rates.
 
 The share of both owner and renter New York households with housing costs has consistently been greater than the national share.
 
@@ -23,6 +25,8 @@ dacs <- here::here("data", "acs")
 
 tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
 tmp <- tabshells |> select(table, tabname, universe) |> distinct()
+
+# This chapter relies on time-series data from the annual ACS constructed in data_acs.R ----
 
 ```
 
@@ -93,6 +97,10 @@ pdata <- bind_rows(rentcb |>
                         levels=c("owner", "renter"),
                         labels=c("Owners", "Renters")))
 
+capt1 <- "Note: Data from the 2020 annual ACS excluded due to low response rates."
+capt2 <- "Source: American Community Survey, Annual, Tables B25070 and B25091."
+capt <- paste0(capt1, "\n", capt2)
+
 p <- pdata |> 
   filter((geotype=="nation") |
            (geotype=="state" & geoid=="36")) |> 
@@ -105,8 +113,8 @@ p <- pdata |>
                      breaks=seq(0, 1, 0.05),
                      labels=scales::percent_format(accuracy=1)) +
   scale_x_continuous(name=NULL, breaks=seq(2000, 2020, 2)) +
-  labs(caption = "Source: American Community Survey, Annual, Tables B25070 and B25091") +
-  ggtitle("Housing costs as percentage of household income") +
+  labs(caption = capt) +
+  ggtitle("Housing costs as percentage of household income, 2006 to 2021") +
   facet_wrap(~tenuref) +
   theme_bw() +
   caption_left  +
@@ -115,6 +123,9 @@ p <- pdata |>
 p
 
 ```
+
+
+Note: To get trends over time we have to use a slightly different data source. Elswhere in this document we use HUD CHAS data, an enhanced version of the American Community Survey that is based on the 5-year ACS 2015-2019. The graph above uses annual data from the ACS.
 
 
 ```{r}
@@ -174,4 +185,3 @@ tabdata <- cost_wide |>
 ```
 
 
-Note: To get trends over time we have to use a slightly different data source. Elswhere in this document we use HUD CHAS data, an enhanced version of the American Community Survey that is based on the 5-year ACS 2015-2019. The graph above uses annual data from the ACS.

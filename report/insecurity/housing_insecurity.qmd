@@ -1,6 +1,6 @@
 # What is Housing Insecurity?
 
-There is no single accepted definition of housing insecurity, sometimes referred to as housing instability. Researchers and policymakers often consider issues such as **housing cost and availability**, **housing quality and conditions**, and **housing-related stress** such as stress from risks related to ability to pay for and remain in suitable housing.^[Discussions of housing security and insecurity definitions can be found in @coxRoadmapUnifiedMeasure2016 and @leopoldImprovingMeasuresHousing2016.] 
+There is no single accepted definition of housing insecurity, sometimes referred to as housing instability. Researchers and policymakers often consider issues such as housing cost and availability, housing quality and conditions, and housing-related stress such as that from risks related to ability to pay for and remain in suitable housing.^[Discussions of housing security and insecurity definitions can be found in @coxRoadmapUnifiedMeasure2016 and @leopoldImprovingMeasuresHousing2016.] 
 
 These definitions often take into account not just characteristics of specific housing units, but also of the neighborhoods in which they are located. The U.S. Department of Health and Human Services and the United Nations have developed detailed and widely cited and overlapping descriptions of what they consider adequate or secure housing.^[See and @unitednationsRightAdequateHousing2014.]
 
@@ -8,5 +8,5 @@ One group of widely cited researchers proposed a unifying definition:^[@coxRoadm
 
 > Limited or uncertain availability of stable, safe, adequate, and affordable housing and neighborhoods; limited or uncertain access to stable, safe, adequate, and affordable housing and neighborhoods; or the inability to acquire stable, safe, adequate, and affordable housing and neighborhoods in socially acceptable ways.
 
-We organize our analysis in this report around three broad categories of housing insecurity: cost and availability, quality and conditions, and housing-related stress.
+This report examines three broad categories of housing insecurity: cost and availability, quality and conditions, and housing-related stress.
 

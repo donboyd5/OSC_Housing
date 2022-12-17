@@ -1,4 +1,16 @@
 
+
+# utility functions -------------------------------------------------------
+# some wrappers for scale functions
+f_pct <- function(num, ...) {scales::label_percent(...)(num)}
+f_comma <- function(num, ...) {scales::label_comma(...)(num)}
+f_dollar <- function(num, ...) {scales::label_dollar(...)(num)}
+
+
+# tables, etc. ------------------------------------------------------------
+
+
+
 vtab <- function(table) {
   # view details about an acs table
   # assumes that tabshells already has been loaded

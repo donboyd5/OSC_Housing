@@ -315,13 +315,15 @@ rgn_xcityvill |>
   filter(variable=="B25070_010") 
 
 
-
-
 # NEW SECTION get selected time series ------------------------------------------------
 
 fts <- function(year=2019, table){
   print(year)
   print(table)
+  if(year==2020){
+    print("skipping 2020...")
+    return(NULL)
+  }
   # default is acs 5 year, ending 2020
   nation <- get_acs(geography = "us", 
                     table = table, 
@@ -368,11 +370,16 @@ vars |>
   filter(table=="B25091") |> 
   select(-tabname)
 
+vtab("B25070")
+vtab("B25091")
+
 # df <- fts(2006, "B25070")
 
+# do both tables -- skipping 2020
+table <- "B25070"
 table <- "B25091"
-df2 <- map_dfr(2006:2019, fts, table)
-glimpse(df2)
+df2 <- map_dfr(2006:2021, fts, table)
+count(df2, endyear)
 saveRDS(df2, here::here("data", "acs", paste0(table, "_timeseries.rds")))
 
 count(df2, endyear)
