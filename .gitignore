@@ -13,6 +13,7 @@ report/results/
 *.doc*
 *.html
 *.js
+*.lnk
 *.pdf
 *.png
 *.rds
