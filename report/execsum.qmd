@@ -50,6 +50,14 @@ Households where at least one person ias age 75 or older tend to have higher rat
 
 ### Homelessness
 
+In the latest complete count, New York had just over 91 thousand homeless people -- one in six of the nation's homeless population, second only to California's 161 thousand. New York's rate of homelessness, at 4.72 per thousand people in the general population, was the greatest of any state. (The District of Columbia has 8.95 homeless people per 1,000, or almost twice as much as New York.) The overall national rate of homelessness was 1.76 homeless people per thousand people in the general population, or less than a quarter of New York's rate.
+
+The state's homeless population increased by 19.1 percent between 2010 and 2020, the second fastest rate in the nation, behind South Dakota's 44.7 percent. This rapid growth dwarfs the growth in the homeless population in most other states.
+
+The U.S. Department of Housing and Urban Development has established groupings of counties to serve and assist homeless people called "Continuums of Care", or CoCs, which generally are contiguous counties. New York's rates of homelessness vary greatly across CoCs: The New York City CoC's rate of homelessness was 9.26 per 1,000 population, more than three times as great as the Schenectady County CoC, which had the next-highest rate at 2.80 per 1,000 people in the general population. Most of the CoCs in New York with high homelessness rates, relative to other CoCs, included a city - in addition to the New York City and Schenectady CoCs, other high-homelessness CoCs include the Albany, Kingston, and Poughkeepsie CoCs. Most of the CoCs with low rates of homelessness are in rural areas, but the Buffalo and Utica CoCs are exceptions - both have rates of homelessness in the bottom 5 out of 25 CoCs in New York.
+
+A small glimmer among the statistics on homelessness is that only 5 percent of New York's homeless population is unsheltered, the lowest rate of any state. By contrast, 70 percent of California's homeless population is unsheltered. The reasons for unsheltered homelessness are complex, reflecting policy choices by governments about the extent to which they provide or require shelter and more-permanent housing, as well as choices by homeless individuals. In general, warmer states have greater rates of unsheltered homelessness than colder states. (@corinthWhenWarmCold2018).
+
 ## Policies to address housing insecurity
 
 \[TO COME\]

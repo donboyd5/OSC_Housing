@@ -16,7 +16,6 @@ source(here::here("r", "constants.r"))
 
 ```
 
-
 ```{r}
 #| label: setup
 #| include: false
@@ -62,22 +61,29 @@ tabdata_ranks <- tabdata |>
   filter(if_any(starts_with("rank_"), ~.x <= 5) | stabbr=="US") |> 
   select(stname, perpopk, hl_total, unsheltpct, pch, pctus, rank_percap, rank_hl, rank_unshelt, rank_pch)
 
-```
+tmp <- tabdata |> 
+  filter(year==2020) |> 
+  select(stabbr, stname, hl_total, hl_unshelter, hl_shelter) |> 
+  # mutate(share=hl_unshelter[hl_unshelter[stabbr=="US"]]) |>
+  mutate(srate=hl_shelter / hl_total,
+         share=hl_shelter / hl_shelter[stabbr=="US"],
+         share_un=hl_unshelter / hl_unshelter[stabbr=="US"]) |> 
+  arrange(srate)
 
+
+```
 
 The table below shows key facts about homelessness in selected states. It is based on the U.S. Department of Housing and Urban Development's Point-in-Time count of the homeless population, ordinarily conducted on a single day in January of each year. Because it is based on only a single day it has weaknesses related to idiosyncracies in data collection methods, weather, and other factors; nonetheless it is the most widely used and most comparable dataset for comparing homelessness across states. The table is based on the count conducted in January 2020 and, for computing change over time, the January 2010 count. The January 2021 count was affected negatively by COVID-19 and is incomplete and noncomparable. A count was conducted in January 2022, but is not yet available in centralized computerized form for all states.
 
 The table shows the number of homeless people per thousand people in the general population, the total number of homeless people, the percent who were unsheltered and often living on the streets (as opposed, for example, to staying in an emergency shelter or more-permanent forms of shelter or housing), the percent change from 2010, and the state as a percentage of the U.S. total. It also includes ranks for selected variables. The table includes states that ranked in the top 5 of any of the measures in the table. It does not include the District of Columbia, which has far more homeless people per 1,000 population than any state, but the overall size of its homeless population is quite small as a percentage of the U.S.
 
-New York stands out in several ways:
+In the latest complete count, New York had just over 91 thousand homeless people -- one in six of the nation's homeless population, second only to California's 161 thousand. New York's rate of homelessness, at 4.72 per thousand people in the general population, was the greatest of any state. (The District of Columbia has 8.95 homeless people per 1,000, or almost twice as much as New York.) The overall national rate of homelessness was 1.76 homeless people per thousand people in the general population, or less than a quarter of New York's rate.
 
--   It has the greatest number of homeless people per 1,000 population of any state. (The District of Columbia has 8.95 homeless people per 1,000, or almost twice as much as New York.)
+The state's homeless population increased by 19.1 percent between 2010 and 2020, the second fastest rate in the nation, behind South Dakota's 44.7 percent. This rapid growth dwarfs the growth in the homeless population in most other states.
 
--   It has the second-largest number of people, behind only California, and constituting 15.7 percent of the nation's homeless population.
+The U.S. Department of Housing and Urban Development has established groupings of counties to serve and assist homeless people called "Continuums of Care", or CoCs, which generally are contiguous counties. New York's rates of homelessness vary greatly across CoCs: The New York City CoC's rate of homelessness was 9.26 per 1,000 population, more than three times as great as that in the Schenectady County CoC, which had the next-highest rate at 2.80 per 1,000 people in the general population.
 
--   Its homeless population increased by 19.1% between 2010 and 2020, the second fastest rate in the nation, behind South Dakota's 44.7%. This rapid growth dwarfs tjhe growth in the homeless population in most other states.
-
--   Finally, a small glimmer among these statistics is that only 5% of New York's homeless population is unsheltered. By contrast, 70 percent of California's homeless population is unsheltered.
+A small glimmer among these statistics is that only 5 percent of New York's homeless population is unsheltered, the lowest unsheltered rate of any state. By contrast, 70 percent of California's homeless population is unsheltered. The reasons for unsheltered homelessness are complex, reflecting policy choices by governments about the extent to which they provide or require shelter and more-permanent housing, as well as choices by homeless individuals. In general, warmer states have greater rates of unsheltered homelessness than colder states. (@corinthWhenWarmCold2018).
 
 ```{r}
 #| label: summary-table-hl
@@ -121,7 +127,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 ## Homelessness in subareas of New York
 
-The U.S. Department of Housing and Urban Development has established groupings of counties to serve and assist homeless people. These groupings are called "Continuums of Care", which generally are contiguous counties. 
+The U.S. Department of Housing and Urban Development has established groupings of counties to serve and assist homeless people. These groupings are called "Continuums of Care", which generally are contiguous counties.
 
 ```{r}
 #| label: summary-table-data-coc
@@ -181,8 +187,6 @@ tabdata_coc
 summary(tabdata_coc)
 
 ```
-
-
 
 ```{r}
 #| label: summary-table-cic
