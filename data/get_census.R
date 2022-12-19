@@ -5,9 +5,233 @@
 # libraries ---------------------------------------------------------------
 
 source(here::here("r", "libraries.r"))
-source(here::here("r", "libraries_ts.r"))
 source(here::here("r", "constants.r"))
 source(here::here("r", "functions.r"))
+
+library(censusapi)
+
+
+
+# FRED population ---------------------------------------------------------
+# https://fred.stlouisfed.org/series/NYPOP
+
+nypop1 <- fredr(
+  series_id = "NYPOP",
+  observation_start = as.Date("1980-01-01"),
+  observation_end = NULL # as.Date("2000-01-01")
+  )
+
+nypop <- nypop1 |> 
+  mutate(year=year(date),
+         stabbr="NY") |> 
+  select(year, pop=value)
+
+nypop |> 
+  ggplot(aes(year, pop)) +
+  geom_line() +
+  geom_point()
+
+nypop_smooth <- nypop |> 
+  arrange(year) %>%
+  do(cbind(., stldf(.$pop, 4)))
+
+nypop_smooth |> 
+  select(year, pop, trend) |> 
+  pivot_longer(-year) |> 
+  ggplot(aes(year, value, colour=name)) +
+  geom_line() +
+  geom_point()
+
+saveRDS(nypop_smooth, here::here("data", "_misc", "nypop_smooth.rds"))
+
+
+# BAD BELOW HERE ----
+
+
+# get state population for NY, over time ----------------------------------
+# for now, use tidycensus for 2000-2019, and censusapi for 2020, 2021
+
+
+pop1a <- get_estimates(
+  geography="state",
+  variables = "POP",
+  year = 2019,
+  state = "NY",
+  county = NULL,
+  time_series = TRUE,
+  output = "tidy",
+  geometry = FALSE,
+  keep_geo_vars = FALSE,
+  shift_geo = FALSE,
+  key = NULL,
+  show_call = FALSE)
+pop1a
+
+pop1b <- pop1a |> 
+  select(stname=NAME, pop=value, date=DATE) |> 
+  mutate(type=case_when(date==1 ~ "cen2010",
+                        date==2 ~ "base2010",
+                        TRUE ~ "est"),
+         year=case_when(date %in% 1:2 ~ 2010,
+                        date %in% 3:12 ~ date + 2007,
+                        TRUE ~ 9999)) |> 
+  select(-date)
+pop1b
+
+pop2a <- getCensus(
+  name = "pep/population",
+  vars = c("NAME", "POP_2020", "POP_2021"), 
+  region="state:36",
+  vintage = 2021)
+pop2a
+
+pop2b <- pop2a |> 
+  select(stname=NAME, POP_2020, POP_2021) |> 
+  pivot_longer(-stname, values_to = "pop") |> 
+  mutate(type="est",
+         year=str_sub(name, -4, -1) |> as.integer()) |> 
+  select(-name)
+pop2b
+
+popst <- bind_rows(pop1b, pop2b) |> 
+  select(stname, type, year, pop)
+popst
+
+popst |> 
+  filter(type=="est") |> 
+  ggplot(aes(year, pop)) +
+  geom_line() +
+  geom_point()
+
+
+df2 <- df1 |> 
+  select(state=NAME, pop=value, date=DATE) |> 
+  mutate(name=case_when(date==1 ~ "cen2010",
+                        date==2 ~ "base2010",
+                        TRUE ~ "est"),
+         year=case_when(date %in% 1:2 ~ 2010,
+                        date %in% 3:12 ~ date + 2007,
+                        TRUE ~ 9999))
+
+
+
+
+
+
+# OLD below here ----------------------------------------------------------
+
+
+
+listCensusMetadata(
+  name="pep/population",
+  vintage = NULL,
+  type = "variables",
+  group = NULL,
+  variable_name = NULL,
+  include_values = FALSE
+)
+
+# https://www.hrecht.com/censusapi/news/index.html
+# https://www.hrecht.com/censusapi/reference/index.html
+df <- listCensusApis()
+tmp <- df |> filter(str_detect(name, "pep"))
+tmp2 <- tmp |> 
+  filter(vintage %in% c(2019, 2021))
+
+# 2019 vintage
+# https://api.census.gov/data/2019/pep/population/variables.html
+dict1 <- listCensusMetadata(
+  name = "pep/population",
+  vintage = 2019,
+  type = "variables",
+  include_values = TRUE)
+
+pop1 <- getCensus(
+  name = "pep/population",
+  vars = c("NAME", "DATE_DESC", "POP"), 
+  region="state:36",
+  # regionin="state:36",
+  # region = "county:*", 
+  vintage = 2019)
+pop1
+# https://api.census.gov/data/pep/population?key=b27cb41e46ffe3488af186dd80c64dce66bd5e87&get=POP&time=2021
+
+pop2 <- getCensus(
+  name = "pep/population",
+  vars = c("NAME", "POP_2020", "POP_2021"), 
+  region="state:36",
+  # regionin="state:36",
+  # regionin = "state:36",
+  # region = "county:*", 
+  vintage = 2021)
+pop2
+
+popest <- getCensus(
+  name = "pep/population",
+  vintage = 2019,
+  vars = c("POP", "DATE_DESC"),
+  region = "state:*")
+ht(df)
+glimpse(df)
+names(df)
+count(df, str_sub(title, 1, 80), sort = TRUE) |> head(10)
+# unique(df$title)
+count(df, str_sub(name, 1, 80), sort = TRUE) |> head(50)
+count(df, type)
+tsdf <- df |> filter(type=="Timeseries")
+aggdf <- df |> filter(type=="Aggregate")
+
+
+df1 <- get_estimates(
+  geography="state",
+  # product = "population",
+  variables = "POP",
+  # breakdown = NULL,
+  # breakdown_labels = FALSE,
+  # year = 2019,
+  state = "NY",
+  county = NULL,
+  time_series = TRUE,
+  output = "tidy",
+  geometry = FALSE,
+  keep_geo_vars = FALSE,
+  shift_geo = FALSE,
+  key = NULL,
+  show_call = FALSE)
+df1
+
+df2 <- get_estimates(
+  geography="state",
+  # product = "population",
+  variables = c("POP_2020", "POP_2021"),
+  # breakdown = NULL,
+  # breakdown_labels = FALSE,
+  year = 2021,
+  state = "NY",
+  county = NULL,
+  # time_series = TRUE,
+  output = "tidy",
+  geometry = FALSE,
+  keep_geo_vars = FALSE,
+  shift_geo = FALSE,
+  key = NULL,
+  show_call = TRUE)
+df2
+
+# https://api.census.gov/data/2021/pep/population?get=NAME%2CPOP%2CDENSITY&for=state%3A36
+
+
+
+df2 <- df1 |> 
+  select(state=NAME, pop=value, date=DATE) |> 
+  mutate(name=case_when(date==1 ~ "cen2010",
+                        date==2 ~ "base2010",
+                        TRUE ~ "est"),
+         year=case_when(date %in% 1:2 ~ 2010,
+                        date %in% 3:12 ~ date + 2007,
+                        TRUE ~ 9999))
+
+
 
 
 # get data ----------------------------------------------------------------

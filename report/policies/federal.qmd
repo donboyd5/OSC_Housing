@@ -16,14 +16,8 @@ source(here::here("r", "constants.r"))
 dfbhere <- here::here("data", "fedbud")
 dlihtc <- here::here("data", "hud", "lihtc")
 dpict <- here::here("data", "hud", "picture")
+dhud <- r"(E:\data\housing_insecurity\hud)"
 
-budauth <- readRDS(path(dfbhere, "budauth.rds"))
-outlay <- readRDS(path(dfbhere, "outlay.rds"))
-
-lihtc <- readRDS(path(dlihtc, "lihtc.rds"))
-
-# nypicture <- readRDS(path(dpict, "nypicture.rds"))
-picture <- readRDS(path(dpict, "picture.rds"))
 
 ```
 
@@ -72,10 +66,33 @@ saveRDS(df2, here::here("data", "fedbud", "deflator.rds"))
 ```
 
 ```{r}
-#| label: countercyclical
+#| label: get-data
 #| include: true
 
 deflator <- readRDS(here::here("data", "fedbud", "deflator.rds"))
+# cenpop <- readRDS(here::here("data", "census", "censuspop.rds"))
+nypop_smooth <- readRDS(here::here("data", "_misc", "nypop_smooth.rds")) # thousands
+
+
+budauth <- readRDS(path(dfbhere, "budauth.rds"))
+outlay <- readRDS(path(dfbhere, "outlay.rds"))
+
+awards <- readRDS(path(dhud, "grantee_awards.rds"))
+
+lihtc <- readRDS(path(dlihtc, "lihtc.rds"))
+
+# nypicture <- readRDS(path(dpict, "nypicture.rds"))
+picture <- readRDS(path(dpict, "picture.rds"))
+
+```
+
+```{r}
+#| label: countercyclical
+#| include: true
+
+tmp <- budauth |> 
+  filter(subfuncode=="604", fyear==2022) |> 
+  arrange(desc(budauth))
 
 pdata <- budauth |> 
   filter(subfuncode=="604") |> 
@@ -113,27 +130,227 @@ There have been two major trends in federal housing assistance since the 1980s:
 1.  The direct federal role in **creating** assisted housing has been declining, while the state and local government role has been increasing. This reflects the end to new construction under project-based Section 8, as well as the creation of the LIHTC.
 2.  Shift to tenant-based assistance; project-based rental assistance contracts between private landlords and HUD began expiring in 1980s
 
-To come (not sure where yet) table that shows major federal, state, and local programs, their size, and which housing insecurity issues they address.
+## Major Federal Housing Assistance Programs
 
-Among other things, table will show (and text will describe) the extent to which spending policies are focused on renters. (Will note that if we consider housing policies more broadly, including mortgage interest deduction and now-limited property tax deduction, more money actually goes to homeowners.)
+### Housing Choice Vouchers (HCV)
 
-*Make sure to cover: far more eligible than served, long waiting lists.*
+HUD's Housing Choice Voucher (HCV) program is the nation's largest form of rental assistance. It is administered through Public Housing Agencies in the states. The program provides vouchers to eligible familes; the family pays about 30 percent of its income for rent and utilities and the voucher covers the rest, up to a HUD cap. Available vouchers are capped by federal spending authorizations, and only about one in four eligible families receive vouchers.[^2] Waiting times in New York for families currently receiving vouchers were 31 months in 2020 - more than two and a half years - and this may overstate wait times because many agencies have closed their voucher waitlist.[^3]
+
+[^2]: https://www.cbpp.org/sites/default/files/7-22-21hous.pdf
+
+[^3]: https://www.cbpp.org/sites/default/files/7-22-21hous.pdf
+
+### Community Development Block Grants (CDBG)
+
+The Community Development Block Grant (CDBG) program provides annual grants on a formula basis to states, cities, and counties to develop viable urban communities by providing decent housing and a suitable living environment, and by expanding economic opportunities, principally for low- and moderate-income persons.[^4]
+
+[^4]: https://www.hud.gov/program_offices/comm_planning/cdbg
+
+### Continuum of Care programs (CoC)
+
+The Continuum of Care program is intended to assist sheltered and unsheltered homeless people by providing the housing and services needed to help individuals move into transitional and permanent housing, with the goal of long-term stability.[^5] The program encourages regional coordination. Continuums of Care are geographic entities, usually consisting of contiguous counties. Continuums of Care coordinate planning, application for federal grants under the program, and implementation of programs.
+
+[^5]: https://files.hudexchange.info/resources/documents/Homelessness-Programs-Toolkits-for-State-ESG-Recipients-Structure-Governance.pdf
+
+### Emergency Solutions Grants (ESG)
+
+The Emergency Solutions Grants (ESG) program is intended to help people quickly regain stability in permanent housing after experiencing a housing crisis or homelessness. ESG provides funding to: engage homeless individuals and families living on the street; improve the number and quality of emergency shelters for homeless individuals and families; help operate these shelters; provide essential services to shelter residents; rapidly re-house homeless individuals and families; and prevent families and individuals from becoming homeless.[^6] Metropolitan cities, urban counties, territories, and states are eligible for ESG funds; states must subgrant ESG funds to local governments or private nonprofit organizations.[^7]
+
+[^6]: https://www.hud.gov/program_offices/comm_planning/esg
+
+[^7]: https://www.hudexchange.info/programs/esg/esg-requirements/
+
+### HOME Investment Partnerships Program (HOME)
+
+The HOME Investment Partnerships Program (HOME) provides formula grants to states and localities that communities use - often in partnership with local nonprofit groups - to fund a wide range of activities including building, buying, and/or rehabilitating affordable housing for rent or homeownership or providing direct rental assistance to low-income people. HOME is the largest federal block grant to state and local governments designed exclusively to create affordable housing for low-income households.[^8]
+
+[^8]: https://www.hud.gov/program_offices/comm_planning/homehttps://www.hud.gov/program_offices/comm_planning/home
+
+### Housing Opportunities for Persons With AIDS (HOPWA)
+
+The Housing Opportunities for Persons With AIDS (HOPWA) Program is the only federal program dedicated to the housing needs of people living with HIV/AIDS. Under the HOPWA Program, HUD makes grants to local communities, states, and nonprofit organizations for projects that benefit low-income persons living with HIV/AIDS and their families.[^9]
+
+[^9]: https://www.hudexchange.info/programs/hopwa/
+
+### Summary of federal programs targeting Housing Assistance
+
+| Program                                             | Description                                                                                 | Primary purpose                                                                                 | Col4 |
+|-----------------------------------------------------|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|------|
+| Community Development Block Grants (CDBG)           | Formula grants to states, cities, and counties                                              | Flexible program targeted toward improving living environments and housing in urban communities |      |
+| Continuum of Care program (CoC)                     |                                                                                             |                                                                                                 |      |
+| Emergency Solutions Grants (ESG)                    |                                                                                             | Help people quickly regain permanent housing stability after a housing crisis or homelessness   |      |
+| HOME Investment Partnerships Program (HOME)         |                                                                                             |                                                                                                 |      |
+| Housing Opportunities for Persons With AIDS (HOPWA) | Grants for projects that benefit low-income persons living with HIV/AIDS and their families | Assist beneficiaries with housing needs                                                         |      |
+|                                                     |                                                                                             |                                                                                                 |      |
+
+### Summary of Major Federal Housing Assistance Grant Awards in New York
+
+```{r}
+#| label: awards-table-data
+#| include: false
+
+levs <- c("CDBG", "CoC", "ESG", "HOME", "HOPWA", "other", "Total")
+labs <- c("Community Development Block Grants",
+          "Continuum of Care",
+          "Emergency Solutions Grants",
+          "HOME Investment Partnerships Program",
+          "Housing Opportunities for Persons With AIDS",
+          "Other",
+          "Total")
+cbind(levs, labs)
+
+tabdata <- awards |> 
+  filter(stabbr=="NY", year %in% 2019:2021) |> 
+  mutate(prognamef2=fct_collapse(prognamef, 
+                                 CDBG="CDBG",
+                                 CoC="CoC",
+                                 ESG="ESG",
+                                 HOME="HOME",
+                                 HOPWA="HOPWA",
+                                 other_level  = "other"),
+         ) |> 
+  summarise(value=sum(amount), .by=c(year, prognamef2)) |> 
+  arrange(year) |> 
+  pivot_wider(names_from = year) |> 
+  arrange(desc(`2019`)) |> 
+  janitor::adorn_totals() |> 
+  mutate(prognamef2=
+           factor(prognamef2,
+                  levels=levs,
+                  labels=labs),
+         change1920=`2020` - `2019`,
+         change2021=`2021` - `2020`)
+  
+tab <- tabdata |> 
+  gt() |> 
+  tab_header(
+    title = "New York Awards for Major Federal Housing Assistance Grant Programs",
+    subtitle = "Millions of dollars by Federal Fiscal Year") |>
+  cols_label(prognamef2="Program",
+             change1920 = html("2020 minus 2019"),
+             change2021 = html("2021 minus 2020")) |> 
+  cols_align(align="left", columns=prognamef2) |> 
+  fmt_number(columns=-prognamef2,
+             scale=1e-6,
+             decimals=0) |> 
+  fmt_currency(columns=-prognamef2,
+             scale=1e-6,
+             decimals=0,
+             rows=c(1, nrow(tabdata))) |> 
+  gt_highlight_rows(rows = nrow(tabdata),  # needs gtExtras
+                    fill="grey97") |> 
+  tab_footnote(footnote="Sorted by 2019 value, as an indiction of pre-Covid relationships", 
+               locations = cells_column_labels(
+                 columns = prognamef2)) |> 
+  tab_source_note(source_note="Source: https://www.hudexchange.info/GRANTEES/ALLOCATIONS-AWARDS/")
+
+tab
+
+```
+
+```{r}
+#| label: awards-table
+#| include: true
+
+tab
+
+```
+
+## Federal housing assistance programs in New York
+
+```{r}
+#| label: fed-grantee-awards
+#| include: false
+#| eval: false
+
+glimpse(awards)
+count(awards, prognamef)
+#  CDBG       25603
+# 2 CoC       118418
+# 3 ESG         8074
+# 4 HOME       12868
+# 5 HOPWA       3191
+# 6 HTF          336
+# 7 NSP          633
+# 8 RHP           52
+
+pdata <- awards |> 
+  filter(stabbr=="NY") |> 
+  mutate(prognamef2=fct_collapse(prognamef, 
+                                 CDBG="CDBG",
+                                 CoC="CoC",
+                                 ESG="ESG",
+                                 HOME="HOME",
+                                 HOPWA="HOPWA",
+                                 other_level  = "other")) |> 
+  summarise(value=sum(amount), .by=c(stabbr, year, prognamef2)) |> 
+  left_join(deflator |> select(year=fyear, ideflator),
+            by = join_by(year)) |> 
+  left_join(nypop_smooth, by = join_by(year)) |> 
+  mutate(rvalue=value * ideflator,
+         rvaluepc=rvalue / pop / 1000)
+
+count(pdata, prognamef, prognamef2)
+
+pdata |> 
+  ggplot(aes(year, rvaluepc, colour=prognamef2)) +
+  geom_line() +
+  geom_point()
+
+
+
+
+ny |> 
+  filter(progtype!="ARP") |> 
+  pivot_longer(-c(stabbr, progname), names_to = "year") |> 
+  mutate(valm=value / 1e6,
+         year=as.integer(year)) |> 
+  ggplot(aes(year, valm, colour=progname)) +
+  geom_line() +
+  geom_point()
+
+arp <- count(df2, progtype)
+
+df3a <- df2 |>
+  summarise(value=sum(amount, na.rm=TRUE), .by=c(stabbr, year, prognamef, arp))
+
+df3arp <- df3a |> 
+  summarise(value=sum(value, na.rm=TRUE), .by=c(stabbr, year, arp))
+df3arp |> filter(stabbr=="NY") |> 
+  arrange(arp, year)
+
+df3a |> 
+  filter(stabbr=="NY") |> 
+  summarise(value=sum(value, na.rm=TRUE), .by=c(stabbr, year, prognamef)) |> 
+  mutate(valm=value / 1e6) |> 
+  ggplot(aes(year, valm, colour=prognamef)) +
+  geom_line() +
+  geom_point()
+  
+
+```
 
 ## Rental assistance
-
-\[Discuss: tenant-based vs. project-based rental assistance, and pros and cons of each rising role of tenant-based assistnce\]
 
 ### Overview of federal programs that provide housing assistance to low-income renters
 
 The following tables summarize HUD federal housing assistance spending programs in New York. As spending programs, they do not include the Low Income Housing Tax Credit, which we present separately.
 
+CDBG
+
+ESG
+
+HOME
+
+CoC
+
+### Who is served by federal housing programs?
 
 ```{r}
 #| label: getdata
 #| include: false
 
 count(picture, program, programf)
-
 
 basedata <- picture |> 
   filter(!program %in% c(4, 7)) |> 
@@ -143,7 +360,6 @@ basedata <- picture |>
     TRUE ~ programf))
 
 ```
-
 
 ```{r}
 #| label: baseline
@@ -189,7 +405,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../_gt_snippet.qmd >}}
 
-
 ```{r}
 #| label: race
 #| include: true
@@ -231,8 +446,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```
 
 {{< include ../_gt_snippet.qmd >}}
-
-
 
 ```{r}
 #| label: states
@@ -283,9 +496,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../_gt_snippet.qmd >}}
 
-
-
-
 ```{r}
 #| label: counties
 #| include: true
@@ -335,9 +545,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```
 
 {{< include ../_gt_snippet.qmd >}}
-
-
-
 
 ```{r}
 #| label: more
@@ -394,15 +601,23 @@ tabdata |>
 Low Income Housing Tax Credit-supported units by county
 
 <!-- ```{r rows.print=65} -->
+
 <!-- #| label: lihtc -->
+
 <!-- #| include: true -->
+
 <!-- #| eval: true -->
 
 <!-- lihtc |>  -->
+
 <!--   mutate(n_units=ifelse(li_units > n_units, li_units, n_units)) |>  -->
+
 <!--   group_by(stcnty, county) |>  -->
+
 <!--   summarise(across(c(n_units, li_units), ~ sum(.x, na.rm=TRUE)), .groups = "drop") |>  -->
+
 <!--   mutate(lipct=li_units / n_units) |>  -->
+
 <!--   arrange(desc(li_units)) -->
 
 <!-- ``` -->
@@ -539,4 +754,3 @@ picture |>
   summarise(across(c(people_total), ~ sum(.x, na.rm=TRUE)), .groups = "drop")
 
 ```
-
