@@ -1,0 +1,706 @@
+# Policies to Address Housing Insecurity
+
+## Federal policies to address housing insecurity
+
+```{r}
+#| label: setup
+#| include: false
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+dfbhere <- here::here("data", "fedbud")
+dlihtc <- here::here("data", "hud", "lihtc")
+dpict <- here::here("data", "hud", "picture")
+dhud <- r"(E:\data\housing_insecurity\hud)"
+
+
+```
+
+### Introduction[^policies-1]
+
+[^policies-1]: This section draws heavily on @mccartyOverviewFederalHousing2019.
+
+The federal government has been involved in housing assistance since the 1930s, but the federal role has changed considerably over time. Current federal policies to address housing insecurity fall into three broad categories:
+
+-   **Rental housing assistance**, including vouchers and other mechanisms to reduce monthly costs of private housing; federally subsidized public housing owned and operated by local public housing authorities (PHAs); and special programs for the elderly and disabled, and to support rural housing;
+-   **Assistance to state and local governments**, including low-income housing tax credits the federal government allocates to states, and Community Development Block Grants (CDBG), and several other housing-related grants;
+-   **Assistance for homeowners**, including federally insured mortgage loans and rural housing support.
+
+Most of these policies are administered by the Department of Housing and Urban Development (HUD), but several are administered by other federal agencies, particularly the U.S. Department of the Treasury and the U.S. Department of Agriculture (USDA).
+
+Federal housing assistance was boosted dramatically in each of the last two recessions (the 2007 housing bubble and Great Recession, and the 2020 Covid-19 recession). Increases were far smaller in the 1990 and 2001 recessions. (figure below)
+
+```{r}
+#| label: ONETIME-deflator
+#| eval: false
+
+# get deflator OMB used in the FFY 2023 budget
+
+dftab <- r"(E:\data\FederalBudget\2023\BUDGET-2023-TAB\xls)"
+fn <- "BUDGET-2023-TAB-2-3.xlsx"
+
+df1 <- read_excel(path(dftab, fn))
+# note that deflator is 1 in 2012, we want it to be 1 in 2022
+
+df2 <- df1 |> 
+  select(fyear=1, deflator=8) |> 
+  mutate(fyear=str_sub(fyear, 1, 4) |> as.integer()) |>
+  filter(fyear %in% 1990:2027) |> 
+  mutate(deflator=as.numeric(deflator),
+         ideflator=deflator[fyear==2022] / deflator)
+saveRDS(df2, here::here("data", "fedbud", "deflator.rds"))
+
+
+# https://fred.stlouisfed.org/series/GDPCTPI
+# gdppi <- fredr(
+#   series_id = "GDPCTPI",
+#   observation_start = as.Date("1980-01-01"),
+#   observation_end = NULL # as.Date("2000-01-01")
+#   )
+
+```
+
+```{r}
+#| label: get-data
+#| include: false
+
+deflator <- readRDS(here::here("data", "fedbud", "deflator.rds"))
+# cenpop <- readRDS(here::here("data", "census", "censuspop.rds"))
+nypop_smooth <- readRDS(here::here("data", "_misc", "nypop_smooth.rds")) # thousands
+
+
+budauth <- readRDS(path(dfbhere, "budauth.rds"))
+outlay <- readRDS(path(dfbhere, "outlay.rds"))
+
+awards <- readRDS(path(dhud, "grantee_awards.rds"))
+
+lihtc <- readRDS(path(dlihtc, "lihtc.rds"))
+lihtc2 <- readRDS(path(dlihtc, "lihtc_coded.rds"))
+
+# nypicture <- readRDS(path(dpict, "nypicture.rds"))
+picture <- readRDS(path(dpict, "picture.rds"))
+
+```
+
+```{r}
+#| label: countercyclical
+#| include: true
+
+tmp <- budauth |> 
+  filter(subfuncode=="604", fyear==2022) |> 
+  arrange(desc(budauth))
+
+pdata <- budauth |> 
+  filter(subfuncode=="604") |> 
+  group_by(fyear) |> 
+  summarise(n=n(), budauth=sum(budauth), .groups="drop") |> 
+  filter(fyear %in% 1990:2027) |> 
+  left_join(deflator |> select(fyear, ideflator), by="fyear") |> 
+  mutate(rbudauth=budauth * ideflator)
+
+capt1 <- "Recession periods are shaded. Amounts for FFY 2023 and later are budget proposals."
+capt2 <- "Source: Federal Budget FFY 2023: Federal Database and Historical Table 2.3" 
+capt <- paste0(capt1, "\n", capt2)
+
+p <- pdata |> 
+  ggplot(aes(fyear, rbudauth)) +
+  geom_line(colour="blue", linewidth=1) +
+  geom_point(colour="blue", size=1.25) +
+  geom_band(recdata(pdata$fyear)) +
+  scale_y_continuous(name="Authorization (billions of 2022 dollars)",
+                     breaks=seq(0, 2e8, 2.5e7),
+                     labels = dollar_format(scale=1e-6),
+                     limits=c(0, NA)) +
+  scale_x_continuous(name="Federal fiscal year", breaks=seq(1990, 2030, 2)) +
+  ggtitle("Federal budget authorization for housing assistance") +
+  labs(caption=capt) +
+  theme_bw() +
+  caption_left
+
+p
+
+```
+
+There have been two major trends in federal housing assistance since the 1980s:
+
+1.  The direct federal role in **creating** assisted housing has been declining, while the state and local government role has been increasing. This reflects the end to new construction under project-based Section 8, as well as the creation of the LIHTC.
+2.  Shift to tenant-based assistance; project-based rental assistance contracts between private landlords and HUD began expiring in 1980s
+
+### Major federal housing assistance programs
+
+#### Community Development Block Grants (CDBG)
+
+The Community Development Block Grant (CDBG) program provides annual grants on a formula basis to states, cities, and counties to develop viable urban communities by providing decent housing and a suitable living environment, and by expanding economic opportunities.
+
+Recipient communities develop their own programs and funding priorities but must give as much priority as practical to activities that benefit low- and moderate-income individuals. Grantees may undertake activities that aid in the prevention or elimination of blight, as well as activities that address urgent community development needs because existing conditions pose a serious and immediate threat to health or welfare. CDBG funds may not be used for activities which do not meet one of these national objectives.[^policies-2]
+
+[^policies-2]: https://www.hud.gov/program_offices/comm_planning/cdbg and https://www.hud.gov/program_offices/comm_planning/cdbg/entitlement-program
+
+#### Continuum of Care programs (CoC)
+
+The Continuum of Care program is intended to assist sheltered and unsheltered homeless people by providing the housing and services needed to help individuals move into transitional and permanent housing, with the goal of long-term stability.[^policies-3] The program encourages regional coordination. Continuums of Care are geographic entities, usually consisting of contiguous counties. Continuums of Care coordinate planning, application for federal grants under the program, and implementation of programs.
+
+[^policies-3]: https://files.hudexchange.info/resources/documents/Homelessness-Programs-Toolkits-for-State-ESG-Recipients-Structure-Governance.pdf
+
+#### Emergency Solutions Grants (ESG)
+
+The Emergency Solutions Grants (ESG) program is intended to help people quickly regain stability in permanent housing after experiencing a housing crisis or homelessness. ESG provides funding to: engage homeless individuals and families living on the street; improve the number and quality of emergency shelters for homeless individuals and families; help operate these shelters; provide essential services to shelter residents; rapidly re-house homeless individuals and families; and prevent families and individuals from becoming homeless.[^policies-4]
+
+[^policies-4]: https://www.hud.gov/program_offices/comm_planning/esg
+
+Under ESG, HUD makes grants to States, units of general purpose local government, and territories for the rehabilitation or conversion of buildings for use as emergency shelter for the homeless, for the payment of certain expenses related to operating emergency shelters, for essential services related to emergency shelters and street outreach for the homeless, and for homelessness prevention and rapid re-housing assistance. States must subgrant ESG funds to local governments or private nonprofit organizations.[^policies-5]
+
+[^policies-5]: See https://www.hudexchange.info/programs/esg/esg-requirements/ and https://www.benefits.gov/benefit/5890.
+
+#### HOME Investment Partnerships Program (HOME)
+
+The HOME Investment Partnerships Program (HOME) provides formula grants to states and localities that communities use - often in partnership with local nonprofit groups - to fund a wide range of activities including building, buying, and/or rehabilitating affordable housing for rent or homeownership or providing direct rental assistance to low-income people. HOME is the largest federal block grant to state and local governments designed exclusively to create affordable housing for low-income households.[^policies-6]
+
+[^policies-6]: https://www.hud.gov/program_offices/comm_planning/homehttps://www.hud.gov/program_offices/comm_planning/home
+
+#### Housing Choice Vouchers (HCV)
+
+HUD's Housing Choice Voucher (HCV) program is the nation's largest form of rental assistance. It is administered through Public Housing Agencies in the states. The program provides vouchers to eligible familes; the family pays about 30 percent of its income for rent and utilities and the voucher covers the rest, up to a HUD cap. Available vouchers are capped by federal spending authorizations, and only about one in four eligible families receive vouchers.[^policies-7] Waiting times in New York for families currently receiving vouchers were 31 months in 2020 - more than two and a half years - and this may overstate wait times because many agencies have closed their voucher waitlist.[^policies-8]
+
+[^policies-7]: https://www.cbpp.org/sites/default/files/7-22-21hous.pdf
+
+[^policies-8]: https://www.cbpp.org/sites/default/files/7-22-21hous.pdf
+
+#### Housing Opportunities for Persons With AIDS (HOPWA)
+
+The Housing Opportunities for Persons With AIDS (HOPWA) Program is the only federal program dedicated to the housing needs of people living with HIV/AIDS. Under the HOPWA Program, HUD makes grants to local communities, states, and nonprofit organizations for projects that benefit low-income persons living with HIV/AIDS and their families.[^policies-9]
+
+[^policies-9]: https://www.hudexchange.info/programs/hopwa/
+
+#### Low-income Housing Tax Credits (LIHTC)
+
+The Low-income Housing Tax Credit (LIHTC) is the nation's largest source of affordable housing financing. The credits are allocated from the Internal Revenue Service to state Housing Finance Authorities (HFAs) which in turn award credits to developers according to guidelines the states establish, within requirements of HUD.
+
+#### Project-Based Rental Assistance (PBRA)
+
+The PBRA program provides over 1.2 million low-income and very low-income families with decent, safe, and affordable housing. According to HUD, "without this assistance, many currently affordable properties would either convert to market rates or would be unable to generate enough rental income to be maintained in good condition."[^policies-10]
+
+[^policies-10]: https://www.hud.gov/sites/dfiles/CFO/documents/2023_BudgetInBriefFINAL.pdf
+
+#### Public Housing Fund
+
+The Public Housing Fund provides federal grants for Public Housing Authorities to operate, maintain and make capital improvements to approximately 935,000 affordable public housing units in federal fiscal year 2023, serving nearly 1.7 million residents.[^policies-11]
+
+[^policies-11]: https://www.hud.gov/sites/dfiles/CFO/documents/2023_BudgetInBriefFINAL.pdf
+
+#### Summary of major federal housing assistance and homelessness programs
+
+```{r}
+#| label: US-fed-grantee-awards
+#| include: false
+#| eval: true
+
+award_size <- awards |> 
+  filter(year==2019) |> 
+  mutate(prognamef2=fct_collapse(prognamef, 
+                                 CDBG="CDBG",
+                                 CoC="CoC",
+                                 ESG="ESG",
+                                 HOME="HOME",
+                                 HOPWA="HOPWA",
+                                 other_level  = "other")) |> 
+  summarise(value=sum(amount), .by=c(prognamef2))
+award_size |> mutate(value=value / 1e6)
+
+```
+
+| Program                                             | Description                                                                                                   | Primary purpose                                                                                                                                     | Size nationally[^policies-12]                    |
+|-----------------|-----------------|---------------------|-----------------|
+| Community Development Block Grants (CDBG)           | Formula grants to states, cities, and counties                                                                | Flexible program targeted toward improving living environments and housing in urban communities                                                     | \$3.3 billion awarded in 2019                    |
+| Continuum of Care program (CoC)                     | CoC's generally coordinate planning and implementation of homelessness-related programs in a geographic area. | Assist sheltered and unsheltered homeless people by providing housing and services to help individuals move into transitional and permanent housing | \$2.3 billion awarded in 2019                    |
+| Emergency Solutions Grants (ESG)                    | Grants to metropolitan cities, urban counties, territories, and states.                                       | Help people quickly regain permanent housing stability after a housing crisis or homelessness                                                       | \$280 million awarded in 2019                    |
+| HOME Investment Partnerships Program (HOME)         | Formula grants to states and localities                                                                       | Building, buying, rehabilitating affordable housing for rent or homeownership; as well as direct rental assistance to low-income people             | \$1.3 billion in 2019                            |
+| Housing Choice Vouchers (HCV                        | Nation's largest form of rental assistance, administered through Public Housing Agencies.                     |                                                                                                                                                     | \$25.1 billion in 2021[^policies-13]             |
+| Housing Opportunities for Persons With AIDS (HOPWA) | Grants for projects that benefit low-income persons living with HIV/AIDS and their families                   | Assist beneficiaries with housing needs                                                                                                             | \$378 million in 2019                            |
+| Low-Income Housing Tax Credit (LIHTC)               | Tax credits allocated by the IRS to states, and awarded by states to developers                               | Help finance housing targeted in part to lower-income households                                                                                    | Approximately \$8 billion annually[^policies-14] |
+| Project-Based Rental Assistance                     | Assistance for low-income families, tied to specific projects                                                 | Assist beneficiaries with housing needs                                                                                                             | \$13.5 billion in 2021                           |
+| Public Housing Fund                                 | Grants for Public Housing Authorities to operate, maintain and make capital improvements                      | Maintain affordable and adequate housing                                                                                                            | \$7.8 billion in 2021                            |
+
+[^policies-12]: Most numbers in this column are from the summary table in HUD's 2023 "Budget in Brief", on p.9. (https://www.hud.gov/sites/dfiles/CFO/documents/2023_BudgetInBriefFINAL.pdf) However, this table uses 2019 values for several programs that were temporarily increased in 2020 or 2021 as part of federal Covid-relief aid.
+
+[^policies-13]: Calculated by subtracting \$6.4 billion increase from \$32.1 billion 2023 proposed amount. See https://www.hud.gov/sites/dfiles/CFO/documents/2023_BudgetInBriefFINAL.pdf
+
+[^policies-14]: https://taxfoundation.org/low-income-housing-tax-credit-lihtc
+
+### Summary of Major Federal Housing Assistance Grant Awards in New York
+
+```{r}
+#| label: awards-table-data
+#| include: false
+
+levs <- c("CDBG", "CoC", "ESG", "HOME", "HOPWA", "other", "Total")
+labs <- c("Community Development Block Grants",
+          "Continuum of Care",
+          "Emergency Solutions Grants",
+          "HOME Investment Partnerships Program",
+          "Housing Opportunities for Persons With AIDS",
+          "Other",
+          "Total")
+cbind(levs, labs)
+
+tabdata <- awards |> 
+  filter(stabbr=="NY", year %in% 2019:2021) |> 
+  mutate(prognamef2=fct_collapse(prognamef, 
+                                 CDBG="CDBG",
+                                 CoC="CoC",
+                                 ESG="ESG",
+                                 HOME="HOME",
+                                 HOPWA="HOPWA",
+                                 other_level  = "other"),
+         ) |> 
+  summarise(value=sum(amount), .by=c(year, prognamef2)) |> 
+  arrange(year) |> 
+  pivot_wider(names_from = year) |> 
+  arrange(desc(`2019`)) |> 
+  janitor::adorn_totals() |> 
+  mutate(prognamef2=
+           factor(prognamef2,
+                  levels=levs,
+                  labels=labs),
+         change1920=`2020` - `2019`,
+         change2021=`2021` - `2020`)
+  
+tab <- tabdata |> 
+  gt() |> 
+  tab_header(
+    title = "New York Awards for Major Federal Housing Assistance Grant Programs",
+    subtitle = "Millions of dollars by Federal Fiscal Year") |>
+  cols_label(prognamef2="Program",
+             change1920 = html("2020 minus 2019"),
+             change2021 = html("2021 minus 2020")) |> 
+  cols_align(align="left", columns=prognamef2) |> 
+  fmt_number(columns=-prognamef2,
+             scale=1e-6,
+             decimals=0) |> 
+  fmt_currency(columns=-prognamef2,
+             scale=1e-6,
+             decimals=0,
+             rows=c(1, nrow(tabdata))) |> 
+  gt_highlight_rows(rows = nrow(tabdata),  # needs gtExtras
+                    fill="grey97") |> 
+  tab_footnote(footnote="Sorted by 2019 value, as an indiction of pre-Covid relationships", 
+               locations = cells_column_labels(
+                 columns = prognamef2)) |> 
+  tab_source_note(source_note="Source: https://www.hudexchange.info/GRANTEES/ALLOCATIONS-AWARDS/")
+
+tab
+
+```
+
+```{r}
+#| label: awards-table
+#| include: true
+
+tab
+
+```
+
+### The important role of the Low-Income Housing Tax Credit
+
+```{r}
+#| label: lihtc-map
+#| eval: true
+#| include: false
+
+# readRDS(here::here("data", "nycos_shape.rds"))
+copop <- readRDS(here::here("data", "acs", "B01003_2019.rds")) |> 
+  filter(geotype=="county") |> 
+  mutate(cntyname=str_remove(name, ", New York")) |> 
+  select(geoid, cntyname, pop=estimate)
+
+# get county-level lihtc data
+lihtc_cnty1 <- lihtc2 |> 
+  filter(yr_alloc >= 2010 | yr_pis >= 2010) |> # 1504 projects
+  summarise(n=n(),
+            across(c(n_units, li_units,
+                     n_unitsr, li_unitr), ~sum(.x, na.rm=TRUE)),
+            .by=c(geoid, shortname))
+
+lihtc_cnty2 <- copop |> 
+  full_join(lihtc_cnty1, by = join_by(geoid)) |> 
+  mutate(cntyname=str_remove(cntyname, " County"),
+         boroname=case_when(cntyname=="Kings" ~ "Brooklyn",
+                            cntyname=="Richmond" ~ "Staten Island",
+                            cntyname=="New York" ~ "Manhatan",
+                            TRUE ~ cntyname)) |> 
+  select(geoid, cntyname, boroname, pop, n, contains("_")) |> 
+  adorn_totals(name="36") |> 
+  mutate(lipct=li_unitr / n_unitsr, lipct2=li_units / n_units,
+         unitspop=n_units / pop) |> 
+  as_tibble()
+
+lihtc_cnty2 |> filter(geoid=="36")
+
+count(lihtc_cnty2, cntyname, boroname)
+
+lihtc_cnty2 |> 
+  filter(!geoid %in% c("36", "36NA")) |> 
+  pull(unitspop) |> 
+  quantile(na.rm=TRUE)
+
+#           0%          25%          50%          75%         100% 
+# 0.0000649182 0.0018632833 0.0033641714 0.0050246312 0.0270530734 
+
+# good, data are set -- we'll drop the statewide total and 36NA for mapping
+
+
+newyork <- map_data("state") |> 
+  filter(region == "new york") 
+
+ny_counties <- map_data("county") |> 
+  filter(region == "new york") |> 
+  mutate(cntyname=str_to_title(subregion),
+         cntyname=ifelse(cntyname=="St Lawrence",
+                         "St. Lawrence",
+                         cntyname))
+
+count(ny_counties, region, subregion, cntyname)
+
+# Hmisc::cut2(x, breaks, formatfun = scales::percent)
+
+
+# county_map +
+#   geom_sf_label(aes(label = boroname), label.padding = unit(1, "mm"))
+
+# +scale_fill_continuous(low="thistle2", high="darkred", 
+#                        guide="colorbar",na.value="white")
+```
+
+Between 2010 and 2020, the Low Income Housing Tax Credit supported approximately 1,504 housing projects in New York, including approximately 160,000 housing units.[^policies-15] More than 80 percent of these units were low-income housing units.
+
+[^policies-15]: Based on credits allocated or properties placed in service in this time period.
+
+The table below shows the top 10 counties for Low-Income Housing Tax Credit units over the 2010-2020 period.
+
+```{r}
+#| label: lihtc-table
+#| eval: true
+#| include: true
+
+tabdata <- lihtc_cnty2 |> 
+  filter(!geoid %in% c("36", "36NA")) |> 
+  select(cntyname, n_units, li_units, unitspop) |> 
+  arrange(desc(n_units)) |> 
+  filter(row_number() <= 10)
+
+tab <- tabdata |> 
+  gt() |>
+    sub_missing(missing_text = "--") |> 
+    tab_header(
+      title = "Housing Units Supported by the Low Income Housing Tax Credit",
+      subtitle = "Top 10 counties, 2010 through 2020"
+    ) |> 
+    cols_label(cntyname="County",
+               n_units = html("# of units"),
+               li_units=html("# of low-income units"),
+               unitspop=html("# units as % of population")) |> 
+    fmt_number(columns=c(n_units, li_units),
+               decimals=0) |> 
+    fmt_percent(columns=unitspop, decimals=1) |> 
+      tab_source_note(source_note="Source: U.S. Department of Housing and Urban Development, Low Income Tax Housing Credit Database)")
+
+tabfile <-  path(tabdir, "lihtc_units_table.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+```{r}
+#| label: lihtc-mapdata
+#| include: false
+
+
+lihtc_cnty3 <- lihtc_cnty2 |> 
+  mutate(upcut=cut2(unitspop, c(0, .0025, .005, .0075, .03), formatfun = scales::percent))
+count(lihtc_cnty3, upcut)
+count(lihtc_cnty3, upcut, cntyname)
+
+mapdata <- lihtc_cnty3 |> 
+  right_join(ny_counties, 
+             by = join_by(cntyname), 
+             multiple="all")
+  
+count(mapdata, upcut)
+count(mapdata, upcut, cntyname)
+count(mapdata, subregion, boroname, cntyname)
+count(mapdata |> filter(is.na(upcut)), cntyname, upcut)
+
+  
+
+# plot the state itself 
+ny_base <- newyork |> 
+  ggplot(aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  # geom_polygon(color = "black", fill = "lightgreen") +
+  geom_polygon(color = "black") + # get the borders
+  theme(panel.background = element_blank(),
+        axis.text = element_blank(), 
+        axis.ticks = element_blank(), 
+        axis.title = element_blank(), 
+        panel.border = element_blank(), 
+        panel.grid = element_blank())
+
+
+ny_base
+
+# add color plot county lines 
+green4 <- c('#edf8e9','#bae4b3','#74c476','#238b45')
+green5 <- c('#edf8e9','#bae4b3','#74c476','#31a354','#006d2c')
+green5 <- c('#c7e9c0','#bae4b3','#74c476','#31a354','#006d2c')
+
+
+county_map <- ny_base + 
+  geom_polygon(data = mapdata, # |> filter(!is.na(upcut)),
+               aes(fill=upcut), color = "white") +
+  scale_fill_manual(values=green5, na.value="grey90") +
+  ggtitle("Housing Units Supported by Low Income Housing Tax Credits, 2010-2020",
+          subtitle="as % of County Population") +
+  guides(fill=guide_legend(title= "% of population"))
+
+  # geom_polygon(color = "black", fill = NA)
+
+# centroids.df <- as.data.frame(rgdal::coordinates(county_map))
+
+county_map
+ggsave(here::here("report", "results", "lihtc_counties.png"), county_map,
+       width=10, height=6)
+```
+
+The map below shows the distribution of housing units supported by Low Income Housing Tax Credits between 2010 and 2020 (latest available) as a percentage of county population. While the LIHTC has been most concentrated in urbanized areas of the state, its use has been widespread throughout New York.
+
+![](images/lihtc_counties.png)
+
+### Who is served by federal housing programs in New York?
+
+```{r}
+#| label: getdata
+#| include: false
+
+count(picture, program, programf)
+
+basedata <- picture |> 
+  filter(!program %in% c(4, 7)) |> 
+  mutate(programf=case_when(
+    program==8 ~ "Supportive Housing for the Elderly (Section 202)",
+    program==9 ~ "Supportive Housing for Persons with Disabilities (Section 811)",
+    TRUE ~ programf))
+
+```
+
+```{r}
+#| label: baseline
+#| include: true
+
+tabdata <- basedata |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(programf, total_units, people_total, hh_income,
+         months_waiting,
+         pct_female_head, pct_age62plus,	pct_disabled_all)
+
+tab <- tabdata |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "HUD Low-income Housing Assistance Programs in New York",
+      subtitle=NULL) |> 
+  cols_label(programf="Program",
+             total_units=html("Number of subsidized units available"),
+             people_total=html("Number of people receiving assistance"),
+             hh_income=html("Average household income"),
+             months_waiting=html("Average number of years on waiting list"),
+             pct_female_head=html("% of households headed by a female"),
+             pct_age62plus=html("% of households where head or spouse is age 62+"),
+             pct_disabled_all=html("% of persons in assisted households with a disability")) |> 
+  fmt_number(columns=c(total_units, people_total, hh_income),
+             decimals=0) |> 
+  fmt_number(columns=c(months_waiting), scale=1/12, decimals=1) |> 
+  fmt_percent(columns=starts_with("pct_"), scale_values=FALSE, decimals=0) |> 
+  tab_source_note(source_note = "Source: HUD Picture of Subsidized Households: 2021")
+
+# tab
+
+tabfile <-  path(tabdir, "picture_ny.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+# f_tabranks
+  # tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
+  #             label=html("Cost burden prevalence within region")) |> 
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+```{r}
+#| label: race
+#| include: true
+
+tabdata <- basedata |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(programf, total_units, people_total,
+         pct_white_nothsp,	pct_black_nonhsp,	pct_hispanic) |> 
+  mutate(pct_other=100 - pct_white_nothsp -	pct_black_nonhsp - pct_hispanic)
+
+tab <- tabdata |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "HUD Low-income Housing Assistance Programs in New York",
+      subtitle=NULL) |> 
+  cols_label(programf="Program",
+             total_units=html("Number of subsidized units available"),
+             people_total=html("Number of people receiving assistance"),
+             #hh_income=html("Average household income"),
+             #months_waiting=html("Average number of years on waiting list"),
+             pct_white_nothsp=html("White non-Hispanic"),
+             pct_black_nonhsp=html("Black non-Hispanic"),
+             pct_hispanic=html("Hispanic, any race"),
+             pct_other=html("Other")) |> 
+  tab_spanner(columns = starts_with("pct_"),
+              label=html("% of households where head is:")) |>
+  fmt_number(columns=c(total_units, people_total),
+             decimals=0) |>
+  fmt_percent(columns=starts_with("pct_"), scale_values=FALSE, decimals=0) |> 
+  tab_source_note(source_note = "Source: HUD Picture of Subsidized Households: 2021")
+
+# tab
+
+tabfile <-  path(tabdir, "picture_ny_race.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+```{r}
+#| label: states
+#| include: true
+
+# ns(basedata)
+
+tabdata <- basedata |> 
+  filter(nygeotype %in% c("state", "nation"), program==1, stabbr %in% c(state.abb, "US")) |> 
+  mutate(pct_pop=people_total / pop *100) |> 
+  select(stabbr, shortname, pop, people_total, pct_pop, months_waiting,
+         pct_female_head, pct_age62plus, pct_disabled_all, pct_minority) |> 
+  arrange(desc(pct_pop))
+
+# tabdata |> arrange(desc(pct_pop))
+
+tab <- tabdata |> 
+  filter(stabbr=="US" | row_number() <= 10) |> 
+  select(-c(stabbr, pop)) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "HUD Low-income Housing Assistance Programs in Top 10 States",
+      subtitle=NULL) |> 
+  cols_label(shortname="State",
+             people_total=html("Number of people receiving assistance"),
+             pct_pop=html("% of population receiving assistance"),
+             months_waiting=html("Average number of years on waiting list"),
+             pct_female_head=html("% of households headed by a female"),
+             pct_age62plus=html("% of households where head or spouse is age 62+"),
+             pct_disabled_all=html("% of persons in assisted households with a disability"),
+             pct_minority=html("% of households headed by a HUD-designated minority")) |> 
+  fmt_number(columns=c(people_total),
+             decimals=0) |>
+  fmt_number(columns=c(months_waiting), scale=1/12, decimals=1) |> 
+  fmt_percent(columns=pct_pop, scale_values=FALSE, decimals=1) |>
+  fmt_percent(columns=c(pct_female_head, pct_age62plus, pct_disabled_all, pct_minority),
+              scale_values=FALSE, decimals=0) |> 
+  tab_source_note(source_note = "Source: HUD Picture of Subsidized Households: 2021")
+
+# tab
+
+tabfile <-  path(tabdir, "picture_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+```{r}
+#| label: counties
+#| include: true
+
+# ns(basedata)
+
+tabdata <- basedata |> 
+  filter(stabbr=="NY", nygeotype %in% c("state", "county"), program==1, geoid!="36XXX") |> 
+  mutate(pct_pop=people_total / pop *100) |> 
+  select(nygeotype, shortname, pop, people_total, pct_pop, months_waiting,
+         pct_female_head, pct_age62plus, pct_disabled_all, pct_minority) |> 
+  arrange(desc(pct_pop))
+
+# tabdata |> arrange(desc(pct_pop))
+
+tab <- tabdata |> 
+  filter(nygeotype=="state" | row_number() <= 15) |> 
+  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |> 
+  select(-c(nygeotype, pop)) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "HUD Low-income Housing Assistance Programs in Top 15 Counties",
+      subtitle=NULL) |> 
+  cols_label(shortname="County",
+             people_total=html("Number of people receiving assistance"),
+             pct_pop=html("% of population receiving assistance"),
+             months_waiting=html("Average number of years on waiting list"),
+             pct_female_head=html("% of households headed by a female"),
+             pct_age62plus=html("% of households where head or spouse is age 62+"),
+             pct_disabled_all=html("% of persons in assisted households with a disability"),
+             pct_minority=html("% of households headed by a HUD-designated minority")) |> 
+  fmt_number(columns=c(people_total),
+             decimals=0) |>
+  fmt_number(columns=c(months_waiting), scale=1/12, decimals=1) |> 
+  fmt_percent(columns=pct_pop, scale_values=FALSE, decimals=1) |>
+  fmt_percent(columns=c(pct_female_head, pct_age62plus, pct_disabled_all, pct_minority),
+              scale_values=FALSE, decimals=0) |> 
+  tab_source_note(source_note = "Source: HUD Picture of Subsidized Households: 2021")
+
+# tab
+
+tabfile <-  path(tabdir, "picture_nycounties.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+```{r}
+#| label: more
+#| include: false
+#| eval: false
+
+picture |> 
+  filter(nygeotype=="nation") |> 
+  select(program, programf, people_total, hh_income,
+         pct_female_head,	pct_female_head_child)
+
+picture |> 
+  filter(nygeotype=="nation") |> 
+  select(program, programf, people_total, hh_income,
+         pct_disabled_lt62,	pct_disabled_ge62, pct_disabled_all)
+
+tabdata |> 
+  filter(nygeotype=="state", stabbr=="NY") |> 
+  select(program, programf, people_total, hh_income,
+         pct_female_head,	pct_female_head_child)
+
+
+
+```
+
+## State policies to address housing insecurity

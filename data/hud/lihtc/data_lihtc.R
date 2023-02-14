@@ -21,9 +21,19 @@ fn1 <- "LIHTCPUB.CSV"
 
 
 # get data ----------------------------------------------------------------
-xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
+# xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
+xwalk <- readRDS(here::here("data", "xwalks", "acs_geocodes.rds"))
 
-xwalk |> filter(rgn_num==9) |> select(geoid, county)
+xwalk |> 
+  filter(rgn_num==9) |> 
+  select(geoid, nygeotype, shortname)
+
+# get a list of 62 counties
+cntycodes <- xwalk |> 
+  filter(nygeotype=="county") |> 
+  select(geoid, nygeotype, shortname) |> 
+  arrange(geoid)
+
 
 df1 <- read_csv(unz(fnz, fn1), col_types = cols(.default = col_character()))
 glimpse(df1)
@@ -31,7 +41,44 @@ glimpse(df1)
 df2 <- df1 |> 
   lcnames() |> 
   filter(st2010=="36") |> 
-  mutate(across(c(latitude, longitude, allocamt:nlm_reason), as.numeric))
+  mutate(across(c(latitude, longitude, allocamt:nlm_reason), as.numeric)) |> 
+  mutate(geoid=paste0(st2010, cnty2010))
+  
+
+df2 |> 
+  filter(yr_alloc >= 2010 | yr_pis >= 2010) |> # 1504 projects
+  count(yr_alloc, yr_pis) |>
+  arrange(yr_alloc, yr_pis) |>
+  pivot_wider(names_from = yr_pis, values_from = n, names_sort = TRUE)
+
+cntycodes |> 
+  left_join(
+    count(df2, st2010, cnty2010) |> 
+      mutate(geoid=paste0(st2010, cnty2010)),
+    by = join_by(geoid))
+
+df3 <- df2 |> 
+  left_join(cntycodes |> select(geoid, shortname),
+            by = join_by(geoid))
+skim(df3)
+saveRDS(df3, fs::path(dlihtc, "lihtc_coded.rds"))
+
+# NY projects since 2010  
+df3 |> 
+  filter(yr_alloc >= 2010 | yr_pis >= 2010) |> # 1504 projects
+  summarise(n=n(),
+            across(c(n_units, li_units,
+                     n_unitsr, li_unitr), ~sum(.x, na.rm=TRUE)),
+            .by=c(geoid, shortname)) |> 
+  janitor::adorn_totals() |> 
+  mutate(lipct=li_unitr / n_unitsr, lipct2=li_units / n_units) |> 
+  arrange(desc(lipct))
+  
+
+# all but Hamilton county
+
+  
+# OLD BELOW HERE ----
 
 check <- df2 |> 
   filter(is.na(cnty2010)) |> 

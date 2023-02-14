@@ -1,0 +1,71 @@
+# TO DO List {.unnumbered}
+
+Maria's comments followed by my notes usually in \[square brackets\]
+
+## Housing insecurity
+
+-   Dec 2: all data included, and all major pieces done; Dec 16 draft report
+
+-   definitely no need for town or village discussion. i tried to be thoughtful about how to limit data/presentation/discussion in terms of substate presentation for the relevant parts. \[removed\]
+
+-   without necessarily showing another presentation of data, can we show whether affordability burdens are higher or lower than say 10 years ago? \[done, using 1-year ACS (not HUD CHAS 5-year ACS) -- see graph, which I think provides a nice overview\]
+
+-   i don't see any demographic type analysis - will that be added per the outline? perhaps we don't need to go into as many levels as specified in the outline, but the **racial/ethnic** and perhaps **age** categories are helpful at a minimum. \[added problems by income group, racial/ethnic group, and age (elderly) group, from HUD CHAS\]
+
+-   housing quality (maybe NYCHA?) \[added HUD data on lack of complete plumbing and kitchen facilities; not much data are available on cracks, holes, etc.; I inserted a table from NYCHA 2021 survey for NYC, but don't have data for rest of state\]
+
+-   crowding:
+
+    -   renters usually in more crowded conditions than owners - give rates \[done -- did not include complete tables in prior versions; full tables now show this\]
+
+    -   Maria surprised at renter crowding rate in NYC (10.9% of renter households, 9% of all NYC households) and actually expected higher (check this): \[done\]
+
+        -   I checked the computations - they were fine
+
+        -   The 2021 [NYC Housing Vacancy Survey](https://www1.nyc.gov/assets/hpd/downloads/pdfs/services/2021-nychvs-selected-initial-findings.pdf), using a different definition of crowding ("more than two people per **bed**room or two or more people living in a studio apartment", rather than more than one person per room) and a different data source (their own survey rather than HUD CHAS ACS-based data), shows 9% of NYC households are crowded (I did not see a renter breakdown)
+
+        -   NYC Comptroller Stringer [in 2015](https://comptroller.nyc.gov/wp-content/uploads/documents/Hidden_Households.pdf) found 8.8% overall crowding rate using 2013 ACS
+
+        -   So the numbers from HUD CHAS ACS seem correctly computed and plausibly consistent with other sources
+
+-   are state/regional data driven by cities? If so, perhaps discuss? \[data done -- new table with breakdowns of regions by city, village, other -- not discussed yet\] \[generally city and village problems are more prevalent than in rest of region, except when it comes to lack of complete plumbing and kitchen facilities; however, I wouldn't say problems are driven entirely by cities and villages - there can be substantial problems in non-urbanized areas\]
+
+-   evictions:
+
+    -   Maria wow to high Maryland rate, much lower NY rate (figure out why this might be so) \[Maryland's high eviction rates have been a longstanding issue. This article says the following (\@gromisEstimatingEvictionPrevalence2022); I removed footnotes:
+        -   "To illustrate how notice requirements shape risk of receiving an eviction filing, consider Maryland, which reported a seemingly impossibly highfiling rate of 69.6% in 2018. In Maryland, eviction lawsuits can be filed immediately following nonpayment of rent for relatively low cost (\$15 to \$25) ...; no prior notice is required from the landlord. If tenants promptly pay the rent due (plus any additional fees), they are able to remain in the residence. This policy environment creates an incentive for landlords to enforce rent collection by using filings as a threat of eviction. Repeated filings against the same households constituted 57.4% of all cases in Maryland, demonstrating that many tenants face recurring threats of displacement while ultimately continuing to make rent payments and remaining at a property."\]
+
+-   Misc table notes
+
+    State table:
+
+    -   Add national average \[done\]
+    -   Top 10 in report, full table in appendix \[done\]
+    -   no bar chart \[done\]
+
+    Regions:
+
+    -   bar chart perhaps was not clear (djb -- perhaps different colors to make owners/renters clearer?) \[I changed dark green to light green for better contrast; I assume OSC graphics folks will figure out what they like if we end up using the chart\]
+
+    Counties:
+
+    -   table top 10: \[done\]
+        -   as 2 tables one for owner burdens, 1 for renters, \[have **not** done this - can be done later, I can provide all data\]
+        -   or heat maps
+    -   full table in appendix \[done for housing cost burden, we can figure out if needed for others\]
+
+    Cities:
+
+    -   maybe limit main to the top 5 \[done -- top 6 plus NYS\]
+
+    -   full table in appendix \[done for housing cost burden\]
+
+-   \[I added a table summarizing the different measures of housing insecurity\]
+
+-   Add homelessness \[added analysis of states, and of NY's COCs; there does not seem to be a readily available source of all--in-one place that gives the general population of each COC, or the geographic areas each includes, so there is no easy way to obtain or construct a population denominator for each COC so that we can calculate \# of homeless per 1,000 population in each COC; I reversed engineered the data from a spreadsheet tool HUD has\]
+
+## Federal policies
+
+-   Of course, add much more on federal programs...
+
+-   

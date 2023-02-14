@@ -1,9 +1,3 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
-
 # Homelessness
 
 ```{r}
@@ -29,7 +23,7 @@ sts <- c(state.abb, "US")
 
 ```
 
-This is based on the point-in-time count data. I exclude 2021 because counts were incomplete and mostly focused on the sheltered population.
+This is based on the point-in-time count data. Counts for 2021 are excluded because these counts were incomplete due to the pandemic, and mostly focused on the sheltered population.
 
 ## Homelessness in New York and other states
 
@@ -81,10 +75,6 @@ In the latest complete count, New York had just over 91 thousand homeless people
 
 The state's homeless population increased by 19.1 percent between 2010 and 2020, the second fastest rate in the nation, behind South Dakota's 44.7 percent. This rapid growth dwarfs the growth in the homeless population in most other states.
 
-The U.S. Department of Housing and Urban Development has established groupings of counties to serve and assist homeless people called "Continuums of Care", or CoCs, which generally are contiguous counties. New York's rates of homelessness vary greatly across CoCs: The New York City CoC's rate of homelessness was 9.26 per 1,000 population, more than three times as great as that in the Schenectady County CoC, which had the next-highest rate at 2.80 per 1,000 people in the general population.
-
-A small glimmer among these statistics is that only 5 percent of New York's homeless population is unsheltered, the lowest unsheltered rate of any state. By contrast, 70 percent of California's homeless population is unsheltered. The reasons for unsheltered homelessness are complex, reflecting policy choices by governments about the extent to which they provide or require shelter and more-permanent housing, as well as choices by homeless individuals. In general, warmer states have greater rates of unsheltered homelessness than colder states. (@corinthWhenWarmCold2018).
-
 ```{r}
 #| label: summary-table-hl
 #| include: true
@@ -125,9 +115,41 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
+### New York's low rate of unsheltered homelessness
+
+A small glimmer among these statistics is that only 5 percent of New York's homeless population is unsheltered, the lowest unsheltered rate of any state. By contrast, 70 percent of California's homeless population is unsheltered.
+
+A major reason for New York's high shelter rate is litigation that created enforceable rights to shelter in New York City. In 1979, the Coalition for the Homeless brought a class action lawsuit on behalf of a homeless man, Robert Callahan, and all homeless men in the city, in response to city actions to turn away homeless individuals. *Callahan v. Carey* argued that the state constitution and several statutes required that the city provide shelter to all who needed it.[^homelessness-1][^homelessness-2] The issue was not resolved through a decision in the case but rather through a consent decree that required, among other things, that the city "shall provide shelter and board to each homeless man who applies for it provided that (a) the man meets the need standard to qualify for the home relief program established in New York State; or (b) the man by reason to physical, mental or social dysfunction is in need of temporary shelter."[^homelessness-3] Robert Callahan died on the streets before the litigation was complete.[^homelessness-4]
+
+[^homelessness-1]: Index No. 42582/79 (Sup. Ct. N.Y. County 1979). The case was brought against the Governor, the Commissioner of Social Services, the Mayor of New York City, the Commissioner of the New York City Human Resources Administration and other state and city government officials.
+
+[^homelessness-2]: See New York State Constitution, Article XVII, Section 1, which states: The aid, care and support of the needy are public concerns and shall be provided by the state and by such of its subdivisions, and in such manner and by such means, as the legislature may from time to time determine.
+
+[^homelessness-3]: Callahan, Robert, Clayton W Fox, Thomas Damian Roig, James Hayes, James Spellman, and Paule E Toole. "Consent Decree in Callahan v. Carey, Supreme Court of the State of New York," August 1981. https://www.coalitionforthehomeless.org/wp-content/uploads/2014/08/CallahanConsentDecree.pdf.
+
+[^homelessness-4]: https://www.coalitionforthehomeless.org/our-programs/advocacy/legal-victories/the-callahan-legacy-callahan-v-carey-and-the-legal-right-to-shelter/
+
+*Callahan v. Carey* was the first in a series of lawsuits that extended the right to shelter to homeless people in New York City: *Eldredge* extended the right to single homeless women, *McCain/Boston* to homeless families with minor children and pregnant women, and *C.W. v. The City of New York,* extended it to runaway and homeless youth.[^homelessness-5]
+
+[^homelessness-5]: The Legal Aid Society, Homeless Rights Project, https://legalaidnyc.org/programs-projects-units/homeless-rights-project/
+
+A former General Counsel of the New York State Department of Social Services, the state agency responsible for homelessness programs at the time of *Callahan*, subsequently wrote that as "a result of *Callahan*, New York City has the most extensive system of shelters for homeless adults in the nation." She also wrote that "As a result of the constant focus on maintaining the standards of the Consent Decree, millions of dollars were spent to improve conditions in armories and other shelters that should never have been used to shelter anyone in the first place. The ability of the city and state to develop homeless policy in a deliberative and rational manner was impeded by the need to respond to frequent motions for enforcement of the Consent Decree."[^homelessness-6]
+
+[^homelessness-6]: Demers, Susan V. "The Failures of Litigation as a Tool for the Development of Social Welfare Policy." Fordham Urban Law Journal 22, no. 4 (1995). https://ir.lawnet.fordham.edu/cgi/viewcontent.cgi?article=1435&context=ulj.
+
+Although the consent decree only applied to New York City, similarly low rates of unsheltered homelessness in other regions of New York suggest that state policy has led affected sheltering in other parts of the state as well.[^homelessness-7] *Callahan v. Carey* has affected sheltering policies in some other states and cities as well. For example, it has been cited in decisions in Los Angeles and Chicago.
+
+[^homelessness-7]: The website of the Legal Aid Society, which represented the plaintiffs in the Callahan v. Carey lawsuit: https://www.legalaidnyc.org/cases/callahan-v-carey/
+
+    The Department of Homeless Services in New Jones v. City of Los Angeles, a 2006 federal court case in which the Callahan v. Carey consent decree was cited as a precedent: https://www.leagle.com/decision/infdco20061128958
+
+    The Chicago Coalition for the Homeless, which has been involved in efforts to establish a right to shelter for homeless people in Chicago: https://www.chicagohomeless.org/right-to-shelter/
+
+The reasons for unsheltered homelessness are complex, reflecting policy choices by governments about the extent to which they provide or require shelter and more-permanent housing, as well as choices by homeless individuals. In addition to policy choices, warmer states generally have greater rates of unsheltered homelessness than colder states. (@corinthWhenWarmCold2018).
+
 ## Homelessness in subareas of New York
 
-The U.S. Department of Housing and Urban Development has established groupings of counties to serve and assist homeless people. These groupings are called "Continuums of Care", which generally are contiguous counties.
+The U.S. Department of Housing and Urban Development has established groupings of counties to serve and assist homeless people called "Continuums of Care", or CoCs, which generally are contiguous counties. New York's rates of homelessness vary greatly across CoCs: The New York City CoC's rate of homelessness was 9.26 per 1,000 population, more than three times as great as that in the Schenectady County CoC, which had the next-highest rate at 2.80 per 1,000 people in the general population.
 
 ```{r}
 #| label: summary-table-data-coc

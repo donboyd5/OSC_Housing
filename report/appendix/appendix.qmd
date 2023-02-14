@@ -1,9 +1,3 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
-
 # Appendix
 
 ```{r}
@@ -33,7 +27,6 @@ source(here::here("r", "constants.r"))
 tabst <- "Percent of occupied housing units with housing costs greater than 30% of income"
 ```
 
-
 ### All States
 
 ```{r}
@@ -55,7 +48,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```
 
 {{< include ../_gt_snippet.qmd >}}
-
 
 ### All Counties
 
@@ -103,6 +95,150 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../_gt_snippet.qmd >}}
 
+### Within-region housing cost burden for city and village vs. other areas
+
+```{r}
+#| label: regional-breakdown-data-cost
+#| echo: false
+#| include: false
+tabdata <- readRDS(here::here("report", "results", "cb_tabdata.rds")) # cost burden table
+
+tabdata_rgn_brkdown <- tabdata |> 
+  filter(nygeotype %in% c("region", "rgn_cities", "rgn_villages", "rgn_xcityvill")) |> 
+  select(nygeotype, shortname, alltenure_pct) |> 
+  pivot_wider(names_from = nygeotype, values_from = alltenure_pct) |> 
+  select(shortname, region, rgn_cities, rgn_villages, rgn_xcityvill) |> 
+  arrange(desc(region))
+
+tabdata_rgn_brkdown
+
+saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "cb_tabdata_rgn_brkdown.rds")) # for appendix
+
+
+```
+
+```{r}
+#| label: regional-breakdown-table-cost
+#| include: true
+#| echo: false
+
+# region rgn_cities rgn_villages rgn_xcityvill
+# New York regions ranked by housing cost burden
+# Percent of occupied housing units with housing costs greater than 30% of income
+
+tabdata_rgn_brkdown <- readRDS(here::here("report", "results", "cb_tabdata_rgn_brkdown.rds"))
+
+tab <- tabdata_rgn_brkdown |> 
+  gt() |> 
+  sub_missing(columns = everything()) |> 
+  tab_header(
+      title = "Breakdown of housing cost burden within New York regions",
+      subtitle=tabst) |> 
+  cols_label(shortname="Region",
+             region=html("Region total"),
+             rgn_cities=html("Cities"),
+             rgn_villages=html("Villages"),
+             rgn_xcityvill=html("Remainder of region")) |> 
+  tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
+              label=html("Cost burden prevalence within region")) |> 
+  fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+  
+tabfile <-  path(tabdir, "cost_region_breakdown.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+# f_tabranks
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+## Upstate and Downstate Housing Cost Burden
+
+```{r}
+#| label: updowndiffs-appendix
+#| eval: true
+#| include: false
+#| echo: false
+
+# prepare the appendix plot for this 
+# see E:/R_projects/OSC_Housing/data/acs/decompose_acs_costs_income.r
+costinc <- readRDS(here::here("data", "acs", "cost_vs_income.rds"))
+
+
+capt1 <- "Red dots have median costs as % of median income above statewide median; green dots are below"
+capt2 <- "Large dots have greater cost burden than small dots"
+capt3 <- "Source: ACS 5-year estimates, ending 2019"
+capt <- paste0(capt1, "\n", capt2, "\n", capt3)
+
+prent <- costinc |> 
+  select(-variable, -estimate) |> 
+  pivot_wider(names_from = vname, values_from = index) |>
+  mutate(cb=cost_renter / mhhi_renter,
+         cbval=ifelse(cb < 1, "low", "high")) |> 
+  mutate(across(c(mhhi_renter, cost_renter), ~.x - 1)) |> 
+  filter(geoid != "36") |> 
+  ggplot(aes(x=mhhi_renter, y=cost_renter)) +
+  # geom_point(colour="blue", aes(size=cb)) +
+  geom_point(aes(size=cb, colour=cbval)) +
+  scale_colour_manual(values=c("red", "darkgreen")) +
+  geom_text(aes(label=name), colour="black", size=1.5, nudge_y=.015) +
+  scale_y_continuous(name="County median renter costs % above or below statewide median",
+                     breaks=seq(-1, 1, .1),
+                     labels = scales::label_percent(accuracy=1)) +
+  scale_x_continuous(name="County median income % above or below statewide median",
+                     breaks=seq(-1, 1, .1),
+                     labels = scales::label_percent(accuracy=1)) + 
+  scale_size_continuous(range = c(0.1, 1.5)) +
+  geom_abline(slope=1, intercept=0, linewidth=.35, linetype="dotted", colour="grey5") +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  legend_none +
+  labs(caption=capt) +
+  caption_left +
+  ggtitle("Renter housing costs and median household income, by county, relative to the statewide median")
+prent  
+
+# ggsave(here::here("report", "results", "cost_vs_income.jpg"), prent, width=10, height=6, scale=1.25)
+
+ggsave(here::here("report", "results", "cost_vs_income.jpg"), prent, width=10, height=6, scale=1.25)
+
+
+```
+
+The figure below compares median housing costs and median incomes of renters, by county, to corresponding statewide medians.[^appendix-1]
+
+[^appendix-1]: The figure is based on data from the 2015-2019 5-year American Community Survey as released by the Census Bureau, which has data elements needed for this analysis that are not available in the version of the ACS available from HUD and used elsewhere in this report.
+
+The vertical axis measures median gross rents relative to the statewide median rent - the higher a county is, the higher its rental housing costs. The horizontal axis measures median renter income relative to statewide median renter income - the farther to the right a county is, the higher its median renter income.
+
+Counties where median renter costs as a percentage of median renter income (a proxy for housing cost burden) are higher than the statewide median have red dots and are above the diagonal, while those where the cost-income ratio is lower than the statewide median have green dots and are below the diagonal.[^appendix-2] The larger the dot, the higher the cost-income ratio.[^appendix-3]
+
+[^appendix-2]: Traditional cost burden measures compute the ratio of housing cost to income for each household, and report the percentage of households where this ratio exceeds a threshold, such as 30 percent. The measure used here, the ratio of median cost to median income relative to the statewide ratio, is highly related to cost burden. We use it here because it can be readily decomposed into a cost component and an income component, allowing us to see how these two elements of cost burden are related.
+
+[^appendix-3]: Also, the greater the vertical distance above the diagonal line, the higher the cost-income ratio.
+
+Counties with renter costs *and* renter income below the statewide median are in the lower left quadrant. Counties with renter costs *and* renter income above the statewide median are in the upper right quadrant.
+
+![](../results/cost_vs_income.jpg)
+
+<!-- {width="611"} -->
+
+By examining specific counties, we can gain insight into differences in incomes and housing costs between upstate and downstate counties.
+
+Nassau and Suffolk counties have high cost-income ratios, despite their very high incomes, because their housing costs are so high. This is also true of a few other downstate counties. The Bronx has a high cost-income ratio even though its median renter costs are below the statewide median because its median renter income is even further below the statewide median.
+
+Most upstate counties have relatively low costs and relatively low incomes, but their costs in almost all cases are further below the statewide median than is their income -- that is, most upstate counties have green dots and are below the diagonal. For example, Wyoming County's median renter income is 27 percent below the statewide median, but its median renter costs are even further below statewide median renter costs -- about 49 percent. This gives it one of the lowest cost-income ratios in the state. (Hamilton's cost-income ratio is lower \-- its dot is smaller \-- because even though its rental costs are higher than Wyoming's, its income is much higher.)[^appendix-4]
+
+[^appendix-4]: Tompkins County is an outlier, with high housing costs for an upstate county. The [Tompkins County Comprehensive Plan](https://tompkinscountyny.gov/files2/planning/ComprehensivePlan/Housing.pdf) suggests that high housing costs reflect the large student population and a desirable community, which keep vacancy rates extremely low and housing costs high. Several news reports also note that the large college student population may drive up rental housing costs. (For example, see [this article](https://www.ithaca.com/news/why-is-ithaca-one-of-the-least-affordable-us-cities/article_e67f68f4-cb0e-11e3-9571-001a4bcf887a.html).)
+
+In the few upstate counties where incomes are low and costs are not as low, relative to statewide medians, the cost of housing relative to income is especially high. This is true in Greene County in the Catskills, where median renter income is 43 percent below the statewide median but median renter costs are only 29 percent below the statewide median. As a result, its ratio of median cost to median income is 25 percent above the statewide median. Thus it has a relatively large red dot and is relatively far above the diagonal. Analytic reports and news stories have reached similar conclusions about housing affordability in Greene County and nearby counties.[^appendix-5]
+
+[^appendix-5]: See https://www.pattern-for-progress.org/portfolio/out-of-reach-2022/ and https://www.nytimes.com/2022/08/19/realestate/hudson-valley-housing-workers.html.
+
+Although housing costs are relatively low in most of upstate, as the body of the report demonstrates, there are pockets of significant cost burden particularly in upstate cities and villages. This analysis suggest that housing cost burden problems upstate are often highly related to low incomes.
 
 ## Supplemental Housing Crowding Tables
 
@@ -114,7 +250,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 tabst <- "Percent of occupied housing units with more than one person per room"
 
 ```
-
 
 ### All States
 
@@ -137,7 +272,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```
 
 {{< include ../_gt_snippet.qmd >}}
-
 
 ### All Counties
 
@@ -185,7 +319,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../_gt_snippet.qmd >}}
 
-
 ## Supplemental Tables for Housing Lacking Complete Plumbing and Kitchen Facilities
 
 ```{r}
@@ -196,7 +329,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 tabst <- "Percent of occupied housing units lacking complete plumbing or kitchen facilities"
 
 ```
-
 
 ### All States
 
@@ -219,7 +351,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 ```
 
 {{< include ../_gt_snippet.qmd >}}
-
 
 ### All Counties
 
@@ -267,4 +398,79 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../_gt_snippet.qmd >}}
 
+## Racial breakdown of housing insecurity across the states
 
+```{r}
+#| label: table-race-state
+#| include: true
+#| echo: false
+
+tabdata <- readRDS(here::here("report", "results", "who_race_tabdata.rds")) 
+
+racegroups <- list(white=html("White alone, non-Hispanic"),
+               black=html("Black or African-American alone, non-Hispanic"),
+               asian=html("Asian alone, non-Hispanic"),
+               hispanic=html("Hispanic, any race"),
+               raceother=html("Other races & ethnicities"),
+               allrace=html("All races & ethnicities"))
+
+hprobs <- "Problems: cost burden (>= 30% of income), crowded (> 1 person per room), or lacks complete plumbing or kitchen facilities"
+
+tabdata_st <- tabdata |> 
+  filter(nygeotype=="state" | stabbr=="US") |> 
+  select(nygeotype, stabbr, shortname, race, pct) |> 
+  pivot_wider(names_from = race, values_from = pct) |> 
+  relocate(hispanic, .before=asian) |> 
+  group_by(nygeotype) |> 
+  arrange(desc(allrace)) |> 
+  mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
+  ungroup()
+
+tab <- tabdata_st  |> 
+  filter(stabbr %in% c(state.abb, "US")) |> 
+  filter(stabbr=="US" | row_number() <= 10) |>
+  select(-stabbr, -nygeotype, -rank) |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = "States: Percentage of households in each racial and ethnic group with housing problems",
+    subtitle=hprobs
+    ) |>
+  tab_spanner(columns = -c(shortname, allrace),
+                label=html("Race and ethnicity categories")) |>
+  cols_label(.list=c(shortname="State", racegroups)) |> 
+  fmt_percent(columns=-shortname, decimals=1) |> 
+  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+# tab               
+  
+tabfile <-  path(tabdir, "problems_race_states.png")
+gtsave(tab, tabfile, zoom=2, expand=20)
+# {{< include ../../_gt_snippet.qmd >}}
+
+```
+
+{{< include ../_gt_snippet.qmd >}}
+
+## Data notes
+
+### About evictions data data
+
+The Eviction Lab at Princeton University has developed a database of eviction filings, at the county level, for 2000-2018. It collects eviction data directly from state and local courts, and uses statistical models to estimate data where it is unable to collect it directly. [@ashleygromisSupplementaryInformationEstimating2022]
+
+They constructed two measures of evictions: (1) eviction filings, and (2) households threatened by eviction. Multiple eviction filings can be applicable to a single household, so they are not unique counts.
+
+They divided these measures by the number of rental households to arrive at eviction rates and rates of households threatened with eviction.
+
+According to The Eviction Lab:
+
+> We used three strategies to collect eviction case data. First, we made bulk requests for individual electronic records directly to the state courts in all states and DC.We requested all publicly available case records, regardless of when the case was originally filed. We received electronic records directly from 16 states and five counties....
+>
+> Second, we also requested annual, aggregated counts of eviction filings at the county level from state and county courts....
+>
+> Third, we purchased proprietary individual records data from LexisNexis Risk Solutions (Lexis- Nexis). LexisNexis conducts automated and in-person bulk collection of records from local civil and housing courts in most states....
+
+They did considerable data cleaning after collection. They noted that "the proprietary data typically undercounted filing volume relative to court-issued data, although the cariability of the measurement error differed considerably across states." Thus, they developed a model to estimate court-issued data, using data in areas where they had both court-issued and proprietary data. They used this model to estimate court-issued evictions in areas where they do not have court-issued data.
+
+The data for NY are based on actual filings for the counties in New York City. The data for counties outside NYC are estimated.
+
+The Eviction Lab constructed 95% confidence intervals for their estimates, and they are pretty large, particularly in smaller areas. For example, Fulton county is a small rural county with the second-highest eviction filing rate in New York after the Bronx. The upper bound of the 95% confidence interval around the eviction filing rate for Fulton is about 6 times as large as its lower bound. By contrast, the upper bound for the Bronx is only about twice the lower bound.

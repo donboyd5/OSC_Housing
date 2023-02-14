@@ -1,4 +1,4 @@
-# Housing Cost and Availability
+# Housing Cost Burden
 
 ```{r}
 #| label: libraries
@@ -72,13 +72,13 @@ nycb_pct <- t9cb_full |>
 
 New York has `r f_comma(nycb_num, scale=1e-6, accuracy=.1)` million cost-burdened households, constituting `r f_pct(nycb_pct, accuracy=.1)` of the state's households.
 
-### Introduction
+## Introduction
 
-Analysts commonly define the cost burden of housing as the ratio of housing costs to household income.[^cost-1] Households for which housing costs exceed 30 percent of income are typically considered cost-burdened. 
+Analysts commonly define the cost burden of housing as the ratio of housing costs to household income.[^cost-1] Households for which housing costs exceed 30 percent of income are typically considered cost-burdened.
 
 [^cost-1]: For renters, housing cost is gross rent (contract rent plus utilities). For owners, housing cost is "select monthly owner costs", which includes mortgage payment, utilities, association fees, insurance, and real estate taxes.
 
-### Housing Cost Burden in New York and Other States
+## Housing cost burden in New York and other states
 
 ```{r}
 #| label: state-cost-data
@@ -86,8 +86,9 @@ Analysts commonly define the cost burden of housing as the ratio of housing cost
 
 tabdata_st <- tabdata |> 
   filter(nygeotype %in% c("nation", "state"), !stabbr %in% c("DC", "PR")) |> 
-  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", .x, NA_real_)),
-         shortname=ifelse(nygeotype=="state", 
+  mutate(across(contains("rank"), ~ ifelse(nygeotype=="state", rank(.x), NA_real_)),
+         .by=nygeotype) |> 
+  mutate(shortname=ifelse(nygeotype=="state", 
                           str_remove(shortname, " State"),
                           shortname))
 
@@ -95,7 +96,7 @@ saveRDS(tabdata_st, here::here("report", "results", "cb_tabdata_st.rds")) # for 
 
 ```
 
-New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 rank for both owners and renters. As is true in every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
+New York has the fourth highest cost burden among the states, measured by the percentage of households with costs greater than 30 percent of income. New York ranks #4 for both owners and renters. As is true in every state, the share of New York's renters who are cost burdened is far greater than the share of owners.
 
 ```{r}
 #| label: state-cost-table
@@ -106,7 +107,7 @@ tt <- "Top 10 states ranked by housing cost burden, plus United States"
 
 tabdata_topn <- tabdata_st |> 
   arrange(desc(alltenure_pct)) |> 
-  filter(nygeotype=="nation" | row_number() <= 10) 
+  filter(nygeotype=="nation" | alltenurerank <= 10) 
 
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
@@ -121,7 +122,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-### Housing Cost Burden in New York's Regions
+## Housing cost burden in New York's regions
 
 ```{r}
 #| label: region-cost-data
@@ -191,63 +192,7 @@ ggsave(here::here("report", "results", "region_cost_hbar.png"), p, width = 10, h
 
 ```
 
-#### Within-Region Housing Cost Burden for City and Village vs. Other areas
-
-```{r}
-#| label: regional-breakdown-data-cost
-#| echo: false
-#| include: false
-
-tabdata_rgn_brkdown <- tabdata |> 
-  filter(nygeotype %in% c("region", "rgn_cities", "rgn_villages", "rgn_xcityvill")) |> 
-  select(nygeotype, shortname, alltenure_pct) |> 
-  pivot_wider(names_from = nygeotype, values_from = alltenure_pct) |> 
-  select(shortname, region, rgn_cities, rgn_villages, rgn_xcityvill) |> 
-  arrange(desc(region))
-
-tabdata_rgn_brkdown
-
-saveRDS(tabdata_rgn_brkdown, here::here("report", "results", "cb_tabdata_rgn_brkdown.rds")) # for appendix
-
-
-```
-
-```{r}
-#| label: regional-breakdown-table-cost
-#| include: true
-#| echo: false
-
-# region rgn_cities rgn_villages rgn_xcityvill
-# New York regions ranked by housing cost burden
-# Percent of occupied housing units with housing costs greater than 30% of income
-
-tab <- tabdata_rgn_brkdown |> 
-  gt() |> 
-  sub_missing(columns = everything()) |> 
-  tab_header(
-      title = "Breakdown of housing cost burden within New York regions",
-      subtitle=tabst) |> 
-  cols_label(shortname="Region",
-             region=html("Region total"),
-             rgn_cities=html("Cities"),
-             rgn_villages=html("Villages"),
-             rgn_xcityvill=html("Remainder of region")) |> 
-  tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
-              label=html("Cost burden prevalence within region")) |> 
-  fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
-  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
-  
-tabfile <-  path(tabdir, "cost_region_breakdown.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
-
-# f_tabranks
-
-```
-
-{{< include ../../_gt_snippet.qmd >}}
-
-### Housing Cost Burden in New York's Counties
+## Housing cost burden in New York's counties
 
 ```{r}
 #| label: county-cost-data
@@ -284,7 +229,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../../_gt_snippet.qmd >}}
 
-### Housing Cost Burden in New York's 6 Largest Cities
+## Housing cost burden in New York's 6 largest cities
 
 ```{r}
 #| label: city-cost-data
@@ -359,67 +304,177 @@ p
 
 ```
 
-<!-- {{< include _housing_cost_burden.qmd >}} -->
+## Housing cost burden in urbanized areas compared to elsewhere
 
-{{< include _housing_affordability.qmd >}}
+Five of New York's six largest cities have cost burden that is above the state average. This is generally true of urbanized areas - cities and villages - throughout the state. In every region, high cost burden is more common in cities and villages than in unincorporated areas. The difference between urbanized and unincorporated areas is greater north of New York City, where cities and villages are far more urbanized than outlying areas, than it is on Long Island where towns tend to be highly urbanized. (See the appendix for data.)
 
-<!-- ## Housing Availability and Related Measures -->
-
-<!-- I mention below a few data sources under investigation. -->
-
-<!-- ### FHFA housing prices -->
-
-<!-- -   [FHFA](https://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index-Datasets.asp) All-Transactions House Price Index, [FRED](https://fred.stlouisfed.org/series/ATNHPIUS36001A) -->
-
-<!--     -   Counties (Developmental Index; Not Seasonally Adjusted) -- Annual House Price Indexes (see Working Papers 16-01, 16-02, and 16-04) -->
-
-<!-- At the end I show price change since 2016. -->
-
-<!-- ### Census building permits -->
-
-<!-- Monthly and annual to the county level. -->
-
-<!-- https://www.census.gov/construction/bps/ https://www2.census.gov/econ/bps/ -->
-
-<!-- ### Realtor.com -->
-
-<!-- > Data Attribution: Files in the realtor.com real estate data library are free to use, we just ask that you attribute any full or partial use of the data to realtor.com with a link to this page. See specific notes on attribution for each data series... -->
-
-<!-- Several county-level data sets. -->
-
-<!-- ## Selected data (exploratory at this point) -->
-
-<!-- {{< include prices.qmd >}} -->
+## Upstate and downstate differences in housing cost burden
 
 ```{r}
-#| label: OLD-STUFF-BELOW-HERE
-#| eval: false
-
-
-
-```
-
-```{r}
-#| label: hbar-states
-#| eval: false
+#| label: updowndiffs
+#| eval: true
 #| include: false
 #| echo: false
 
-p <- tabdata_st |> 
-  arrange(desc(alltenure_pct)) |> 
-  filter(nygeotype=="nation" | row_number() <= 10) |> 
-  select(shortname, alltenure_pct) |>
-  ggplot() +
-  geom_col(aes(x=alltenure_pct, y=reorder(shortname, alltenure_pct)), fill="blue", width=0.5) +
-  scale_x_continuous(name="Cost-burdened households as percent of all households",
-                     breaks=seq(0, 1, 0.05),
-                     labels=percent_format(accuracy=1)) +
-  scale_y_discrete(name=NULL) +
-  # scale_fill_manual(values=c("blue", "darkgreen")) +
-  ggtitle("Cost-Burdened Households as Percent of All Households, by State") +
-  theme_bw() +
-  legend_notitle
+# see E:/R_projects/OSC_Housing/data/acs/decompose_acs_costs_income.r
+costinc <- readRDS(here::here("data", "acs", "cost_vs_income.rds"))
+# xwalk <- readRDS(here::here("data", "xwalks", "nycounty_xwalk.rds"))
+xwalk <- readRDS(here::here("data", "xwalks", "acs_geocodes.rds")) |> 
+  filter(stabbr=="NY", nygeotype=="county")
+
+count(costinc, vname)
+
+
+
+costinc |> 
+  filter(vname=="cost_renter", geotype != "state") |> 
+  left_join(xwalk |> select(geoid, shortname, rgn_code, rgn_osc)) |> 
+  summarise(n=n(), index=median(index), .by=c(rgn_code, rgn_osc)) |> 
+  arrange(desc(index))
+
+costinc |> 
+  filter(vname=="cost_renter", geotype != "state") |> 
+  left_join(xwalk |> select(geoid, shortname, rgn_code, rgn_osc)) |> 
+  filter(!rgn_code %in% c("li", "nyc", "hudson")) |> 
+  mutate(mdn=median(index)) |> 
+  arrange(desc(index))
   
-p  
+costinc |> 
+  filter(vname=="mhhi_renter", geotype != "state") |> 
+  left_join(xwalk |> select(geoid, shortname, rgn_code, rgn_osc)) |> 
+  filter(!rgn_code %in% c("li", "nyc", "hudson")) |> 
+  mutate(mdn=median(index)) |> 
+  arrange(desc(index))
+  
+costinc |> 
+  select(-variable, -estimate) |> 
+  pivot_wider(names_from = vname, values_from = index) |>
+  left_join(xwalk |> select(geoid, shortname, rgn_code, rgn_osc)) |> 
+  mutate(cb=cost_renter / mhhi_renter,
+         updown=ifelse(rgn_code %in% c("li", "nyc", "hudson"), "upstate", "downstate"))
+  
+  
+```
+
+The differences between upstate and downstate New York in housing costs, household income, and housing cost burden are substantial. Every one of the 48 counties outside of New York City, Long Island, and the Mid-Hudson region has median rental housing costs that are below the statewide median -- 39 percent below in the typical upstate county. Incomes are lower in all but one of these upstate counties -- about 28 percent lower in the the typical upstate county. With housing costs much lower in upstate New York than downstate, housing cost burdens upstate may often be driven by low incomes rather than high housing costs. (See the appendix for further discussion of this issue and discussion of selected counties.)
+
+
+## Trends in housing cost burden
+
+Far greater percentages of renters have high housing costs, relative to income, than do homeowners. Furthermore, owner cost burdens fell substantially during the last decade, in part a result of the fall in interest rates, which lowered mortgage costs. By contrast, renter cost burdens were far more stable over most of the last decade.
+
+Both owner cost burden and renter cost burden rose sharply in 2021, reflecting the rise inflation and, for owner cost burden, the rise in mortgage interest rates.
+
+The share of both owner and renter New York households with housing costs has consistently been greater than the national share.
+
+```{r}
+#| label: setup-trends
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+dacs <- here::here("data", "acs")
+
+tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
+tmp <- tabshells |> select(table, tabname, universe) |> distinct()
+
+# This chapter relies on time-series data from the annual ACS constructed in data_acs.R ----
 
 ```
+
+```{r}
+#| label: get-rent-burden-trends
+#| include: false
+
+# rent burden
+vtab("B25070")
+
+b25070ts <- readRDS(here::here("data", "acs", "B25070_timeseries.rds"))
+
+# note the a and b versions of cost burden, where denominators differ
+#  a subtracts noncomputable from denominator, b does not
+rentcb <- b25070ts |>
+  select(geoid, geotype, name, endyear, variable, estimate) |> 
+  pivot_wider(names_from = variable, values_from = estimate) |> 
+  mutate(rentcb30a=(B25070_007 + B25070_008 + B25070_009 + B25070_010) /
+           (B25070_001 - B25070_011),
+         rentcb30b=(B25070_007 + B25070_008 + B25070_009 + B25070_010) / B25070_001)
+
+```
+
+```{r}
+#| label: get-owner-mortgage-burden-trends
+#| include: false
+
+vtab("B25091")
+b25091ts <- readRDS(here::here("data", "acs", "B25091_timeseries.rds"))
+glimpse(b25091ts)
+
+# a and b versions have denominators as in renters, and are for housing with mortgage
+# the all version is all owner households, not just mortgages
+owncb <- b25091ts |>
+  select(geoid, geotype, name, endyear, variable, estimate) |> 
+  pivot_wider(names_from = variable, values_from = estimate) |> 
+  mutate(ownmort=B25091_008 + B25091_009 + B25091_010 + B25091_011,
+         ownxmort=B25091_019 + B25091_020 + B25091_021 + B25091_022,
+         ownmcb30a=ownmort / (B25091_002 - B25091_012),
+         ownmcb30b=ownmort / B25091_002,
+         owncb30all=(ownmort + ownxmort) / B25091_001)
+glimpse(owncb)
+
+owncb |> filter(geotype=="state" & geoid=="36") |> 
+  select(name, endyear, B25091_001, B25091_002, B25091_013, owncb30all, ownmcb30b, ownmcb30a)
+
+```
+
+```{r}
+#| label: plot-trends
+#| fig-width: 12
+#| fig-height: 8
+#| fig-column: page-right
+#| include: true
+
+# use the "b" version of the denominator, to be consistent with CHAS
+pdata <- bind_rows(rentcb |> 
+                  select(geoid, geotype, name, endyear, value=rentcb30b) |> 
+                  mutate(tenure="renter"),
+                owncb |> 
+                  select(geoid, geotype, name, endyear, value=owncb30all) |> 
+                  mutate(tenure="owner")) |> 
+  mutate(geotypef=factor(geotype, 
+                         levels=c("nation", "state"),
+                         labels=c("United States", "New York")),
+         tenuref=factor(tenure, 
+                        levels=c("owner", "renter"),
+                        labels=c("Owners", "Renters")))
+
+capt1 <- "Note: Data from the 2020 annual ACS excluded due to low response rates."
+capt2 <- "Source: American Community Survey, Annual, Tables B25070 and B25091."
+capt <- paste0(capt1, "\n", capt2)
+
+p <- pdata |> 
+  filter((geotype=="nation") |
+           (geotype=="state" & geoid=="36")) |> 
+  ggplot(aes(endyear, value, colour=geotypef)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values=c("blue", "darkgreen")) +
+  scale_y_continuous(name="Percentage of household income",
+                     limits=c(0, NA), 
+                     breaks=seq(0, 1, 0.05),
+                     labels=scales::percent_format(accuracy=1)) +
+  scale_x_continuous(name=NULL, breaks=seq(2000, 2020, 2)) +
+  labs(caption = capt) +
+  ggtitle("Housing costs as percentage of household income, 2006 to 2021") +
+  facet_wrap(~tenuref) +
+  theme_bw() +
+  caption_left  +
+  theme(legend.position = 'bottom') +
+  legend_notitle
+p
+
+```
+
+Note: To get trends over time we have to use a slightly different data source. Elswhere in this document we use HUD CHAS data, an enhanced version of the American Community Survey that is based on the 5-year ACS 2015-2019. The graph above uses annual data from the ACS.

@@ -1,10 +1,4 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
-
-# Who is housing insecure?
+# Who is Housing Insecure?
 
 ```{r}
 #| label: constants-whohas
@@ -54,7 +48,6 @@ glimpse(t1)
 
 
 ```
-
 
 ```{r}
 #| label: data-prep-problem-income-race-basedata
@@ -227,8 +220,13 @@ basedata <- t1c
 
 ```
 
-
 ## Housing insecurity by income level - what % of households in each income group have housing problems?
+
+The tables below show the prevalence of housing insecurity problems in different areas of the country and New York by income group. In each case, households are classified according to their income relative to the median income in the metropolitan area, adjusted for average family size in the area. Median income is estimated by the U.S. Department of Housing and Urban Development.[^who_has_housing_insecurity-1]
+
+[^who_has_housing_insecurity-1]: The measure is known as Housing and Urban Development Area Median Family Income (HAMFI). HUD makes adjustments in their calculation of area median income, and the results differ somewhat from Census-reported median incomes.
+
+In the table comparing states, households are classified according to their income relative to their state's HUD-estimated median income. For the regions of New York, households are classified according to their income relative to the median income in the metropolitan area their county is in, and then the counties are aggregated to the regions of New York.
 
 ```{r}
 #| label: state-data-prep-income
@@ -262,6 +260,8 @@ ygroups <- list(le30=html("<= 30%"),
 
 ### States
 
+About 80 percent of New York households with income below 30 percent of the area median have some form of housing insecurity, and 73 percent of households with income that is only 30-50 percent of the area median are housing-insecure. The percentages are much smaller for households between 50 and 100 percent of the median, and only 11 percent of households above area median income face housing insecurity. These general patterns hold in most states.
+
 ```{r}
 #| label: table-income-state
 #| include: true
@@ -287,7 +287,7 @@ tab <- tabdata_st  |>
     subtitle=hprobs
     ) |>
   tab_spanner(columns = c(le30, gt30le50, gt50le80, gt80le100,  gt100),
-                label=html("Income relative to area median income")) |>
+                label=html("Income relative to area median income adjusted for family size")) |>
   cols_label(.list=c(shortname="State", ygroups)) |> 
   fmt_percent(columns=-shortname, decimals=1) |> 
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
@@ -303,6 +303,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 ### Regions in New York
 
+Lower-income households have the highest rates of housing insecurity in all of New York's regions - particularly households with incomes below 30 percent of the area median. Prevalence of housing insecurity is somewhat lower in New York's upstate regions than in downstate.
 
 ```{r}
 #| label: table-income-region
@@ -329,7 +330,7 @@ tab <- tabdata_rgn  |>
     subtitle=hprobs
     ) |>
   tab_spanner(columns = c(le30, gt30le50, gt50le80, gt80le100,  gt100),
-                label=html("Income relative to area median income")) |>
+                label=html("Income relative to area median income adjusted for family size")) |>
   cols_label(.list=c(shortname="Region", ygroups)) |> 
   fmt_percent(columns=-shortname, decimals=1) |> 
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
@@ -344,7 +345,6 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 {{< include ../_gt_snippet.qmd >}}
 
 ## Housing insecurity by race and ethnicity - what % of households in each group have housing problems?
-
 
 ```{r}
 #| label: state-data-prep-race
@@ -379,51 +379,13 @@ racegroups <- list(white=html("White alone, non-Hispanic"),
                raceother=html("Other races & ethnicities"),
                allrace=html("All races & ethnicities"))
 
-```
-
-### States
-
-```{r}
-#| label: table-race-state
-#| include: true
-#| echo: false
-
-tabdata_st <- tabdata |> 
-  filter(nygeotype=="state" | stabbr=="US") |> 
-  select(nygeotype, stabbr, shortname, race, pct) |> 
-  pivot_wider(names_from = race, values_from = pct) |> 
-  relocate(hispanic, .before=asian) |> 
-  group_by(nygeotype) |> 
-  arrange(desc(allrace)) |> 
-  mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
-  ungroup()
-
-tab <- tabdata_st  |> 
-  filter(stabbr %in% c(state.abb, "US")) |> 
-  filter(stabbr=="US" | row_number() <= 10) |>
-  select(-stabbr, -nygeotype, -rank) |> 
-  gt() |> 
-  sub_missing(columns = everything()) |>
-  tab_header(
-    title = "States: Percentage of households in each racial and ethnic group with housing problems",
-    subtitle=hprobs
-    ) |>
-  tab_spanner(columns = -c(shortname, allrace),
-                label=html("Race and ethnicity categories")) |>
-  cols_label(.list=c(shortname="State", racegroups)) |> 
-  fmt_percent(columns=-shortname, decimals=1) |> 
-  tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
-# tab               
-  
-tabfile <-  path(tabdir, "problems_race_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
+saveRDS(tabdata, here::here("report", "results", "who_race_tabdata.rds")) 
 
 ```
 
-{{< include ../_gt_snippet.qmd >}}
+Housing insecurity in New York and in other states is far more common among households headed by a person of color than for households with a white head of household. In New York, 56.1 percent of households headed by an Hispanic person (any race) had at least one housing insecurity problem, compared with 31.2 percent of households headed by a white person; 50.6 percent of households headed by a black or African American person and 48.2 percent of households headed by an Asian person had at least one housing insecurity problem. (See the appendix for state-by-state details.)
 
-### Regions in New York
+This pattern generally holds in all regions of the state.
 
 ```{r}
 #| label: table-race-region
@@ -464,9 +426,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 {{< include ../_gt_snippet.qmd >}}
 
-
 ## Housing insecurity by elderly and nonelderly - what % of households in each group have housing problems?
-
 
 ```{r}
 #| label: data-prep-get_table5
@@ -493,7 +453,6 @@ glimpse(t5)
 
 
 ```
-
 
 ```{r}
 #| label: data-prep-problem-income-elderly-basedata
@@ -652,8 +611,9 @@ agegroups <- list(agelt62=html("No one age 62+"),
 
 ```
 
-
 ### States
+
+In New York, 44 percent households headed by a person age 75 face housing insecurity, compared to 39 percent or less for younger households. This is generally true in northeastern states but is not the case in many other states.
 
 ```{r}
 #| label: table-age-state
@@ -696,6 +656,8 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 {{< include ../_gt_snippet.qmd >}}
 
 ### Regions in New York
+
+Older households are more likely to be housing-insecure in New York's downstate region but not in the Mohawk Valley or North Country.
 
 ```{r}
 #| label: table-age-region

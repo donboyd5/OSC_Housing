@@ -1,10 +1,10 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
-# Summarizing Housing Insecurity in New York
+# Summarizing Three Major Measures of Housing Insecurity in New York's Regions
 
+The table below summarizes by region three major measures of housing insecurity that are available on a comparable basis: cost burden, crowding, and the extent to which housing lacks complete plumbing or kitchen facilities. The table shows the percentage of households in the region that are faced with a given form of housing insecurity, as well as the region's rank within the state (with a rank of 1 being the worst).
+
+Cost burden is the most prevalent form of housing insecurity in every region. Statewide 36 percent of households are cost burdened, 5.1 percent face crowded conditions, and 0.9 percent lack complete plumbing or kitchen facilities. New York City ranks worst overall on cost burden and crowding measures.
+
+![](images/image-1480931507.png)
 
 ```{r}
 #| label: constants
@@ -79,6 +79,5 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 
 
 ```
-
 
 {{< include ../_gt_snippet.qmd >}}

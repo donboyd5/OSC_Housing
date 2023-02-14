@@ -18,6 +18,9 @@ library(RcppRoll)
 library(fredr)
 library(tidycensus)
 
+library(skimr)
+library(Hmisc)
+
 # boyd libraries
 library(btools)
 library(bdata)
@@ -38,6 +41,7 @@ library(kableExtra)
 library(DT)
 library(gt)
 library(gtExtras)
+library(janitor)
 
 
 

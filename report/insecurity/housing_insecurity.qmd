@@ -1,12 +1,33 @@
-# What is Housing Insecurity?
+# Housing Insecurity and Its Consequences
 
-There is no single accepted definition of housing insecurity, sometimes referred to as housing instability. Researchers and policymakers often consider issues such as housing cost and availability, housing quality and conditions, and housing-related stress such as that from risks related to ability to pay for and remain in suitable housing.^[Discussions of housing security and insecurity definitions can be found in @coxRoadmapUnifiedMeasure2016 and @leopoldImprovingMeasuresHousing2016.] 
+## What is Housing Insecurity?
 
-These definitions often take into account not just characteristics of specific housing units, but also of the neighborhoods in which they are located. The U.S. Department of Health and Human Services and the United Nations have developed detailed and widely cited and overlapping descriptions of what they consider adequate or secure housing.^[See and @unitednationsRightAdequateHousing2014.]
+There is no single accepted definition of housing insecurity, sometimes referred to as housing instability. Researchers and policymakers often consider issues such as housing cost and availability, housing quality and conditions, and housing-related stress such as that from risks related to ability to pay for and remain in suitable housing.[^housing_insecurity-1]
 
-One group of widely cited researchers proposed a unifying definition:^[@coxRoadmapUnifiedMeasure2016]
+[^housing_insecurity-1]: Discussions of housing security and insecurity definitions can be found in @coxRoadmapUnifiedMeasure2016 and @leopoldImprovingMeasuresHousing2016
+
+These definitions often take into account not just characteristics of specific housing units, but also of the neighborhoods in which they are located. The U.S. Department of Health and Human Services and the United Nations have developed detailed and widely cited and overlapping descriptions of what they consider adequate or secure housing.[^housing_insecurity-2]
+
+[^housing_insecurity-2]: See and @unitednationsRightAdequateHousing2014.
+
+One group of widely cited researchers proposed a unifying definition:[^housing_insecurity-3]
+
+[^housing_insecurity-3]: @coxRoadmapUnifiedMeasure2016
 
 > Limited or uncertain availability of stable, safe, adequate, and affordable housing and neighborhoods; limited or uncertain access to stable, safe, adequate, and affordable housing and neighborhoods; or the inability to acquire stable, safe, adequate, and affordable housing and neighborhoods in socially acceptable ways.
 
 This report examines three broad categories of housing insecurity: cost and availability, quality and conditions, and housing-related stress.
 
+## Consequences of Housing Insecurity
+
+Housing insecurity can have negative impacts on the physical and mental health of individuals and families in four main ways[^housing_insecurity-4]:
+
+[^housing_insecurity-4]: See @taylorHousingHealthOverview2018 and @officeofdiseasepreventionandhealthpromotionHousingInstabilityLiterature2022
+
+Housing *instability* is associated with negative health consequences. Children in families that move frequently tend to have worse health and increased risks of teen pregnancy, early drug use, and depression. Chronically homeless individuals have greater physical and mental health problems than other individuals. [@taylorHousingHealthOverview2018]
+
+Inadquate *housing conditions* can have negative health consequences. For example, lead explosure can cause irreversible brain damage, and substandard conditions such as water leaks, poor ventilation, dirty carpets, and pest infestation is associated with poor health. [@taylorHousingHealthOverview2018]
+
+*Financial burdens* of housing can leave families with less to spend on food and health care, with potential indirect negative consequences for health. In addition, stress associated with cost burdens can have direct consequences for health. [@taylorHousingHealthOverview2018]
+
+The *neighborhoods* in which housing-insecure families live can have negative health consequences. Living near high-volume roads can result in increased asthma rates. Some research suggests that neighborhood segregation widens health disparities through its impact on access to schools, jobs, and health care, among other things. [@taylorHousingHealthOverview2018]
