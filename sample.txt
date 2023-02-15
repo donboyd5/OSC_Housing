@@ -1,0 +1,15 @@
+
+
+tabfile <- tab_save("cost_counties", tabdata, tab)
+plot_save("region_cost_hbar", pdata, p)
+
+
+
+basename <- "cost_states"
+write_csv(tabdata_topn, path(oscdir, paste0(basename, ".csv")))
+tabfile <-  path(oscdir, paste0(basename, ".png"))
+gtsave(tab, tabfile, zoom=2, expand=20)
+
+
+do we need electronic version of deficiencies table?
+![](images/image-1724408426.png)

@@ -4,17 +4,16 @@ The table below summarizes by region three major measures of housing insecurity 
 
 Cost burden is the most prevalent form of housing insecurity in every region. Statewide 36 percent of households are cost burdened, 5.1 percent face crowded conditions, and 0.9 percent lack complete plumbing or kitchen facilities. New York City ranks worst overall on cost burden and crowding measures.
 
-![](images/image-1480931507.png)
+<!-- ![](images/image-1480931507.png) -->
 
 ```{r}
 #| label: constants
 #| include: false
 
-
 ```
 
 ```{r}
-#| label: libraries
+#| label: includes
 #| include: false
 
 source(here::here("r", "libraries.r"))
@@ -41,7 +40,11 @@ stack <- bind_rows(cost |> mutate(measure="cost"),
 
 ```
 
+
 ```{r}
+#| label: region-crosscutting
+#| include: true
+#| echo: false
 
 tabdata <- stack |> 
   select(measure, shortname, alltenure_pct, alltenurerank) |> 
@@ -73,8 +76,13 @@ tab <- tabdata |>
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
 # tab  
 
-tabfile <-  path(tabdir, "cost_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "cost_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+# vwidth = 992, vheight = 744,
+tabfile <- tab_save("crosscutting_regions", tabdata, tab,
+                    zoom=1, expand=20, vwidth=1200, vheight=744)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 

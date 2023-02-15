@@ -1,7 +1,7 @@
 # Housing Cost Burden
 
 ```{r}
-#| label: libraries
+#| label: include-files
 #| include: false
 
 source(here::here("r", "libraries.r"))
@@ -112,8 +112,11 @@ tabdata_topn <- tabdata_st |>
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "cost_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+tabfile <- tab_save(basename="cost_states", tabdata_topn, tab)
+
+# write_csv(tabdata_topn, path(oscdir, paste0(basename, ".csv")))
+# tabfile <-  path(oscdir, paste0(basename, ".png"))
+# gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -150,9 +153,12 @@ tt <- "New York regions ranked by housing cost burden"
 tab <- f_tabranks(tabdata_rgn, stubvar="shortname", stubhead="Region",
          tabtitle=tt)
 
-tabfile <-  path(tabdir, "cost_regions.png")
-# tabfile <- "E:/R_projects/OSC_Housing/report/gtables/cost_regions.png"
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "cost_regions.png")
+# # tabfile <- "E:/R_projects/OSC_Housing/report/gtables/cost_regions.png"
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save(basename="cost_regions", tabdata_rgn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -165,7 +171,7 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 #| echo: false
 # names(t9cb_full)
 
-p <- t9cb_full |> 
+pdata <- t9cb_full |> 
   filter(stabbr=="NY", nygeotype %in% c("region")) |> 
   select(shortname, own_cost30, rent_cost30, alltenure_cost30) |> 
   arrange(desc(alltenure_cost30)) |>
@@ -174,7 +180,9 @@ p <- t9cb_full |>
   mutate(namef=factor(name, 
                       levels=c("rent_cost30", "own_cost30"),
                       labels=c("renters", "owners"))) |> 
-  arrange(namef) |> 
+  arrange(namef)
+  
+p <- pdata |>   
   ggplot() +
   geom_col(aes(x=value, y=reorder(shortname, alltenure_cost30), fill=namef), width=0.5) +
   scale_x_continuous(name="Number of cost-burdened households (thousands)",
@@ -188,7 +196,9 @@ p <- t9cb_full |>
   
 p  
 
-ggsave(here::here("report", "results", "region_cost_hbar.png"), p, width = 10, height = 6, scale=1.5)
+plot_save("region_cost_hbar", pdata, p)
+
+# ggsave(here::here("report", "results", "region_cost_hbar.png"), p, width = 10, height = 6, scale=1.5)
 
 ```
 
@@ -219,11 +229,17 @@ tabdata_topn <- tabdata_cnty |>
   arrange(desc(alltenure_pct)) |> 
   filter(nygeotype=="state" | row_number() <= 10) 
 
-tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="County",
-         tabtitle=tt, tabsubtitle=tabst)
+tab <- f_tabranks(tabdata_topn, 
+                  stubvar="shortname", 
+                  stubhead="County",
+                  tabtitle=tt, 
+                  tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "cost_counties.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "cost_counties.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("cost_counties", tabdata_topn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 ```
 
@@ -263,8 +279,10 @@ tabdata_bigcities <- tabdata_city |>
 tab <- f_tabranks(tabdata_bigcities, stubvar="shortname", stubhead="City",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 
-tabfile <-  path(tabdir, "cost_cities.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+tabfile <- tab_save("cost_cities", tabdata_bigcities, tab)
+
+# tabfile <-  path(oscdir, "cost_cities.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 ```
 
@@ -358,7 +376,6 @@ costinc |>
 
 The differences between upstate and downstate New York in housing costs, household income, and housing cost burden are substantial. Every one of the 48 counties outside of New York City, Long Island, and the Mid-Hudson region has median rental housing costs that are below the statewide median -- 39 percent below in the typical upstate county. Incomes are lower in all but one of these upstate counties -- about 28 percent lower in the the typical upstate county. With housing costs much lower in upstate New York than downstate, housing cost burdens upstate may often be driven by low incomes rather than high housing costs. (See the appendix for further discussion of this issue and discussion of selected counties.)
 
-
 ## Trends in housing cost burden
 
 Far greater percentages of renters have high housing costs, relative to income, than do homeowners. Furthermore, owner cost burdens fell substantially during the last decade, in part a result of the fall in interest rates, which lowered mortgage costs. By contrast, renter cost burdens were far more stable over most of the last decade.
@@ -437,7 +454,7 @@ owncb |> filter(geotype=="state" & geoid=="36") |>
 #| include: true
 
 # use the "b" version of the denominator, to be consistent with CHAS
-pdata <- bind_rows(rentcb |> 
+pdata1 <- bind_rows(rentcb |> 
                   select(geoid, geotype, name, endyear, value=rentcb30b) |> 
                   mutate(tenure="renter"),
                 owncb |> 
@@ -454,9 +471,11 @@ capt1 <- "Note: Data from the 2020 annual ACS excluded due to low response rates
 capt2 <- "Source: American Community Survey, Annual, Tables B25070 and B25091."
 capt <- paste0(capt1, "\n", capt2)
 
-p <- pdata |> 
+pdata <- pdata1 |> 
   filter((geotype=="nation") |
-           (geotype=="state" & geoid=="36")) |> 
+           (geotype=="state" & geoid=="36"))
+
+p <- pdata |> 
   ggplot(aes(endyear, value, colour=geotypef)) +
   geom_line() +
   geom_point() +
@@ -474,6 +493,8 @@ p <- pdata |>
   theme(legend.position = 'bottom') +
   legend_notitle
 p
+
+plot_save("usny_cost_trend", pdata, p)
 
 ```
 

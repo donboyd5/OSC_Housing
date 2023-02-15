@@ -136,7 +136,7 @@ tabdata_topn <- tabdata_st |>
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "plumbkitch_states.png")
+tabfile <-  path(oscdir, "plumbkitch_states.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
@@ -173,7 +173,7 @@ tt <- "New York regions ranked by housing plumbkitching"
 tab <- f_tabranks(tabdata_rgn, stubvar="shortname", stubhead="Region",
          tabtitle=tt)
 
-tabfile <-  path(tabdir, "plumbkitch_regions.png")
+tabfile <-  path(oscdir, "plumbkitch_regions.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
@@ -228,7 +228,7 @@ tab <- tabdata_rgn_brkdown |>
   fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
   
-tabfile <-  path(tabdir, "plumbkitch_region_breakdown.png")
+tabfile <-  path(oscdir, "plumbkitch_region_breakdown.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 
@@ -267,7 +267,7 @@ tabdata_topn <- tabdata_cnty |>
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="County",
          tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "plumbkitch_counties.png")
+tabfile <-  path(oscdir, "plumbkitch_counties.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 ```
@@ -309,7 +309,7 @@ tabdata_bigcities <- tabdata_city |>
 tab <- f_tabranks(tabdata_bigcities, stubvar="shortname", stubhead="City",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 
-tabfile <-  path(tabdir, "plumbkitch_cities.png")
+tabfile <-  path(oscdir, "plumbkitch_cities.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 ```

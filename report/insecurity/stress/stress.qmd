@@ -7,11 +7,12 @@ Eviction and the threat of eviction are major sources of housing insecurity stre
 > Eviction cases are civil lawsuits filed by landlords to remove tenants from rental properties or collect past-due rent or other monetary damages (1). The filing represents only the first action in the formal eviction process. Tenants must respond to the filing, either by answering the summons or appearing in court. If the tenant fails to respond, a default judgment in favor of the plaintiff is usually issued by the court. If the tenant responds, the case proceeds and can be resolved in many ways. The case may be dismissed due to insufficient action or evidence by the landlord or because the tenant has already vacated the property. The landlord and tenant may resolve the dispute by mutual agreement, which may or may not stipulate that the tenant vacates the property or repays past-due rent. A judge may decide the case in favor of the landlord or tenant after a court trial. If a tenant is ordered by the court to vacate a property but does not leave voluntarily, the landlord can file a writ of restitution with the sheriff or marshal to forcibly remove the tenant. [@ashleygromisSupplementaryInformationEstimating2022]
 
 ```{r}
-#| label: libraries
+#| label: includes
 #| include: false
 
 source(here::here("r", "libraries.r"))
 source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
 
 evdir <- here::here("data", "evictions")
 evict <- readRDS(path(evdir, "evict.rds"))
@@ -27,9 +28,7 @@ f_evrates <- function(geotype, tt, tst){
                         geotype=="region" ~ "Region",
                         geotype=="county" ~ "County")
   
-  tab <- tabdata |>
-  select(shortname, `2010`, `2018`, frate_change) |> 
-  arrange(desc(`2018`)) |> 
+  tab <- tabdata |> 
   gt::gt() |>
   sub_missing(columns = everything()) |>
   gt::tab_header(
@@ -80,8 +79,10 @@ The figure below shows eviction filing rates in New York and the United State fr
 #| label: eviction-rates-plot
 #| include: true
 
-p <- basedata |> 
-  filter(nygeotype %in% c("state", "nation"), stabbr %in% c("NY", "US")) |> 
+pdata <- basedata |> 
+  filter(nygeotype %in% c("state", "nation"), stabbr %in% c("NY", "US"))
+
+p <- pdata |> 
   ggplot(aes(year, frate, colour=stabbr)) +
   geom_line() +
   geom_point(size=0.5) +
@@ -97,6 +98,8 @@ p <- basedata |>
   theme(legend.title=element_blank())
 p
 
+plot_save("usny_evictions", pdata, p)
+
 ```
 
 ## Eviction filing rates by state
@@ -110,15 +113,20 @@ The table below shows eviction filing rates for the top 10 states in 2018 (lates
 tabdata <- tabbase  |> 
   filter(nygeotype %in% c("nation", "state"), stabbr!="DC") |>
   arrange(desc(`2018`)) |> 
-  filter(row_number() <= 10 | nygeotype=="nation")
+  filter(row_number() <= 10 | nygeotype=="nation") |> 
+  select(shortname, `2010`, `2018`, frate_change) |> 
+  arrange(desc(`2018`))
 
 
 tt <- "Eviction filing rates for top 10 states and the U.S., 2010 and 2018"
 tst <- "As % of number of renter households, sorted by 2018 rate"
-f_evrates(geotype="state", tt, tst)
+tab <- f_evrates(geotype="state", tt, tst)
 
+tabfile <- tab_save("evictrates_states", tabdata, tab)
 
 ```
+
+{{< include ../../_gt_snippet.qmd >}}
 
 New York had the 10th highest eviction filing rate, 9 evictions filed per 100 households, somewhat behind New Jersey's rate of 12.1. Virtually all states had declines in eviction filing rates, with the largest declines in the states with the highest rates. We do not yet have comprehensive data for eviction filing rates after 2018, but multiple measures of housing insecurity have weakened since the Covid-19 pandemic and related recession, and eviction filing rates are likely to have increased.
 
@@ -138,14 +146,19 @@ The table below shows eviction filing rates by New York region in 2010 and 2018,
 
 tabdata <- tabbase  |> 
   filter(nygeotype %in% c("nyregion") | nygeotype=="state" & stabbr=="NY") |> 
-  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |> 
+  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |>
+  select(shortname, `2010`, `2018`, frate_change) |> 
   arrange(desc(`2018`))
 
 tt <- "Eviction filing rates by New York region, 2010 and 2018"
 tst <- "As % of number of renter households, sorted by 2018 rate"
-f_evrates(geotype="region", tt, tst)
+tab <- f_evrates(geotype="region", tt, tst)
+
+tabfile <- tab_save("evictrates_regions", tabdata, tab)
 
 ```
+
+{{< include ../../_gt_snippet.qmd >}}
 
 ## New York counties with the highest eviction filing rates
 
@@ -157,12 +170,18 @@ The table below shows eviction filing rates in 2010 and 2018, and the change bet
 
 tabdata <- tabbase  |> 
   filter(nygeotype %in% c("county") | nygeotype=="state" & stabbr=="NY") |> 
-  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |> 
-  arrange(desc(`2018`)) |> 
-  filter(row_number() <= 10 | nygeotype=="state")
+  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |>
+  filter(row_number() <= 10 | nygeotype=="state") |>  
+  select(shortname, `2010`, `2018`, frate_change) |> 
+  arrange(desc(`2018`))
 
 tt <- "Eviction filing rates by New York county, 2010 and 2018"
 tst <- "As % of number of renter households, sorted by 2018 rate"
-f_evrates(geotype="county", tt, tst)
+tab <- f_evrates(geotype="county", tt, tst)
+
+tabfile <- tab_save("evictrates_counties", tabdata, tab)
 
 ```
+
+{{< include ../../_gt_snippet.qmd >}}
+

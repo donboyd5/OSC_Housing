@@ -276,10 +276,12 @@ tabdata_st <- tabdata |>
   mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
   ungroup()
 
-tab <- tabdata_st  |> 
+tabdata_topn <- tabdata_st  |> 
   filter(stabbr %in% c(state.abb, "US")) |> 
   filter(stabbr=="US" | row_number() <= 10) |>
-  select(-stabbr, -nygeotype, -rank) |> 
+  select(-stabbr, -nygeotype, -rank) 
+
+tab <- tabdata_topn |> 
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
@@ -293,8 +295,11 @@ tab <- tabdata_st  |>
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
 # tab               
   
-tabfile <-  path(tabdir, "problems_income_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "problems_income_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("problems_income_states", tabdata_topn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -318,11 +323,11 @@ tabdata_rgn <- tabdata |>
   group_by(nygeotype) |> 
   arrange(desc(allincome)) |> 
   mutate(rank=ifelse(nygeotype=="region", row_number(), NA_real_)) |> 
-  ungroup()
-
-tab <- tabdata_rgn  |> 
+  ungroup() |> 
   filter(nygeotype=="region") |>
-  select(-stabbr, -nygeotype, -rank) |> 
+  select(-stabbr, -nygeotype, -rank)
+
+tab <- tabdata_rgn  |>
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
@@ -336,8 +341,11 @@ tab <- tabdata_rgn  |>
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
 # tab
   
-tabfile <-  path(tabdir, "problems_income_regions.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "problems_income_regions.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("problems_income_regions", tabdata_rgn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -400,11 +408,11 @@ tabdata_rgn <- tabdata |>
   group_by(nygeotype) |> 
   arrange(desc(allrace)) |> 
   mutate(rank=ifelse(nygeotype=="region", row_number(), NA_real_)) |> 
-  ungroup()
-
-tab <- tabdata_rgn  |> 
+  ungroup() |> 
   filter(nygeotype=="region") |>
-  select(-stabbr, -nygeotype, -rank) |> 
+  select(-stabbr, -nygeotype, -rank)
+
+tab <- tabdata_rgn |> 
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
@@ -418,8 +426,11 @@ tab <- tabdata_rgn  |>
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
 # tab
   
-tabfile <-  path(tabdir, "problems_race_regions.png")
+tabfile <-  path(oscdir, "problems_race_regions.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("problems_race_regions", tabdata_rgn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -628,12 +639,12 @@ tabdata_st <- tabdata |>
   group_by(nygeotype) |> 
   arrange(desc(allage)) |> 
   mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
-  ungroup()
-
-tab <- tabdata_st  |> 
+  ungroup() |> 
   filter(stabbr %in% c(state.abb, "US")) |> 
   filter(stabbr=="US" | row_number() <= 10) |>
-  select(-stabbr, -nygeotype, -rank) |> 
+  select(-stabbr, -nygeotype, -rank)
+
+tab <- tabdata_st  |> 
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
@@ -647,8 +658,11 @@ tab <- tabdata_st  |>
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
 # tab               
   
-tabfile <-  path(tabdir, "problems_age_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "problems_age_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("problems_age_states", tabdata_st, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -672,10 +686,10 @@ tabdata_rgn <- tabdata |>
   group_by(nygeotype) |> 
   arrange(desc(allage)) |> 
   mutate(rank=ifelse(nygeotype=="region", row_number(), NA_real_)) |> 
-  ungroup()
+  ungroup() |> 
+  filter(nygeotype=="region")
 
-tab <- tabdata_rgn  |> 
-  filter(nygeotype=="region") |>
+tab <- tabdata_rgn |>
   select(-stabbr, -nygeotype, -rank) |> 
   gt() |> 
   sub_missing(columns = everything()) |>
@@ -691,8 +705,11 @@ tab <- tabdata_rgn  |>
 # tab
 
 
-tabfile <-  path(tabdir, "problems_age_regions.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "problems_age_regions.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("problems_age_regions", tabdata_rgn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```

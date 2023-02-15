@@ -106,8 +106,10 @@ tab <- tabdata_ranks |>
   tab_source_note(source_note = "Source: HUD Point-In-Time count for a single day in January")
 # tab
 
-tabfile <-  path(tabdir, "homeless_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "homeless_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("homeless_states", tabdata_ranks, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 # tab
 
@@ -216,10 +218,12 @@ summary(tabdata_coc)
 
 subt <- "Ranked by homeless population per 1,000 general population"
 
-tab <- tabdata_coc |>
+tabdata_coc2 <- tabdata_coc |>
   select(cocnum, cocname, hl_total, 
          perpopk, unsheltpct, pch, pctny, 
-         rank_percap, rank_hl, rank_unshelt) |> 
+         rank_percap, rank_hl, rank_unshelt) 
+
+tab <- tabdata_coc2 |> 
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
@@ -245,8 +249,11 @@ tab <- tabdata_coc |>
   tab_source_note(source_note = "Source: HUD Point-In-Time count for a single day in January")
 # tab
 
-tabfile <-  path(tabdir, "homeless_cocs.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "homeless_cocs.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("homeless_cocs", tabdata_coc2, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 # tab
 

@@ -36,7 +36,7 @@ tt <- paste0("Towns in New York with ",
 tab <- f_tabranks(tabdata_town, stubvar="mininame", stubhead="Town",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 
-tabfile <-  path(tabdir, "cost_towns.png")
+tabfile <-  path(oscdir, "cost_towns.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 ```
@@ -78,7 +78,7 @@ tt <- paste0("Villages in New York with ",
 tab <- f_tabranks(tabdata_village, stubvar="mininame", stubhead="Village",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 
-tabfile <-  path(tabdir, "cost_villages.png")
+tabfile <-  path(oscdir, "cost_villages.png")
 gtsave(tab, tabfile, zoom=2, expand=20)
 # {{< include ../../_gt_snippet.qmd >}}
 ```

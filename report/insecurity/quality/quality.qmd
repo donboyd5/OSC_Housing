@@ -1,9 +1,3 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
-
 # Housing Quality and Conditions
 
 ## Housing Crowding
@@ -141,8 +135,10 @@ tabdata_topn <- tabdata_st |>
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "crowd_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("crowd_states", tabdata_topn, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -178,8 +174,11 @@ tt <- "New York regions ranked by housing crowding"
 tab <- f_tabranks(tabdata_rgn, stubvar="shortname", stubhead="Region",
          tabtitle=tt)
 
-tabfile <-  path(tabdir, "crowd_regions.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_regions.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("crowd_regions", tabdata_rgn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -265,8 +264,11 @@ tab <- tabdata_rgn_brkdown |>
   fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
   
-tabfile <-  path(tabdir, "crowd_region_breakdown.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_region_breakdown.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("crowd_region_breakdown", tabdata_rgn_brkdown, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 # f_tabranks
@@ -304,8 +306,11 @@ tabdata_topn <- tabdata_cnty |>
 tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="County",
          tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "crowd_counties.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_counties.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("crowd_counties", tabdata_topn, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 ```
 
@@ -346,13 +351,14 @@ tabdata_bigcities <- tabdata_city |>
 tab <- f_tabranks(tabdata_bigcities, stubvar="shortname", stubhead="City",
          tabtitle=tt, tabsubtitle=tabst, keepcounty = TRUE)
 
-tabfile <-  path(tabdir, "crowd_cities.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_cities.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("crowd_cities", tabdata_bigcities, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 ```
 
 {{< include ../../_gt_snippet.qmd >}}
-
 
 
 <!-- {{< include _plumb_kitch.qmd >}} -->

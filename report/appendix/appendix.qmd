@@ -41,8 +41,10 @@ tt <- "States ranked by housing cost burden, plus United States"
 tab <- f_tabranks(tabdata_st, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "cost_states_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "cost_states_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_cost_states_all", tabdata_st, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -63,8 +65,10 @@ tt <- "Counties ranked by housing cost burden, plus New York State"
 tab <- f_tabranks(tabdata_cnty, stubvar="shortname", stubhead="County",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "cost_counties_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "cost_counties_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_cost_counties_all", tabdata_cnty, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -87,8 +91,11 @@ tt <- "Cities ranked by housing cost burden, plus New York State"
 tab <- f_tabranks(tabdata_city, stubvar="shortname", stubhead="City",
            tabtitle=tt, tabsubtitle=tabst, keepcounty=TRUE)
 
-tabfile <-  path(tabdir, "cost_cities_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "cost_cities_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+
+tabfile <- tab_save("appendix_cost_cities_all", tabdata_city, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -144,8 +151,10 @@ tab <- tabdata_rgn_brkdown |>
   fmt_percent(columns=c(region, rgn_cities, rgn_villages, rgn_xcityvill), decimals=1) |> 
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
   
-tabfile <-  path(tabdir, "cost_region_breakdown.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "cost_region_breakdown.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_cost_region_breakdown", tabdata_rgn_brkdown, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 # f_tabranks
@@ -155,6 +164,11 @@ gtsave(tab, tabfile, zoom=2, expand=20)
 {{< include ../_gt_snippet.qmd >}}
 
 ## Upstate and Downstate Housing Cost Burden
+
+The figure below compares median housing costs and median incomes of renters, by county, to corresponding statewide medians.[^appendix-1]
+
+[^appendix-1]: The figure is based on data from the 2015-2019 5-year American Community Survey as released by the Census Bureau, which has data elements needed for this analysis that are not available in the version of the ACS available from HUD and used elsewhere in this report.
+
 
 ```{r}
 #| label: updowndiffs-appendix
@@ -172,13 +186,15 @@ capt2 <- "Large dots have greater cost burden than small dots"
 capt3 <- "Source: ACS 5-year estimates, ending 2019"
 capt <- paste0(capt1, "\n", capt2, "\n", capt3)
 
-prent <- costinc |> 
+pdata <- costinc |> 
   select(-variable, -estimate) |> 
   pivot_wider(names_from = vname, values_from = index) |>
   mutate(cb=cost_renter / mhhi_renter,
          cbval=ifelse(cb < 1, "low", "high")) |> 
   mutate(across(c(mhhi_renter, cost_renter), ~.x - 1)) |> 
-  filter(geoid != "36") |> 
+  filter(geoid != "36")
+
+prent <- pdata |> 
   ggplot(aes(x=mhhi_renter, y=cost_renter)) +
   # geom_point(colour="blue", aes(size=cb)) +
   geom_point(aes(size=cb, colour=cbval)) +
@@ -203,14 +219,12 @@ prent
 
 # ggsave(here::here("report", "results", "cost_vs_income.jpg"), prent, width=10, height=6, scale=1.25)
 
-ggsave(here::here("report", "results", "cost_vs_income.jpg"), prent, width=10, height=6, scale=1.25)
+# ggsave(here::here("report", "results", "cost_vs_income.jpg"), prent, width=10, height=6, scale=1.25)
+
+plot_save("appendix_cost_vs_income", pdata, prent, width=10, height=6, scale=1.25)
 
 
 ```
-
-The figure below compares median housing costs and median incomes of renters, by county, to corresponding statewide medians.[^appendix-1]
-
-[^appendix-1]: The figure is based on data from the 2015-2019 5-year American Community Survey as released by the Census Bureau, which has data elements needed for this analysis that are not available in the version of the ACS available from HUD and used elsewhere in this report.
 
 The vertical axis measures median gross rents relative to the statewide median rent - the higher a county is, the higher its rental housing costs. The horizontal axis measures median renter income relative to statewide median renter income - the farther to the right a county is, the higher its median renter income.
 
@@ -222,7 +236,7 @@ Counties where median renter costs as a percentage of median renter income (a pr
 
 Counties with renter costs *and* renter income below the statewide median are in the lower left quadrant. Counties with renter costs *and* renter income above the statewide median are in the upper right quadrant.
 
-![](../results/cost_vs_income.jpg)
+![](../../report/oscdir/appendix_cost_vs_income.png)
 
 <!-- {width="611"} -->
 
@@ -265,8 +279,10 @@ tt <- "States ranked by housing crowding, plus United States"
 tab <- f_tabranks(tabdata_st, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "crowd_states_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_states_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_crowd_states_all", tabdata_st, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -287,8 +303,10 @@ tt <- "Counties ranked by housing crowding, plus New York State"
 tab <- f_tabranks(tabdata_cnty, stubvar="shortname", stubhead="County",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "crowd_counties_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_counties_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_crowd_counties_all", tabdata_cnty, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -311,8 +329,10 @@ tt <- "Cities ranked by housing crowding, plus New York State"
 tab <- f_tabranks(tabdata_city, stubvar="shortname", stubhead="City",
            tabtitle=tt, tabsubtitle=tabst, keepcounty=TRUE)
 
-tabfile <-  path(tabdir, "crowd_cities_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "crowd_cities_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_crowd_cities_all", tabdata_city, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -344,8 +364,10 @@ tt <- "States ranked by lack of complete plumbing and kitchen facilities, plus U
 tab <- f_tabranks(tabdata_st, stubvar="shortname", stubhead="State",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "plumbkitch_states_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "plumbkitch_states_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_plumbkitch_states_all", tabdata_st, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -366,8 +388,10 @@ tt <- "Counties ranked by lack of complete plumbing and kitchen facilities, plus
 tab <- f_tabranks(tabdata_cnty, stubvar="shortname", stubhead="County",
            tabtitle=tt, tabsubtitle=tabst)
 
-tabfile <-  path(tabdir, "plumbkitch_counties_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "plumbkitch_counties_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_plumbkitch_counties_all", tabdata_cnty, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -390,8 +414,10 @@ tt <- "Cities ranked by housing plumbkitching, plus New York State"
 tab <- f_tabranks(tabdata_city, stubvar="shortname", stubhead="City",
            tabtitle=tt, tabsubtitle=tabst, keepcounty=TRUE)
 
-tabfile <-  path(tabdir, "plumbkitch_cities_all.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "plumbkitch_cities_all.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_plumbkitch_cities_all", tabdata_city, tab)
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```
@@ -424,12 +450,12 @@ tabdata_st <- tabdata |>
   group_by(nygeotype) |> 
   arrange(desc(allrace)) |> 
   mutate(rank=ifelse(nygeotype=="state", row_number(), NA_real_)) |> 
-  ungroup()
-
-tab <- tabdata_st  |> 
+  ungroup() |> 
   filter(stabbr %in% c(state.abb, "US")) |> 
   filter(stabbr=="US" | row_number() <= 10) |>
-  select(-stabbr, -nygeotype, -rank) |> 
+  select(-stabbr, -nygeotype, -rank)
+
+tab <- tabdata_st |> 
   gt() |> 
   sub_missing(columns = everything()) |>
   tab_header(
@@ -443,8 +469,11 @@ tab <- tabdata_st  |>
   tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
 # tab               
   
-tabfile <-  path(tabdir, "problems_race_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "problems_race_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("appendix_problems_race_states", tabdata_st, tab)
+
 # {{< include ../../_gt_snippet.qmd >}}
 
 ```

@@ -7,6 +7,24 @@ f_comma <- function(num, ...) {scales::label_comma(...)(num)}
 f_dollar <- function(num, ...) {scales::label_dollar(...)(num)}
 
 
+
+# snippet_prep ------------------------------------------------------------
+
+tab_save <- function(basename, data, tab, zoom=2, expand=20, ...){
+  write_csv(data, path(oscdir, paste0(basename, ".csv")))
+  pngname <-  path(oscdir, paste0(basename, ".png"))
+  gtsave(tab, pngname, zoom=zoom, expand=expand, ...)
+  return(pngname)
+}
+
+plot_save <- function(basename, data, plot, width=10, height=6, scale=1.5){
+  write_csv(data, path(oscdir, paste0(basename, ".csv")))
+  pngname <- path(oscdir, paste0(basename, ".png"))
+  ggsave(pngname, plot, width=width, height=height, scale=scale)
+}
+
+
+
 # tables, etc. ------------------------------------------------------------
 
 

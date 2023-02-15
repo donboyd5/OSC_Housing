@@ -120,6 +120,9 @@ p <- pdata |>
 
 p
 
+plot_save("fedbudget_housing_assistance", pdata, p)
+
+
 ```
 
 There have been two major trends in federal housing assistance since the 1980s:
@@ -211,7 +214,7 @@ award_size |> mutate(value=value / 1e6)
 ```
 
 | Program                                             | Description                                                                                                   | Primary purpose                                                                                                                                     | Size nationally[^policies-12]                    |
-|-----------------|-----------------|---------------------|-----------------|
+|---------------|------------------|-------------------------|---------------|
 | Community Development Block Grants (CDBG)           | Formula grants to states, cities, and counties                                                                | Flexible program targeted toward improving living environments and housing in urban communities                                                     | \$3.3 billion awarded in 2019                    |
 | Continuum of Care program (CoC)                     | CoC's generally coordinate planning and implementation of homelessness-related programs in a geographic area. | Assist sheltered and unsheltered homeless people by providing housing and services to help individuals move into transitional and permanent housing | \$2.3 billion awarded in 2019                    |
 | Emergency Solutions Grants (ESG)                    | Grants to metropolitan cities, urban counties, territories, and states.                                       | Help people quickly regain permanent housing stability after a housing crisis or homelessness                                                       | \$280 million awarded in 2019                    |
@@ -299,7 +302,12 @@ tab
 
 tab
 
+tabfile <- tab_save("hud_nyawards", tabdata, tab)
+
 ```
+
+{{< include ../_gt_snippet.qmd >}}
+
 
 ### The important role of the Low-Income Housing Tax Credit
 
@@ -405,8 +413,10 @@ tab <- tabdata |>
     fmt_percent(columns=unitspop, decimals=1) |> 
       tab_source_note(source_note="Source: U.S. Department of Housing and Urban Development, Low Income Tax Housing Credit Database)")
 
-tabfile <-  path(tabdir, "lihtc_units_table.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
+# tabfile <-  path(oscdir, "lihtc_units_table.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("lihtc_units_table", tabdata, tab)
 
 ```
 
@@ -469,8 +479,12 @@ county_map <- ny_base +
 # centroids.df <- as.data.frame(rgdal::coordinates(county_map))
 
 county_map
-ggsave(here::here("report", "results", "lihtc_counties.png"), county_map,
-       width=10, height=6)
+
+# ggsave(here::here("report", "results", "lihtc_counties.png"), county_map,
+#        width=10, height=6)
+
+plot_save("lihtc_counties", lihtc_cnty3, county_map)
+
 ```
 
 The map below shows the distribution of housing units supported by Low Income Housing Tax Credits between 2010 and 2020 (latest available) as a percentage of county population. While the LIHTC has been most concentrated in urbanized areas of the state, its use has been widespread throughout New York.
@@ -526,9 +540,12 @@ tab <- tabdata |>
 
 # tab
 
-tabfile <-  path(tabdir, "picture_ny.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
+# tabfile <-  path(oscdir, "picture_ny.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("picture_ny", tabdata, tab)
+
+# {{< include ../_gt_snippet.qmd >}}
 
 # f_tabranks
   # tab_spanner(columns = c(rgn_cities, rgn_villages, rgn_xcityvill),
@@ -572,9 +589,11 @@ tab <- tabdata |>
 
 # tab
 
-tabfile <-  path(tabdir, "picture_ny_race.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
+# tabfile <-  path(oscdir, "picture_ny_race.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("picture_ny_race", tabdata, tab)
+# {{< include ../_gt_snippet.qmd >}}
 
 ```
 
@@ -591,13 +610,13 @@ tabdata <- basedata |>
   mutate(pct_pop=people_total / pop *100) |> 
   select(stabbr, shortname, pop, people_total, pct_pop, months_waiting,
          pct_female_head, pct_age62plus, pct_disabled_all, pct_minority) |> 
-  arrange(desc(pct_pop))
+  arrange(desc(pct_pop))|> 
+  filter(stabbr=="US" | row_number() <= 10) |> 
+  select(-c(stabbr, pop))
 
 # tabdata |> arrange(desc(pct_pop))
 
-tab <- tabdata |> 
-  filter(stabbr=="US" | row_number() <= 10) |> 
-  select(-c(stabbr, pop)) |> 
+tab <- tabdata  |> 
   gt() |> 
   sub_missing(columns = everything()) |> 
   tab_header(
@@ -621,9 +640,12 @@ tab <- tabdata |>
 
 # tab
 
-tabfile <-  path(tabdir, "picture_states.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
+# tabfile <-  path(oscdir, "picture_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("picture_states", tabdata, tab)
+
+# {{< include ../_gt_snippet.qmd >}}
 
 ```
 
@@ -640,14 +662,14 @@ tabdata <- basedata |>
   mutate(pct_pop=people_total / pop *100) |> 
   select(nygeotype, shortname, pop, people_total, pct_pop, months_waiting,
          pct_female_head, pct_age62plus, pct_disabled_all, pct_minority) |> 
-  arrange(desc(pct_pop))
+  arrange(desc(pct_pop)) |> 
+  filter(nygeotype=="state" | row_number() <= 15) |> 
+  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |> 
+  select(-c(nygeotype, pop))
 
 # tabdata |> arrange(desc(pct_pop))
 
 tab <- tabdata |> 
-  filter(nygeotype=="state" | row_number() <= 15) |> 
-  mutate(shortname=ifelse(nygeotype=="state", "New York State", shortname)) |> 
-  select(-c(nygeotype, pop)) |> 
   gt() |> 
   sub_missing(columns = everything()) |> 
   tab_header(
@@ -671,9 +693,11 @@ tab <- tabdata |>
 
 # tab
 
-tabfile <-  path(tabdir, "picture_nycounties.png")
-gtsave(tab, tabfile, zoom=2, expand=20)
-# {{< include ../../_gt_snippet.qmd >}}
+# tabfile <-  path(oscdir, "picture_nycounties.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("picture_nycounties", tabdata, tab)
+# {{< include ../_gt_snippet.qmd >}}
 
 ```
 

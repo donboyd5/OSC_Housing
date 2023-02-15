@@ -1,5 +1,5 @@
-# tabdir <- path_home("Documents", "R_projects", "OSC_Housing", "report", "gtables")
-tabdir <- path("e:/", "R_projects", "OSC_Housing", "report", "gtables")
+# oscdir <- path_home("Documents", "R_projects", "OSC_Housing", "report", "gtables")
+oscdir <- path("e:/", "R_projects", "OSC_Housing", "report", "oscdir")
 dchas <- r"(E:\data\housing_insecurity\chas)"
 dchas2019 <- r"(E:\data\housing_insecurity\chas\2015-2019)"
 dchwide <- r"(E:\data\housing_insecurity\chas\2015-2019\wide_tables)"
