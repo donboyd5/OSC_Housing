@@ -47,6 +47,7 @@ f_tabranks <- function(tabdata,
                        stubhead,
                        tabtitle,
                        tabsubtitle=NULL,
+                       srcnote="Source: HUD 5-year CHAS ending 2019",
                        keepcounty=FALSE){
   
   mainvars <- c("allunits",
@@ -86,7 +87,7 @@ f_tabranks <- function(tabdata,
     gt::fmt_percent(columns=c(own_pct, rent_pct, alltenure_pct, renter_share), decimals=1) |>
     gt::fmt_number(columns=c(allunits, ownrank, rentrank, alltenurerank),
                    decimals=0) |>
-    gt::tab_source_note(source_note = "Source: HUD 5-year CHAS ending 2019")
+    gt::tab_source_note(source_note = srcnote)
   
   if(keepcounty) tab <- tab |> gt::cols_label(countyname=cntyhead)
   tab

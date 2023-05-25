@@ -1,0 +1,500 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Supplemental information May 23, 2023 and later
+
+1.  When will new HUD CHAS data be available?
+2.  Make sure OSC has data for first graph in the February 10, 2023 draft report ("Housing-Insecurity-in-New-York-State_2023-02-10.docx"). It used annual ACS data.
+3.  Update state comparison table on p.17 of draft to use 2021 ACS
+4.  Are there any new evictions data? If so, update.
+5.  Can we use later state-level homelessness point-in-time counts, for comparisons across states - see table in draft report.
+
+Note: the text below describes updates and gives the names of associated png (picture) and csv (data) files in the dropbox [osc_transfer folder](https://www.dropbox.com/sh/e3a6vumbsjjnc1u/AAC9_JLoNMrOI2LFu6lVZik6a?dl=0). Some of the images in the png files may be too large to show the full table or graph but you can see the full version below. The csv files have all the data you need.
+
+## Are HUD CHAS data updates available? (No)
+
+The [HUD CHAS 2015-2019 ACS 5-year estimates were released on Sept 9, 2022](https://www.huduser.gov/portal/datasets/cp.html). It's reasonable to assume the 2016-2020 data will be released in Sept 2023, but HUD doesn't have a release schedule on its website. In any event, we probably would not want to use 2016-2020 data because of the 2020 problems, and 2017-2021 HUD CHAS data certainly won't be available in time for this report. (CHAS stands for Comprehensive Housing Affordability Strategy.)
+
+## Where to find data for first graph in Feb 10, 2023 draft report
+
+-   The graph, on p.3 of the draft and in the cost burden section, is shown below.
+
+-   The files are in the dropbox [osc_transfer folder](https://www.dropbox.com/sh/e3a6vumbsjjnc1u/AAC9_JLoNMrOI2LFu6lVZik6a?dl=0). The graph is named "usny_cost_trend.png" and the associated data file is named "usny_cost_trend.csv"
+
+![](images/image-1190145018.png){width="511"}
+
+## Updating the state comparison table on p.17 of the draft to use 2021 ACS
+
+-   The original HUD CHAS-based table is shown below
+
+-   The updated table is right after that, in copyable html.
+
+-   The data for the updated table are in the dropbox [osc_transfer folder](https://www.dropbox.com/sh/e3a6vumbsjjnc1u/AAC9_JLoNMrOI2LFu6lVZik6a?dl=0){style="font-size: 13pt;"}. The table png file is named "crowd_states_acs2021.png" and the associated data file is named "crowd_states_acs2021.csv"
+
+![](images/image-1622542555.png)
+
+```{r}
+#| label: constants
+#| include: false
+
+
+```
+
+```{r}
+#| label: libraries
+#| include: false
+
+source(here::here("r", "libraries.r"))
+source(here::here("r", "functions.r"))
+source(here::here("r", "constants.r"))
+
+```
+
+```{r}
+#| label: data
+#| include: false
+
+dacs <- here::here("data", "acs")
+
+tabshells <- readRDS(path(dacs, "tabshells_2019.rds"))
+utabshells <- tabshells |> select(table, tabname, universe) |> distinct()
+
+
+# note the a and b versions of cost burden, where denominators differ
+#  a subtracts noncomputable from denominator, b does not
+
+# use the "b" version of the denominator, to be consistent with CHAS
+# pdata1 <- bind_rows(rentcb |> 
+#                   select(geoid, geotype, name, endyear, value=rentcb30b) |> 
+#                   mutate(tenure="renter"),
+#                 owncb |> 
+#                   select(geoid, geotype, name, endyear, value=owncb30all) |> 
+#                   mutate(tenure="owner")) |> 
+
+```
+
+```{r}
+#| label: get-crowding
+#| include: false
+
+# ACS table B25014 -- crowding
+vtab("B25014")
+
+b25014ts <- readRDS(here::here("data", "acs", "B25014_timeseries.rds")) # crowding
+
+b25014_shells <- tabshells |> filter(table=="B25014")
+
+tcwide <- b25014ts |> 
+  filter(endyear==2021, geotype %in% c("state", "nation"), name!="District of Columbia") |> 
+  select(geotype, name, variable, estimate) |> 
+  pivot_wider(id_cols = c(geotype, name),
+              names_from=variable, 
+              values_from = estimate) |> 
+  mutate(occ=B25014_001,
+         owners=B25014_002,
+         renters=B25014_008,
+         renter_share=renters / occ,
+         owngt1pr=B25014_005 + B25014_006 + B25014_007,
+         owngt1pr_pct=owngt1pr / owners,
+         rentgt1pr=B25014_011 + B25014_012 + B25014_013,
+         rentgt1pr_pct=rentgt1pr / renters,
+         occgt1pr_pct=(owngt1pr + rentgt1pr) / occ
+         ) |> 
+  relocate(occ, renter_share, owngt1pr_pct, rentgt1pr_pct, occgt1pr_pct, 
+           owners, renters, owngt1pr, rentgt1pr, .after=name) |> 
+  mutate(across(c(owngt1pr_pct, rentgt1pr_pct, occgt1pr_pct),
+                ~ rank(-.x),
+                .names = "{.col}_rank"),
+         .by=geotype) |> 
+  mutate(across(contains("_rank"), ~ ifelse(geotype=="nation", NA_real_, .x))) |> 
+  relocate(contains("_rank"), .after=occgt1pr_pct)
+
+names(tcwide)[1:10]
+
+tt <- "Top 10 states ranked by housing crowding, plus United States"
+tabst <- "Percent of occupied housing units with more than one person per room"
+
+tabdata_topn <- tcwide |> 
+  filter(geotype=="nation" | (occgt1pr_pct_rank <= 10)) |> 
+  arrange(desc(occgt1pr_pct)) |> 
+  select(shortname=name,
+         allunits=occ,
+         renter_share,
+         own_pct=owngt1pr_pct,
+         rent_pct=rentgt1pr_pct,
+         alltenure_pct=occgt1pr_pct,
+         ownrank=owngt1pr_pct_rank,
+         rentrank=rentgt1pr_pct_rank,
+         alltenurerank=occgt1pr_pct_rank
+         )
+  
+
+tab <- f_tabranks(tabdata_topn, stubvar="shortname", stubhead="State",
+           tabtitle=tt, tabsubtitle=tabst, srcnote="American Community Survey, 2021, Table B25014")
+
+# tabfile <-  path(oscdir, "crowd_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("crowd_states_acs2021", tabdata_topn, tab)
+# {{< include ../../_gt_snippet.qmd >}}
+
+
+# note the a and b versions of cost burden, where denominators differ
+#  a subtracts noncomputable from denominator, b does not
+
+
+```
+
+Here's the table using data for the 2021 ACS:
+
+```{r}
+#| label: crowding-table-acs2021
+#| include: true
+
+tab
+
+```
+
+## Are there any new data on evictions? (Not from original source but some alternative sources might be useful)
+
+### The draft report
+
+The draft report used data from Princeton University's [Eviction Lab](https://evictionlab.org/). The data in the report for New York state, which end in 2018, are the latest available from their site. Here's a table from the draft, in section 6.3:
+
+![](images/image-17042168.png)
+
+There are a few other sources of eviction data in New York - several for New York City, and one for New York State. The New York State data available from the Unified Court System, described in the last subsection below, may be of greatest interest to you.
+
+### NYC data -- Princeton University's Eviction Lab, via Housing Data Coalition
+
+The [Lab also has data](https://evictionlab.org/eviction-tracking/) for selected states (New York is not one of them) and cities, including New York City.
+
+Here is a graph from the Princeton Lab's [New York City page](https://evictionlab.org/eviction-tracking/new-york-ny/) showing monthly eviction filings through April 2023 relative to the 2016-2018 average. Filings remain well below the pre-COVID average but have been rising over the last year.
+
+![](images/image-1232278606.png)
+
+This next graph shows the numbers of eviction filings and the 2016-2018 averages used to generate the graph above. The data are [here](https://evictionlab.org/uploads/newyork_barchart.csv).
+
+![](images/image-584856757.png)
+
+The number of eviction filings is influenced heavily by policy decisions. The Lab notes,
+
+> New York saw a number of steps taken to prevent a surge in eviction cases. A state-wide moratorium prevented landlords from filing eviction cases from late-March until June 20, 2020. Additional protections --- including the [Tenant Safe Harbor Act](https://www.nysenate.gov/legislation/bills/2019/s8192/amendment/b) and the [automatic suspension of newly-filed eviction cases](http://nycourts.gov/whatsnew/pdf/ao160a20.pdf) --- kept filings below historical averages. A state-wide moratorium was again implemented in late-December 2020. Pieces of the state-wide moratorium that allowed tenants to avoid a court case by declaring a COVID hardship were struck down by the Supreme Court in August 2021, but a new moratorium was enacted on September 2, 2021 that still afforded tenants certain protections in cases of COVID hardship. This moratorium expired on January 15, 2022.
+
+### The Housing Data Collection (New York City)
+
+The Eviction Lab does not collect New York City data directly, but rather obtains it from the [Housing Data Coalition](https://www.housingdatanyc.org/) in New York City. The Housing Data Coalition maintains an [extensive publicly available database](https://github.com/nycdb/nycdb) of eviction-related data compiled and linked from publicly available data sources including complaints, violations, eviction filings, and other data items. The Coalition's database contains links to many of these other sources of eviction-related data in New York City.
+
+### NYC OpenData
+
+The City government maintains a [case-level database](https://data.cityofnewyork.us/City-Government/Evictions/6z8x-wfk4) (\~75k records) of eviction-related information from 2017 forward on the OpenData site, also available [directly on the New York State OpenData site](https://data.ny.gov/widgets/6z8x-wfk4). I don't think it's likely to be of interest in this project. (New York State OpenData does not appear to provide evictions data for other localities in the state.)
+
+### NYS Unified Court System
+
+The Unified Court System's [Division of Technology & Court Research](https://ww2.nycourts.gov/court-research/index.shtml) has eviction filings data for the entire state from 2019 forward on their public website, in a pretty maps/graphs system that, with some work, allows access to underlying data. Earlier data might be available upon request but I don't find it on their website. (They also have a deidentified case-level landlord-tenant database with information on different kinds of landlord-tenant disputes. It could be of interest to you in the future.)
+
+#### Eviction report
+
+The eviction report shows trends in eviction filings for January 2019 to present by zip code summed over all housing courts, including town & village, in a weekly updated dashboard. It includes an interactive map by zip code, and filings as a percentage of household & population, annual, monthly, & year-to-date comparisons by county. It also includes warrants of eviction for city & district courts only.
+
+Here's an example of what's on their site - \# of eviction filings in 2022, by zip code. Oddly, they don't have a legend for the colors but darker red must mean more evictions, not more per capita. The table to the right gives statewide number of filings from 2019 through 2022 (and part 2023, not shown). The trend is broadly similar to the NYC trend above - substantial increases since the pandemic lows but still below pre-pandemic levels.
+
+![](images/image-1609592935.png)
+
+It's possible to get at statewide monthly trends (apparently including partial data for May 2023):
+
+![](images/image-934539996.png)
+
+It's possible to extract county-level information:
+
+![](images/image-395170669.png)
+
+![](images/image-1316588018.png)
+
+#### Using the UCS data
+
+If you want simple data - such as number of filings for the state as a whole, 2019-2022 you can just pull them from the relevant screenshot above or I can copy them into an email.
+
+For anything that requires analysis we'd have to either extract data from their "user friendly" maps/graphs system (there's no ready way to download all the data), which is possible but a bit of work - **in that event we should talk about what you want so that getting the data is as efficient as possible**.
+
+Using the data would require understanding it - for example, some small town courts are excluded from evictions data, and the data include commercial property filings and it might be possible to exclude them (but they probably don't skew the numbers much).
+
+For serious analysis, we could contact UCS and ask for data but that's probably outside the scope of what you want to do here.
+
+## Updating the homelessness Point-in-Time counts to the 2022 PIT data
+
+Chapter 8 of the draft report compares the number of homeless people per capita, by state, in 2020 and 2010. It is based on the HUD Continuum of Care (CoC) Point-in-Time (PIT) data. The data were obtained from HUD ([landing page](https://www.hudexchange.info/resource/3031/pit-and-hic-data-since-2007/)). At the time, they included data from 2007-2021; I only used data from 2007-2020 because of COVID-related problems with the 2021 count.
+
+The data have since been [updated to include 2022](https://www.huduser.gov/portal/sites/default/files/xls/2007-2022-PIT-Counts-by-State.xlsx). I first show excerpts from the draft report, and updated tables comparing 2022 to 2012.
+
+### Data in the draft report
+
+Excerpt below:
+
+![](images/image-2145194857.png)
+
+The draft also has a similar table for CoCs in New York - excerpt:
+
+![](images/image-1205118755.png)
+
+### Updated data
+
+```{r}
+#| label: setup
+#| include: false
+
+dahar <- here::here("data", "hud", "ahar")
+pit1 <- readRDS(path(dahar, "pit_report.rds"))
+cocpop <- readRDS(here::here("data", "hud", "homelessness", "cocdata_pop.rds"))
+
+# sts <- c(state.abb, "DC", "US")
+sts <- c(state.abb, "US")
+
+```
+
+This is based on the point-in-time count data. Counts for 2021 are excluded because these counts were incomplete due to the pandemic, and mostly focused on the sheltered population.
+
+### Homelessness in New York and other states
+
+The table below uses data from the 2022 point in time count. The png file is "homeless_states_pit2022.png" and the data file is "homeless_states_pit2022.csv". The files are in the dropbox [osc_transfer folder](https://www.dropbox.com/sh/e3a6vumbsjjnc1u/AAC9_JLoNMrOI2LFu6lVZik6a?dl=0){style="font-size: 13pt;"}.
+
+```{r}
+#| label: pit-prep
+#| include: false
+
+years <- c(2012, 2022)
+
+
+url <- "https://www2.census.gov/programs-surveys/popest/tables/2020-2022/state/totals/NST-EST2022-POP.xlsx"
+url <- "https://www2.census.gov/programs-surveys/popest/tables/2020-2022/state/totals/NST-EST2022-POP.xlsx"
+
+ddir <- r"(E:\R_projects\OSC_Housing\data\census)"
+fn <- "NST-EST2022-POP.xlsx"
+
+# spop.a
+
+popests1 <- read_excel(path(ddir, fn), col_types = "text")
+
+popests <- popests1 |> 
+  select(stname=1, census_2020=2, postcensal_2020=3, postcensal_2021=4, postcensal_2022=5) |> 
+  filter(!is.na(stname), !is.na(postcensal_2022)) |> 
+  mutate(stname=str_remove(stname, "\\.")) |> 
+  left_join(stcodes |> select(stname, stabbr), by = join_by(stname)) |> 
+  filter(!is.na(stabbr), stabbr %in% c("US", state.abb)) |> 
+  pivot_longer(-c(stabbr, stname)) |> 
+  separate(name, into=c("type", "year")) |>
+  mutate(value=as.numeric(value), year=as.integer(year)) |> 
+  select(stabbr, year, value, type)
+
+pops <- bind_rows(spop.a |> filter(year %in% years, type!="census"),
+                  popests |>  filter(year %in% years, type!="census"))
+
+```
+
+
+
+```{r}
+#| label: summary-table-data-hl
+#| include: false
+
+# count(pops, type)
+# count(pit1, stabbr)
+
+tabdata <- pit1 |> 
+  filter(rectype=="state", stabbr %in% c("US", state.abb), year %in% years) |> 
+  select(-pop) |> 
+  left_join(pops |> select(stabbr, year, pop=value),
+            by = join_by(stabbr, year)) |> 
+  select(stabbr, stname, year, vname, value, pop) |> 
+  pivot_wider(names_from = vname) |> 
+  mutate(pch=hl_total / hl_total[year==years[1]] - 1, .by=stabbr) |> 
+  filter(year==years[2]) |> 
+  mutate(type=ifelse(stabbr=="US", "us", "state"),
+         pctus=hl_total / hl_total[stabbr=="US"]) |> 
+  mutate(perpopk=hl_total / pop * 1000,
+         unsheltpct=hl_unshelter / hl_total,
+         rank_hl=rank(desc(hl_total)),
+         rank_percap=rank(desc(perpopk)),
+         rank_pch=rank(desc(pch)),
+         rank_unshelt=rank(desc(unsheltpct)),
+         .by=type) |> 
+  mutate(across(starts_with("rank_"), ~ ifelse(stabbr=="US", NA_real_, .x))) |> 
+  arrange(desc(perpopk))
+  # arrange(desc(hl_total))
+tabdata
+
+tabdata_ranks <- tabdata |> 
+  filter(if_any(starts_with("rank_"), ~.x <= 5) | stabbr=="US") |> 
+  select(stname, perpopk, hl_total, unsheltpct, pch, pctus, rank_percap, rank_hl, rank_unshelt, rank_pch)
+
+```
+
+```{r}
+#| label: summary-table-hl
+#| include: true
+
+subt <- "Table includes states ranking in the top 5 in any category. Does not include District of Columbia."
+
+tab <- tabdata_ranks |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = paste0("State homeless populations in ",
+                   years[2],
+                   " and change from ",
+                   years[1]),
+    subtitle=subt) |>
+  cols_label(stname="State",
+             hl_total="Homeless population",
+             perpopk=html("Number of homeless people per 1,000 population"),
+             unsheltpct=html("% who were unsheltered"),	
+             pch=paste0("% change in homeless count from ", years[1]),
+             pctus="Homeless population as % of U.S. total",
+             rank_percap="per 1,000 population",
+             rank_hl="Total # of homeless people",
+             rank_unshelt="% who were unsheltered",
+             rank_pch=html(paste0("% change from ",years[1]))) |> 
+  tab_spanner(columns = contains("rank_"),
+                    label=html("Rank (1=largest)")) |> 
+  fmt_percent(columns=c(unsheltpct, pch, pctus), decimals=1)|> 
+  fmt_number(columns=c(hl_total, contains("rank_")),
+             decimals=0) |>
+  fmt_number(columns=perpopk, decimals=2) |> 
+  tab_source_note(source_note = "Source: HUD Point-In-Time count for a single day in January")
+
+tab
+
+# tabfile <-  path(oscdir, "homeless_states.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("homeless_states_pit2022", tabdata_ranks, tab)
+# {{< include ../../_gt_snippet.qmd >}}
+# tab
+
+```
+
+### Homelessness in Continuums of Care in New York
+
+
+```{r}
+#| label: summary-table-data-coc
+#| include: false
+#| echo: false
+
+cocpop <- readRDS(here::here("data", "hud", "homelessness", "cocdata_pop.rds"))
+# tmp <- cocpop |> filter(stabbr=="NY")
+
+# nyshares <- cocpop |> 
+#   filter(stabbr=="NY")
+
+glimpse(pit1)
+count(pit1 |> filter(stabbr=="NY"), stname, cocname)
+
+nycoc_mergers <- read_csv(
+"cocnum_pre, cocnum_post, year
+NY-502, NY-505, 2016
+NY-504, NY-525, 2020
+NY-506, NY-525, 2019
+NY-509, NY-505, 2015
+NY-515, NY-511, 2008
+NY-516, NY-525, 2020
+NY-517, NY-508, 2015
+NY-521, NY-518, 2008
+NY-524, NY-508, 2013
+NY-605, NY-603, 2012
+NY-607, NY-525, 2020
+")
+nycoc_mergers
+
+
+tabdata_coc <- pit1 |> 
+  filter(stabbr=="NY", year %in% years) |> 
+  select(-pop) |> 
+  left_join(pops |> select(stabbr, year, statepop=value),
+            by = join_by(stabbr, year)) |> 
+  mutate(cocnum=ifelse(rectype=="state", "NYS", cocnum),
+         cocname=ifelse(rectype=="state", "New York State", cocname)) |> 
+  select(stabbr, stname, cocnum, cocname, rectype, year, vname, value, statepop) |> 
+  pivot_wider(names_from = vname) |> 
+  left_join(cocpop |> select(stabbr, cocnum, acspop=pop),
+            by = join_by(stabbr, cocnum)) |> 
+  mutate(cocpop=ifelse(rectype=="state", statepop, acspop)) |> 
+  arrange(cocnum, year) |> 
+  mutate(n=n(), 
+         notmerged=!(year==years[2] & cocnum %in% nycoc_mergers$cocnum_post),
+         .by=cocnum) |> 
+  mutate(pch=ifelse(n==2 & year==years[2] & notmerged, 
+                    hl_total / hl_total[year==years[1]] - 1,
+                    NA_real_),
+         .by=cocnum) |> 
+  filter(year==years[2]) |> 
+  mutate(perpopk=hl_total / cocpop * 1000,
+         pctny=hl_total / hl_total[rectype=="state"]) |> 
+  mutate(unsheltpct=hl_unshelter / hl_total,
+         rank_hl=rank(desc(hl_total)),
+         # rank_pch=rank(desc(pch)),
+         rank_percap=rank(desc(perpopk)),
+         rank_unshelt=rank(desc(unsheltpct)),
+         .by=rectype) |> 
+  mutate(across(starts_with("rank_"), ~ ifelse(rectype=="state", NA_real_, .x))) |> 
+  arrange(desc(perpopk))
+
+tabdata_coc
+summary(tabdata_coc)
+
+```
+
+
+
+```{r}
+#| label: summary-table-coc
+#| include: true
+
+subt <- "Ranked by homeless population per 1,000 general population"
+
+tabdata_coc2 <- tabdata_coc |>
+  select(cocnum, cocname, hl_total, 
+         perpopk, unsheltpct, pch, pctny, 
+         rank_percap, rank_hl, rank_unshelt) 
+
+tab <- tabdata_coc2 |> 
+  gt() |> 
+  sub_missing(columns = everything()) |>
+  tab_header(
+    title = paste0("Continuum of Care homeless populations in ", years[2],
+                   ", and change from ", years[1]),
+    subtitle=subt) |>
+  cols_label(cocnum="COC number",
+             cocname="COC",
+             hl_total="Homeless population",
+             perpopk=html("Number of homeless people per 1,000 population"),
+             unsheltpct=html("% who were unsheltered"),	
+             pch=paste0("% change in homeless count from ", years[1]),
+             pctny="Homeless population as % of NY total",
+             rank_percap="per 1,000 population",
+             rank_hl="Total # of homeless people",
+             rank_unshelt="% who were unsheltered") |> 
+  tab_spanner(columns = contains("rank_"),
+                    label=html("Rank (1=largest)")) |> 
+  fmt_percent(columns=c(unsheltpct, pch, pctny), decimals=1)|> 
+  fmt_number(columns=c(hl_total, contains("rank_")),
+             decimals=0) |>
+  fmt_number(columns=perpopk, decimals=2) |> 
+  tab_source_note(source_note = "Source: HUD Point-In-Time count for a single day in January")
+
+# tabfile <-  path(oscdir, "homeless_cocs.png")
+# gtsave(tab, tabfile, zoom=2, expand=20)
+
+tabfile <- tab_save("homeless_cocs_pit2022", tabdata_coc2, tab)
+
+tab
+
+# {{< include ../../_gt_snippet.qmd >}}
+# tab
+
+```
+
+

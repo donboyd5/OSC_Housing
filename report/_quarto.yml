@@ -33,6 +33,7 @@ book:
   chapters:
     - index.qmd
     - intro.qmd
+    - supplemental_May2023.qmd
     - part: "Housing Insecurity"
       chapters:
         - insecurity/housing_insecurity.qmd

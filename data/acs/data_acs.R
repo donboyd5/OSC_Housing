@@ -375,6 +375,14 @@ vtab("B25091")
 
 # df <- fts(2006, "B25070")
 
+### NEW 2023-05-24 B25014 ----
+table <- "B25014"
+df2 <- map_dfr(2006:2021, fts, table)
+count(df2, endyear)
+saveRDS(df2, here::here("data", "acs", paste0(table, "_timeseries.rds")))
+
+### END NEW 2023-05-24 B25014 ----
+
 # do both tables -- skipping 2020
 table <- "B25070"
 table <- "B25091"

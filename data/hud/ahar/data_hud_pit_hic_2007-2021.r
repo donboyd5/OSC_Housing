@@ -20,29 +20,17 @@ dahar <- here::here("data", "hud", "ahar")
 
 
 # PIT initial gathering of data -------------------------------------------
-# fn <- "2007-2021-PIT-Counts-by-State_djb.xlsx"
-# https://www.huduser.gov/portal/sites/default/files/xls/2007-2022-PIT-Counts-by-State.xlsx
-
-url_states <- "https://www.huduser.gov/portal/sites/default/files/xls/2007-2022-PIT-Counts-by-State.xlsx"
-fn_states <- path_file(url_states)
-
-url_cocs <- "https://www.huduser.gov/portal/sites/default/files/xls/2007-2022-PIT-Counts-by-CoC.xlsx"
-fn_cocs <- path_file(url_cocs)
-
-## ONETIME DOWNLOAD FILES ----
-download.file(url_states, path(dahar, fn_states), mode="wb")
-download.file(url_cocs, path(dahar, fn_cocs), mode="wb")
-## END ONETIME DOWNLOAD FILES ----
-
-## get states 2022 data ----
-df1 <- read_excel(path(dahar, fn_states), sheet="2022")
+fn <- "2007-2021-PIT-Counts-by-State_djb.xlsx"
+df1 <- read_excel(path(dahar, fn), sheet="2020")
 
 year <- 2020
 
 fstate_year <- function(year) {
   # read state data for a year
   print(year)
-  df1 <- read_excel(path(dahar, fn_states), 
+  sfn <- "2007-2021-PIT-Counts-by-State.xlsx"
+  # cfn <- "2007-2021-PIT-Counts-by-CoC.xlsx"
+  df1 <- read_excel(path(dahar, sfn), 
                     sheet=as.character(year), 
                     col_names = TRUE,
                     col_types = "text")
@@ -53,10 +41,7 @@ fstate_year <- function(year) {
            rectype="state",
            ncocs=as.integer(ncocs),
            value=as.numeric(value)) |> 
-    mutate(vdesc=str_sub(name, 1, -7),
-           varyear=str_sub(name, -5, -1)) |> 
-  # varyear=str_extract_after_last(name, ","))
-  #  separate(name, into = c("vdesc", "varyear"), sep=",") |> 
+    separate(name, into = c("vdesc", "varyear"), sep=",") |> 
     mutate(varyear=as.integer(varyear))
   
   if(sum(df2$year) != sum(df2$varyear)) rlang::abort("ERROR in variable name for state.")
@@ -66,37 +51,42 @@ fstate_year <- function(year) {
   df3
 }
 
+year <- 2008
 
 fcoc_year <- function(year) {
   # read coc data for a year
   print(year)
-  df1 <- read_excel(path(dahar, fn_cocs), 
+  # sfn <- "2007-2021-PIT-Counts-by-State.xlsx"
+  cfn <- "2007-2021-PIT-Counts-by-CoC.xlsx"
+  df1 <- read_excel(path(dahar, cfn), 
                     sheet=as.character(year), 
                     col_names = TRUE,
                     col_types = "text")
-  if(year==2022) {
-    lookup <- c(cocnum=1, cocname=2, coctype=3, populations=ncol(df1))
-  } else {lookup <-c(cocnum=1, cocname=2)}
   
-  df2 <- df1 |>
-    rename(all_of(lookup)) |> 
-    mutate(stabbr=str_sub(cocnum, 1, 2)) |>
-    pivot_longer(cols=-all_of(c("stabbr", names(lookup)))) |> 
+  if(year==2021) {
+    df2 <- df1 |> 
+      rename(cocnum=1, cocname=2, coctype=3, counttype=4)
+    } else{
+      df2 <- df1 |>
+        rename(cocnum=1, cocname=2) |> 
+        mutate(coctype=NA_character_, counttype=NA_character_) |> 
+        select(cocnum, cocname, coctype, counttype, everything())
+    }
+  
+  df3 <- df2 |> 
+    mutate(stabbr=str_sub(cocnum, 1, 2)) |> 
+    pivot_longer(cols=-c(stabbr, cocnum, cocname, coctype, counttype)) |> 
     mutate(year=as.integer(!!year),
            rectype="coc",
            value=as.numeric(value)) |> 
-    mutate(vdesc=str_sub(name, 1, -7),
-           varyear=str_sub(name, -5, -1)) |> 
+    separate(name, into = c("vdesc", "varyear"), sep=",") |> 
     mutate(varyear=as.integer(varyear))
   
+  if(sum(df3$year) != sum(df3$varyear)) rlang::abort("ERROR in variable name for CoC")
   
-  if(sum(df2$year) != sum(df2$varyear)) rlang::abort("ERROR in variable name for CoC")
-  
-  keepvars <- c("stabbr", "rectype", "year", names(lookup), "vdesc", "value")
-  
-  df3 <- df2 |> 
-    select(all_of(keepvars))
-  df3
+  df4 <- df3 |> 
+    select(stabbr, rectype, year, cocnum, cocname, coctype, counttype, vdesc, value)
+  df4
 }
 
 df1 <- fstate_year(2008)
@@ -107,20 +97,16 @@ glimpse(df2)
 
 fall <- function(years){
   print("states")
-  df1 <- purrr::map_dfr(years, fstate_year)
+  df1 <- map_dfr(years, fstate_year)
   print("CoCs")
-  df2 <- purrr::map_dfr(years, fcoc_year)
+  df2 <- map_dfr(years, fcoc_year)
   df3 <- bind_rows(df1, df2)
   df3 |> 
     mutate(vdesc=str_trim(vdesc)) |> 
-    relocate(vdesc, value, .after=populations)
+    relocate(vdesc, value, .after=counttype)
 }
 
-years <- 2022
-year <- 2022
-fall(years)
-
-pit_raw <- fall(2007:2022)
+pit_raw <- fall(2007:2021)
 saveRDS(pit_raw, path(dahar, "pit_raw.rds"))
 
 
